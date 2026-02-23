@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Plus, Link as LinkIcon, Zap } from "lucide-react";
+import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 
 type ClientWithFlow = {
   id: string;
@@ -121,9 +122,11 @@ const Admin = () => {
             </h1>
             <p className="text-muted-foreground">Gerencie clientes e fluxos de automação</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Novo Cliente</Button>
+          <div className="flex gap-2">
+            <CreateUserDialog clients={clients.map(c => ({ id: c.id, name: c.name }))} onUserCreated={fetchClients} />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" /> Novo Cliente</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -146,7 +149,8 @@ const Admin = () => {
                 <Button onClick={createClient} className="w-full">Criar Cliente</Button>
               </div>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         <Card>
