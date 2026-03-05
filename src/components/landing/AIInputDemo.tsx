@@ -1,0 +1,125 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Sparkles, ArrowRight } from "lucide-react";
+
+const industries = [
+  "Saúde e Bem-estar",
+  "Educação Online",
+  "E-commerce de Moda",
+  "Mercado Financeiro",
+  "Marketing Digital",
+  "Gastronomia",
+  "Advocacia",
+  "Imobiliário",
+];
+
+const chips = [
+  "Reels para Instagram",
+  "Vídeos para YouTube",
+  "TikTok virais",
+  "Ads para Meta",
+  "Conteúdo educacional",
+  "Storytelling de marca",
+];
+
+export default function AIInputDemo() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [typed, setTyped] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const word = industries[currentIndex];
+
+    if (!isDeleting && typed === word) {
+      const timeout = setTimeout(() => setIsDeleting(true), 1800);
+      return () => clearTimeout(timeout);
+    }
+
+    if (isDeleting && typed === "") {
+      setIsDeleting(false);
+      setCurrentIndex((prev) => (prev + 1) % industries.length);
+      return;
+    }
+
+    const speed = isDeleting ? 30 : 60;
+    const timeout = setTimeout(() => {
+      setTyped(
+        isDeleting
+          ? word.substring(0, typed.length - 1)
+          : word.substring(0, typed.length + 1)
+      );
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [typed, isDeleting, currentIndex]);
+
+  return (
+    <section className="relative py-24 md:py-32 overflow-hidden">
+      {/* Holographic mesh gradient background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(135deg, hsl(var(--holo-blue)) 0%, hsl(var(--holo-violet)) 40%, hsl(var(--holo-pink)) 80%, hsl(var(--holo-blue)) 100%)",
+          opacity: 0.4,
+        }}
+      />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+
+      <div className="relative z-10 mx-auto max-w-3xl px-4 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 tracking-tight">
+            Qual nicho você quer{" "}
+            <span className="text-gradient-primary">transformar?</span>
+          </h2>
+          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
+            Diga à IA o seu segmento e receba roteiros sob medida.
+          </p>
+        </motion.div>
+
+        {/* Glassmorphism input */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative mx-auto max-w-xl"
+        >
+          <div className="relative flex items-center rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-[0_0_40px_hsl(var(--primary)/0.08)] px-5 py-4 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_0_60px_hsl(var(--primary)/0.15)]">
+            <Sparkles className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+            <div className="flex-1 text-left">
+              <span className="text-foreground">{typed}</span>
+              <span className="inline-block w-0.5 h-5 bg-primary ml-0.5 animate-typing-cursor align-middle" />
+            </div>
+            <button className="ml-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform hover:scale-110 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Suggestion chips */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-6 flex flex-wrap justify-center gap-2"
+        >
+          {chips.map((chip) => (
+            <span
+              key={chip}
+              className="inline-flex items-center rounded-full border border-border/40 bg-card/40 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-200 cursor-pointer"
+            >
+              {chip}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
