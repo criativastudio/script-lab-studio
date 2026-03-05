@@ -32,7 +32,7 @@ const testimonials = [
 
 export default function SocialProof() {
   return (
-    <section className="relative py-28 md:py-36 px-4">
+    <section className="relative py-16 md:py-24 px-4">
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

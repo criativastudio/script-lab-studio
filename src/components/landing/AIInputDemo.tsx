@@ -62,7 +62,7 @@ export default function AIInputDemo() {
   };
 
   return (
-    <section className="relative py-28 md:py-36 overflow-hidden">
+    <section className="relative py-16 md:py-24 overflow-hidden">
       {/* Holographic mesh gradient background */}
       <div
         className="absolute inset-0"

@@ -72,7 +72,7 @@ export default function FeatureTabs() {
   const current = features[active];
 
   return (
-    <section className="relative py-28 md:py-36 px-4">
+    <section className="relative py-16 md:py-24 px-4">
       <div className="section-fade-top" />
       <div className="mx-auto max-w-6xl">
         <motion.div
@@ -80,7 +80,7 @@ export default function FeatureTabs() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-center mb-12"
         >
           <h2 className="font-display text-xl md:text-3xl font-light tracking-tight mb-6">
             Tudo em <span className="text-gradient-primary">uma plataforma</span>
