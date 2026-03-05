@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2, Link as LinkIcon, Copy, Users } from "lucide-react";
 
 interface Project {
   id: string; name: string | null; client_name: string | null; objective: string | null;
@@ -22,18 +22,35 @@ interface Project {
 interface Briefing { id: string; goal: string | null; target_audience: string | null; content_style: string | null; created_at: string | null; }
 interface Script { id: string; title: string | null; script: string | null; created_at: string | null; }
 interface Idea { id: string; idea: string | null; status: string | null; created_at: string | null; }
+interface BriefingRequest {
+  id: string; business_name: string; contact_name: string | null; contact_email: string | null;
+  contact_whatsapp: string | null; project_name: string; video_quantity: number;
+  status: string; token: string; created_at: string; persona: string | null; positioning: string | null;
+}
 
 const statusLabels: Record<string, string> = { active: "Ativo", completed: "Concluído", paused: "Pausado" };
 const statusColors: Record<string, string> = { active: "bg-accent text-accent-foreground", completed: "bg-primary text-primary-foreground", paused: "bg-muted text-muted-foreground" };
+const briefingStatusLabels: Record<string, string> = { pending: "Pendente", submitted: "Enviado", processing: "Processando", completed: "Concluído" };
+const briefingStatusColors: Record<string, string> = { pending: "bg-muted text-muted-foreground", submitted: "bg-warning text-warning-foreground", processing: "bg-primary text-primary-foreground", completed: "bg-accent text-accent-foreground" };
 
 const CRM = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("projects");
   const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", client_name: "", objective: "", platform: "" });
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Briefing requests
+  const [briefingRequests, setBriefingRequests] = useState<BriefingRequest[]>([]);
+  const [briefingOpen, setBriefingOpen] = useState(false);
+  const [briefingForm, setBriefingFormState] = useState({
+    business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "",
+    project_name: "", video_quantity: "3",
+  });
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
   // Detail data for expanded project
   const [briefings, setBriefings] = useState<Briefing[]>([]);
@@ -41,7 +58,7 @@ const CRM = () => {
   const [ideas, setIdeas] = useState<Idea[]>([]);
 
   // Forms for adding items
-  const [briefingForm, setBriefingForm] = useState({ goal: "", target_audience: "", content_style: "" });
+  const [briefingFormData, setBriefingForm] = useState({ goal: "", target_audience: "", content_style: "" });
   const [scriptForm, setScriptForm] = useState({ title: "", script: "" });
   const [ideaForm, setIdeaForm] = useState({ idea: "" });
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -52,6 +69,16 @@ const CRM = () => {
     if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
     setProjects((data as Project[]) || []);
+  };
+
+  const fetchBriefingRequests = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("briefing_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setBriefingRequests((data as BriefingRequest[]) || []);
   };
 
   const fetchProjectDetails = async (projectId: string) => {
@@ -66,7 +93,7 @@ const CRM = () => {
     setIdeas((i.data as Idea[]) || []);
   };
 
-  useEffect(() => { fetchProjects(); }, [user, filter]);
+  useEffect(() => { fetchProjects(); fetchBriefingRequests(); }, [user, filter]);
 
   useEffect(() => {
     if (expandedId) fetchProjectDetails(expandedId);
@@ -85,15 +112,42 @@ const CRM = () => {
     toast({ title: "Projeto criado!" });
   };
 
+  const handleCreateBriefingRequest = async () => {
+    if (!user || !briefingForm.business_name || !briefingForm.project_name) return;
+    const { data, error } = await supabase.from("briefing_requests").insert({
+      user_id: user.id,
+      business_name: briefingForm.business_name,
+      contact_name: briefingForm.contact_name || null,
+      contact_email: briefingForm.contact_email || null,
+      contact_whatsapp: briefingForm.contact_whatsapp || null,
+      project_name: briefingForm.project_name,
+      video_quantity: parseInt(briefingForm.video_quantity),
+    }).select("token").single();
+
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+
+    const link = `${window.location.origin}/briefing/${data.token}`;
+    setGeneratedLink(link);
+    fetchBriefingRequests();
+    toast({ title: "Cliente registrado!" });
+  };
+
+  const copyLink = () => {
+    if (generatedLink) {
+      navigator.clipboard.writeText(generatedLink);
+      toast({ title: "Link copiado!" });
+    }
+  };
+
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   const addBriefing = async () => {
-    if (!user || !expandedId || !briefingForm.goal) return;
+    if (!user || !expandedId || !briefingFormData.goal) return;
     const { error } = await supabase.from("briefings").insert({
-      goal: briefingForm.goal, target_audience: briefingForm.target_audience || null,
-      content_style: briefingForm.content_style || null, project_id: expandedId, user_id: user.id,
+      goal: briefingFormData.goal, target_audience: briefingFormData.target_audience || null,
+      content_style: briefingFormData.content_style || null, project_id: expandedId, user_id: user.id,
     });
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     setBriefingForm({ goal: "", target_audience: "", content_style: "" });
@@ -140,196 +194,316 @@ const CRM = () => {
             <p className="text-muted-foreground">Gerencie suas produções audiovisuais</p>
           </div>
           <div className="flex gap-2">
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="completed">Concluídos</SelectItem>
-                <SelectItem value="paused">Pausados</SelectItem>
-              </SelectContent>
-            </Select>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={briefingOpen} onOpenChange={(v) => { setBriefingOpen(v); if (!v) setGeneratedLink(null); }}>
               <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-2" />Novo Projeto</Button>
+                <Button variant="outline"><Users className="h-4 w-4 mr-2" />Novo Cliente + Briefing</Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Novo Projeto</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Nome do Projeto</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                  <div><Label>Cliente</Label><Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></div>
-                  <div><Label>Objetivo</Label><Textarea value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })} /></div>
-                  <div><Label>Plataforma</Label>
-                    <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="YouTube">YouTube</SelectItem>
-                        <SelectItem value="Instagram">Instagram</SelectItem>
-                        <SelectItem value="TikTok">TikTok</SelectItem>
-                        <SelectItem value="TV">TV</SelectItem>
-                        <SelectItem value="Cinema">Cinema</SelectItem>
-                        <SelectItem value="Outro">Outro</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <DialogHeader><DialogTitle>Registrar Cliente + Briefing</DialogTitle></DialogHeader>
+                {generatedLink ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Cliente registrado! Envie o link abaixo para o cliente preencher o briefing:</p>
+                    <div className="flex gap-2">
+                      <Input value={generatedLink} readOnly className="flex-1 text-xs" />
+                      <Button size="sm" onClick={copyLink}><Copy className="h-4 w-4" /></Button>
+                    </div>
+                    <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3" }); }}>Fechar</Button>
                   </div>
-                  <Button className="w-full" onClick={handleCreate}>Criar Projeto</Button>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div><Label>Nome da Empresa *</Label><Input value={briefingForm.business_name} onChange={(e) => setBriefingFormState({ ...briefingForm, business_name: e.target.value })} /></div>
+                    <div><Label>Nome do Contato</Label><Input value={briefingForm.contact_name} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_name: e.target.value })} /></div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div><Label>Email</Label><Input type="email" value={briefingForm.contact_email} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_email: e.target.value })} /></div>
+                      <div><Label>WhatsApp</Label><Input value={briefingForm.contact_whatsapp} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_whatsapp: e.target.value })} /></div>
+                    </div>
+                    <div><Label>Nome do Projeto *</Label><Input value={briefingForm.project_name} onChange={(e) => setBriefingFormState({ ...briefingForm, project_name: e.target.value })} /></div>
+                    <div>
+                      <Label>Quantidade de Vídeos</Label>
+                      <Select value={briefingForm.video_quantity} onValueChange={(v) => setBriefingFormState({ ...briefingForm, video_quantity: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 vídeo</SelectItem>
+                          <SelectItem value="3">3 vídeos</SelectItem>
+                          <SelectItem value="5">5 vídeos</SelectItem>
+                          <SelectItem value="10">10 vídeos</SelectItem>
+                          <SelectItem value="15">15 vídeos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full" onClick={handleCreateBriefingRequest} disabled={!briefingForm.business_name || !briefingForm.project_name}>
+                      <LinkIcon className="h-4 w-4 mr-2" />Gerar Link de Briefing
+                    </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            {projects.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhum projeto encontrado.</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-8"></TableHead>
-                    <TableHead>Projeto</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Plataforma</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Criado em</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projects.map((p) => (
-                    <>
-                      <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(p.id)}>
-                        <TableCell>
-                          {expandedId === p.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                        </TableCell>
-                        <TableCell className="font-medium">{p.name || "—"}</TableCell>
-                        <TableCell>{p.client_name || "—"}</TableCell>
-                        <TableCell>{p.platform || "—"}</TableCell>
-                        <TableCell>
-                          <Badge className={statusColors[p.status || "active"]}>{statusLabels[p.status || "active"] || p.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
-                        </TableCell>
+        {/* Main tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="projects"><FolderOpen className="h-4 w-4 mr-1" />Projetos</TabsTrigger>
+            <TabsTrigger value="briefings"><Users className="h-4 w-4 mr-1" />Clientes & Briefings</TabsTrigger>
+          </TabsList>
+
+          {/* Projects Tab */}
+          <TabsContent value="projects" className="mt-4">
+            <div className="flex gap-2 mb-4">
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="completed">Concluídos</SelectItem>
+                  <SelectItem value="paused">Pausados</SelectItem>
+                </SelectContent>
+              </Select>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-2" />Novo Projeto</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Novo Projeto</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <div><Label>Nome do Projeto</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                    <div><Label>Cliente</Label><Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></div>
+                    <div><Label>Objetivo</Label><Textarea value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })} /></div>
+                    <div><Label>Plataforma</Label>
+                      <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="YouTube">YouTube</SelectItem>
+                          <SelectItem value="Instagram">Instagram</SelectItem>
+                          <SelectItem value="TikTok">TikTok</SelectItem>
+                          <SelectItem value="TV">TV</SelectItem>
+                          <SelectItem value="Cinema">Cinema</SelectItem>
+                          <SelectItem value="Outro">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full" onClick={handleCreate}>Criar Projeto</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {projects.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum projeto encontrado.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8"></TableHead>
+                        <TableHead>Projeto</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Plataforma</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Criado em</TableHead>
                       </TableRow>
-                      {expandedId === p.id && (
-                        <TableRow key={`${p.id}-detail`}>
-                          <TableCell colSpan={6} className="p-0">
-                            <div className="p-4 bg-muted/30 border-t border-border">
-                              <Tabs defaultValue="briefings">
-                                <TabsList>
-                                  <TabsTrigger value="briefings"><BookOpen className="h-4 w-4 mr-1" />Briefings ({briefings.length})</TabsTrigger>
-                                  <TabsTrigger value="scripts"><FileText className="h-4 w-4 mr-1" />Roteiros ({scripts.length})</TabsTrigger>
-                                  <TabsTrigger value="ideas"><Lightbulb className="h-4 w-4 mr-1" />Ideias ({ideas.length})</TabsTrigger>
-                                </TabsList>
+                    </TableHeader>
+                    <TableBody>
+                      {projects.map((p) => (
+                        <>
+                          <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(p.id)}>
+                            <TableCell>
+                              {expandedId === p.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </TableCell>
+                            <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                            <TableCell>{p.client_name || "—"}</TableCell>
+                            <TableCell>{p.platform || "—"}</TableCell>
+                            <TableCell>
+                              <Badge className={statusColors[p.status || "active"]}>{statusLabels[p.status || "active"] || p.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
+                            </TableCell>
+                          </TableRow>
+                          {expandedId === p.id && (
+                            <TableRow key={`${p.id}-detail`}>
+                              <TableCell colSpan={6} className="p-0">
+                                <div className="p-4 bg-muted/30 border-t border-border">
+                                  <Tabs defaultValue="briefings">
+                                    <TabsList>
+                                      <TabsTrigger value="briefings"><BookOpen className="h-4 w-4 mr-1" />Briefings ({briefings.length})</TabsTrigger>
+                                      <TabsTrigger value="scripts"><FileText className="h-4 w-4 mr-1" />Roteiros ({scripts.length})</TabsTrigger>
+                                      <TabsTrigger value="ideas"><Lightbulb className="h-4 w-4 mr-1" />Ideias ({ideas.length})</TabsTrigger>
+                                    </TabsList>
 
-                                <TabsContent value="briefings" className="space-y-4 mt-4">
-                                  {briefings.map((b) => (
-                                    <Card key={b.id}>
-                                      <CardContent className="p-3 flex justify-between items-start">
-                                        <div className="space-y-1 flex-1">
-                                          <p className="font-medium text-sm">{b.goal || "Sem objetivo"}</p>
-                                          <p className="text-xs text-muted-foreground">Público: {b.target_audience || "—"} • Estilo: {b.content_style || "—"}</p>
-                                        </div>
-                                        <Button variant="ghost" size="icon" onClick={() => deleteItem("briefings", b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                  <div className="grid gap-2 border border-border rounded-md p-3">
-                                    <Label className="text-xs font-semibold">Novo Briefing</Label>
-                                    <Input placeholder="Objetivo" value={briefingForm.goal} onChange={(e) => setBriefingForm({ ...briefingForm, goal: e.target.value })} />
-                                    <Input placeholder="Público-alvo" value={briefingForm.target_audience} onChange={(e) => setBriefingForm({ ...briefingForm, target_audience: e.target.value })} />
-                                    <Input placeholder="Estilo de conteúdo" value={briefingForm.content_style} onChange={(e) => setBriefingForm({ ...briefingForm, content_style: e.target.value })} />
-                                    <Button size="sm" onClick={addBriefing}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
-                                  </div>
-                                </TabsContent>
+                                    <TabsContent value="briefings" className="space-y-4 mt-4">
+                                      {briefings.map((b) => (
+                                        <Card key={b.id}>
+                                          <CardContent className="p-3 flex justify-between items-start">
+                                            <div className="space-y-1 flex-1">
+                                              <p className="font-medium text-sm">{b.goal || "Sem objetivo"}</p>
+                                              <p className="text-xs text-muted-foreground">Público: {b.target_audience || "—"} • Estilo: {b.content_style || "—"}</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" onClick={() => deleteItem("briefings", b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                      <div className="grid gap-2 border border-border rounded-md p-3">
+                                        <Label className="text-xs font-semibold">Novo Briefing</Label>
+                                        <Input placeholder="Objetivo" value={briefingFormData.goal} onChange={(e) => setBriefingForm({ ...briefingFormData, goal: e.target.value })} />
+                                        <Input placeholder="Público-alvo" value={briefingFormData.target_audience} onChange={(e) => setBriefingForm({ ...briefingFormData, target_audience: e.target.value })} />
+                                        <Input placeholder="Estilo de conteúdo" value={briefingFormData.content_style} onChange={(e) => setBriefingForm({ ...briefingFormData, content_style: e.target.value })} />
+                                        <Button size="sm" onClick={addBriefing}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
+                                      </div>
+                                    </TabsContent>
 
-                                <TabsContent value="scripts" className="space-y-4 mt-4">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={isGeneratingAI || briefings.length === 0}
-                                    onClick={async () => {
-                                      if (!user || !expandedId || briefings.length === 0) return;
-                                      const b = briefings[0];
-                                      const project = projects.find(p => p.id === expandedId);
-                                      setIsGeneratingAI(true);
-                                      const { data, error } = await supabase.functions.invoke("generate-script", {
-                                        body: {
-                                          briefing: b.goal || "Marketing video",
-                                          target_audience: b.target_audience || "Público geral",
-                                          platform: project?.platform || "Instagram Reels",
-                                          video_duration: "60 segundos",
-                                        },
-                                      });
-                                      setIsGeneratingAI(false);
-                                      if (error || data?.error) {
-                                        toast({ title: "Erro ao gerar", description: data?.error || error?.message, variant: "destructive" });
-                                        return;
-                                      }
-                                      const title = `IA: ${(b.goal || "Roteiro").substring(0, 50)}`;
-                                      await supabase.from("scripts").insert({
-                                        title, script: data.script, project_id: expandedId, user_id: user.id,
-                                      });
-                                      fetchProjectDetails(expandedId);
-                                      toast({ title: "Roteiro gerado e salvo!" });
-                                    }}
-                                  >
-                                    {isGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                                    {isGeneratingAI ? "Gerando..." : "Gerar com IA"}
-                                  </Button>
-                                  {briefings.length === 0 && (
-                                    <p className="text-xs text-muted-foreground">Adicione um briefing primeiro para gerar com IA.</p>
-                                  )}
-                                  {scripts.map((s) => (
-                                    <Card key={s.id}>
-                                      <CardContent className="p-3 flex justify-between items-start">
-                                        <div className="space-y-1 flex-1">
-                                          <p className="font-medium text-sm">{s.title || "Sem título"}</p>
-                                          <p className="text-xs text-muted-foreground line-clamp-2">{s.script || "—"}</p>
-                                        </div>
-                                        <Button variant="ghost" size="icon" onClick={() => deleteItem("scripts", s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                  <div className="grid gap-2 border border-border rounded-md p-3">
-                                    <Label className="text-xs font-semibold">Novo Roteiro</Label>
-                                    <Input placeholder="Título" value={scriptForm.title} onChange={(e) => setScriptForm({ ...scriptForm, title: e.target.value })} />
-                                    <Textarea placeholder="Texto do roteiro" value={scriptForm.script} onChange={(e) => setScriptForm({ ...scriptForm, script: e.target.value })} rows={4} />
-                                    <Button size="sm" onClick={addScript}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
-                                  </div>
-                                </TabsContent>
+                                    <TabsContent value="scripts" className="space-y-4 mt-4">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={isGeneratingAI || briefings.length === 0}
+                                        onClick={async () => {
+                                          if (!user || !expandedId || briefings.length === 0) return;
+                                          const b = briefings[0];
+                                          const project = projects.find(p => p.id === expandedId);
+                                          setIsGeneratingAI(true);
+                                          const { data, error } = await supabase.functions.invoke("generate-script", {
+                                            body: {
+                                              briefing: b.goal || "Marketing video",
+                                              target_audience: b.target_audience || "Público geral",
+                                              platform: project?.platform || "Instagram Reels",
+                                              video_duration: "60 segundos",
+                                            },
+                                          });
+                                          setIsGeneratingAI(false);
+                                          if (error || data?.error) {
+                                            toast({ title: "Erro ao gerar", description: data?.error || error?.message, variant: "destructive" });
+                                            return;
+                                          }
+                                          const title = `IA: ${(b.goal || "Roteiro").substring(0, 50)}`;
+                                          await supabase.from("scripts").insert({
+                                            title, script: data.script, project_id: expandedId, user_id: user.id,
+                                          });
+                                          fetchProjectDetails(expandedId);
+                                          toast({ title: "Roteiro gerado e salvo!" });
+                                        }}
+                                      >
+                                        {isGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                        {isGeneratingAI ? "Gerando..." : "Gerar com IA"}
+                                      </Button>
+                                      {briefings.length === 0 && (
+                                        <p className="text-xs text-muted-foreground">Adicione um briefing primeiro para gerar com IA.</p>
+                                      )}
+                                      {scripts.map((s) => (
+                                        <Card key={s.id}>
+                                          <CardContent className="p-3 flex justify-between items-start">
+                                            <div className="space-y-1 flex-1">
+                                              <p className="font-medium text-sm">{s.title || "Sem título"}</p>
+                                              <p className="text-xs text-muted-foreground line-clamp-2">{s.script || "—"}</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" onClick={() => deleteItem("scripts", s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                      <div className="grid gap-2 border border-border rounded-md p-3">
+                                        <Label className="text-xs font-semibold">Novo Roteiro</Label>
+                                        <Input placeholder="Título" value={scriptForm.title} onChange={(e) => setScriptForm({ ...scriptForm, title: e.target.value })} />
+                                        <Textarea placeholder="Texto do roteiro" value={scriptForm.script} onChange={(e) => setScriptForm({ ...scriptForm, script: e.target.value })} rows={4} />
+                                        <Button size="sm" onClick={addScript}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
+                                      </div>
+                                    </TabsContent>
 
-                                <TabsContent value="ideas" className="space-y-4 mt-4">
-                                  {ideas.map((i) => (
-                                    <Card key={i.id}>
-                                      <CardContent className="p-3 flex justify-between items-start">
-                                        <p className="text-sm flex-1">{i.idea || "—"}</p>
-                                        <Button variant="ghost" size="icon" onClick={() => deleteItem("ideas", i.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                  <div className="grid gap-2 border border-border rounded-md p-3">
-                                    <Label className="text-xs font-semibold">Nova Ideia</Label>
-                                    <Input placeholder="Descreva sua ideia" value={ideaForm.idea} onChange={(e) => setIdeaForm({ ...ideaForm, idea: e.target.value })} />
-                                    <Button size="sm" onClick={addIdea}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
-                                  </div>
-                                </TabsContent>
-                              </Tabs>
-                            </div>
+                                    <TabsContent value="ideas" className="space-y-4 mt-4">
+                                      {ideas.map((i) => (
+                                        <Card key={i.id}>
+                                          <CardContent className="p-3 flex justify-between items-start">
+                                            <p className="text-sm flex-1">{i.idea || "—"}</p>
+                                            <Button variant="ghost" size="icon" onClick={() => deleteItem("ideas", i.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                      <div className="grid gap-2 border border-border rounded-md p-3">
+                                        <Label className="text-xs font-semibold">Nova Ideia</Label>
+                                        <Input placeholder="Descreva sua ideia" value={ideaForm.idea} onChange={(e) => setIdeaForm({ ...ideaForm, idea: e.target.value })} />
+                                        <Button size="sm" onClick={addIdea}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
+                                      </div>
+                                    </TabsContent>
+                                  </Tabs>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Clientes & Briefings Tab */}
+          <TabsContent value="briefings" className="mt-4">
+            <Card>
+              <CardContent className="p-0">
+                {briefingRequests.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum cliente registrado ainda.</p>
+                    <p className="text-sm">Clique em "Novo Cliente + Briefing" para começar.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Projeto</TableHead>
+                        <TableHead>Contato</TableHead>
+                        <TableHead>Vídeos</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Link</TableHead>
+                        <TableHead>Data</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {briefingRequests.map((br) => (
+                        <TableRow key={br.id}>
+                          <TableCell className="font-medium">{br.business_name}</TableCell>
+                          <TableCell>{br.project_name}</TableCell>
+                          <TableCell className="text-sm">
+                            {br.contact_name && <span>{br.contact_name}<br /></span>}
+                            <span className="text-muted-foreground">{br.contact_email || br.contact_whatsapp || "—"}</span>
+                          </TableCell>
+                          <TableCell>{br.video_quantity}</TableCell>
+                          <TableCell>
+                            <Badge className={briefingStatusColors[br.status] || "bg-muted text-muted-foreground"}>
+                              {briefingStatusLabels[br.status] || br.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/briefing/${br.token}`);
+                                toast({ title: "Link copiado!" });
+                              }}
+                            >
+                              <Copy className="h-3 w-3 mr-1" />Copiar
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {new Date(br.created_at).toLocaleDateString("pt-BR")}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
