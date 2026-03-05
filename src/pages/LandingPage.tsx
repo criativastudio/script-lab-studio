@@ -255,10 +255,10 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="flex flex-col items-center gap-4"
               >
-                <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-light leading-[1.1] tracking-tight">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-light leading-[1.1] tracking-tight">
                   Veja a plataforma <span className="text-gradient-primary">em ação</span>
                 </h2>
-                <p className="max-w-lg text-sm font-light text-muted-foreground">
+                <p className="max-w-lg text-sm md:text-base font-light text-muted-foreground">
                   Interface intuitiva para criar roteiros profissionais.
                 </p>
               </motion.div>
@@ -286,10 +286,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">A solução</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
+            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-base font-light leading-relaxed">
+            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
               Em três passos simples, você sai da ideia ao roteiro pronto.
             </p>
           </motion.div>
@@ -326,10 +326,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">O problema</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
+            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base font-light leading-relaxed">
+            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
               A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
             </p>
           </motion.div>
@@ -373,10 +373,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Exemplo</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
+            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base font-light">
+            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base md:text-lg font-light">
               Veja como um roteiro é estruturado cena a cena.
             </p>
           </motion.div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Benefícios</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-14 tracking-tight max-w-xl mx-auto">
+            <h2 className="font-display text-2xl font-light md:text-4xl mb-14 tracking-tight max-w-xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
@@ -466,10 +466,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Planos</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
+            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
-            <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-base font-light">
+            <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-base md:text-lg font-light">
               Do criador solo à agência, temos o plano certo.
             </p>
           </motion.div>
@@ -530,10 +530,10 @@ export default function LandingPage() {
           className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-10 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
+          <h2 className="relative z-10 font-display text-2xl font-light md:text-4xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
             Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
           </h2>
-          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base font-light">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base md:text-lg font-light">
             Roteiros profissionais prontos para gravação em minutos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
