@@ -1,108 +1,116 @@
 
 
-# Audit Results & Implementation Plan
+# Progressive Smart Briefing — Implementation Plan
 
-## Current State vs Required Architecture
+## Overview
 
-| Step | Required | Status |
-|------|----------|--------|
-| 1. Strategic Briefing Form | Form with business_name, target_audience, objectives, positioning, capacity, references | **MISSING** — no such form exists. The ScriptGenerator page has a simpler form for video scripts, not strategic analysis. |
-| 2. Backend Endpoint | Edge function for strategic analysis with AI | **MISSING** — `generate-script` exists but generates video scripts, not structured strategic analysis. |
-| 3. Structured JSON Response | AI returns persona, positioning, tone_of_voice, content_funnel, script_ideas | **MISSING** — current AI returns free-text scripts. |
-| 4. Database Storage | `strategic_reports` table | **MISSING** — table does not exist. |
-| 5. PDF Generation | Auto-generate branded PDF report | **MISSING** — no PDF generation anywhere. |
-| 6. Delivery System | Email PDF + private download link + dashboard storage | **MISSING** — no email sending, no file storage bucket. |
-| 7. Dashboard Integration | "Strategic Reports" section in Dashboard | **MISSING** — Dashboard shows projects/scripts/ideas only. |
-| 8. End-to-end flow | All steps connected | **MISSING** — none of the 8 steps exist as described. |
+Add a client registration + shareable briefing form workflow inside the existing CRM and Dashboard. Platform users register clients with video quantity, get a unique link, clients fill a guided form, and the system auto-generates strategic briefings + scripts via AI.
 
-## Implementation Plan
+## Database Changes
 
-### 1. Database: Create `strategic_reports` table
+### New table: `briefing_requests`
+
+Stores the client registration, shareable token, form answers, and generated strategic content.
 
 ```sql
-CREATE TABLE public.strategic_reports (
+CREATE TABLE public.briefing_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
+  token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+  -- Client info (set by platform user)
   business_name text NOT NULL,
-  target_audience text,
-  objectives text,
-  brand_positioning text,
-  production_capacity text,
-  content_references text,
+  contact_name text,
+  contact_email text,
+  contact_whatsapp text,
+  project_name text NOT NULL,
+  video_quantity integer NOT NULL DEFAULT 3,
+  -- Form answers (set by client via public form)
+  form_answers jsonb,
+  -- AI-generated strategic content
   persona text,
   positioning text,
   tone_of_voice text,
-  content_funnel text,
-  script_ideas jsonb,
-  pdf_url text,
-  status text DEFAULT 'processing',
+  content_strategy text,
+  -- Status: pending → submitted → processing → completed
+  status text NOT NULL DEFAULT 'pending',
+  project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now()
 );
+
+ALTER TABLE public.briefing_requests ENABLE ROW LEVEL SECURITY;
+
+-- Platform user can CRUD own rows
+CREATE POLICY "Users can view own" ON public.briefing_requests FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
+CREATE POLICY "Users can insert own" ON public.briefing_requests FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update own" ON public.briefing_requests FOR UPDATE TO authenticated
+  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
+CREATE POLICY "Users can delete own" ON public.briefing_requests FOR DELETE TO authenticated
+  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
+
+-- Public read by token (for the client form — anon role)
+CREATE POLICY "Anon can read by token" ON public.briefing_requests FOR SELECT TO anon
+  USING (true);
+CREATE POLICY "Anon can update by token" ON public.briefing_requests FOR UPDATE TO anon
+  USING (true);
 ```
 
-RLS: users CRUD own rows, admins see all.
+Note: The anon policies are needed so the public briefing form can read the request by token and submit answers. The edge function uses service role for final processing.
 
-### 2. Storage Bucket
+## New Edge Function: `process-briefing`
 
-Create a `strategic-reports` storage bucket for PDF files with RLS so users can read their own files.
+Receives `{ token }`, reads the `briefing_requests` row, sends form answers to Lovable AI Gateway with tool calling to extract:
+- persona, positioning, tone_of_voice, content_strategy
+- N scripts (matching `video_quantity`) each with: title, objective, hook, scene_structure, narration, visual_direction, call_to_action
 
-### 3. Edge Function: `strategic-analysis`
+Then:
+1. Creates a `project` linked to the user
+2. Creates a `briefing` linked to the project
+3. Creates N `scripts` linked to the project
+4. Updates `briefing_requests` with strategic data and status = completed
 
-New edge function that:
-- Receives form data (business_name, target_audience, objectives, brand_positioning, production_capacity, content_references)
-- Uses Lovable AI Gateway with tool calling to extract structured JSON (persona, positioning, tone_of_voice, content_funnel, script_ideas)
-- Saves the structured response to `strategic_reports` table
-- Generates a PDF using HTML-to-PDF rendering (via a simple HTML template converted with Deno)
-- Uploads PDF to `strategic-reports` storage bucket
-- Updates the report row with the `pdf_url`
-- Returns the report data + pdf_url
+## New Public Page: `src/pages/ClientBriefingForm.tsx`
 
-Note on email delivery: Lovable only supports auth emails natively. For automatic report email delivery, we would need a third-party service (e.g., Resend). For now, the system will store the report in the dashboard with a download link. We can add email delivery later if the user sets up a transactional email service.
+Route: `/briefing/:token` (NOT inside ProtectedRoute — public access)
 
-### 4. Dashboard: Add "Strategic Reports" section
+A progressive, guided form with 5 questions:
+1. About the business (textarea + helper chips)
+2. Typical customer (textarea + helper chips)
+3. Problem solved (textarea + helper chips)
+4. Business objective (multi-select chips)
+5. Content references (multi-select chips)
 
-Update `src/pages/Dashboard.tsx` to include:
-- A "Análise Estratégica" nav card/button linking to the form
-- A "Relatórios Estratégicos" section listing past reports with download links
+Each question shows example hints and clickable helper options that auto-fill or append to the text. Steps are shown one at a time (wizard-style) for a guided experience.
 
-### 5. Strategic Analysis Form Page
+On submit: saves `form_answers` as JSON to `briefing_requests`, sets status to `submitted`, then calls `process-briefing` edge function.
 
-Reuse the existing ScriptGenerator page route (`/gerador`) or add a new section inside Dashboard. Since the instructions say "create a page inside the Dashboard called Strategic Analysis," we'll add it as a sub-view within Dashboard accessible via a tab or button. Alternatively, we can repurpose the ScriptGenerator page to have two tabs: "Gerador de Roteiros" and "Análise Estratégica."
+## CRM Integration
 
-**Decision**: Add a new route `/analise-estrategica` and nav item "Análise Estratégica" in the sidebar. This keeps existing pages intact and adds the new feature cleanly.
+Add a "Novo Cliente + Briefing" dialog in `src/pages/CRM.tsx` with fields:
+- business_name, contact_name, email, whatsapp, project_name, video_quantity (select: 1, 3, 5, 10, 15)
 
-### 6. Files to Create/Modify
+On create: inserts into `briefing_requests` table, gets back the `token`, displays the shareable link with a copy button.
+
+Add a "Clientes & Briefings" tab or section showing all `briefing_requests` with status badges and link to view results.
+
+## Dashboard Integration
+
+Add a "Briefings Recentes" section in Dashboard showing recent `briefing_requests` with status. When status = completed, user can expand to see generated persona, positioning, scripts, and export PDF.
+
+## App.tsx Changes
+
+Add route: `<Route path="/briefing/:token" element={<ClientBriefingForm />} />` (no ProtectedRoute wrapper)
+
+## Files to Create/Modify
 
 | File | Action |
 |------|--------|
-| `supabase/migrations/` | New migration: create `strategic_reports` table + storage bucket + RLS |
-| `supabase/functions/strategic-analysis/index.ts` | New edge function |
+| Migration SQL | Create `briefing_requests` table |
+| `supabase/functions/process-briefing/index.ts` | New edge function |
 | `supabase/config.toml` | Add function config |
-| `src/pages/StrategicAnalysis.tsx` | New page with form + results display + PDF download |
-| `src/pages/Dashboard.tsx` | Add "Strategic Reports" section showing past reports |
-| `src/App.tsx` | Add `/analise-estrategica` route |
-| `src/components/DashboardLayout.tsx` | Add nav item |
-
-### 7. PDF Generation Approach
-
-Since we're in a Deno edge function environment, we'll generate the PDF by:
-- Building an HTML document with the report data and branding
-- Using `jsPDF` or returning the HTML as a downloadable file
-- Realistically: generate a styled HTML report, convert it to a blob, and store it in Supabase Storage. The "PDF" will be a well-formatted HTML document that can be printed to PDF from the browser, OR we use a lightweight Deno-compatible PDF library.
-
-**Practical approach**: Generate the report as structured data, store in DB, and provide a client-side "Export to PDF" button using browser `window.print()` with a print-optimized layout. This avoids complex server-side PDF generation and works reliably.
-
-### 8. Email Delivery
-
-Lovable does not support transactional emails natively. The report will be stored in the dashboard with a download link. If the user wants automatic email delivery, they'll need to integrate a third-party email service like Resend.
-
-## Summary of What Gets Built
-
-1. New Supabase table `strategic_reports` with RLS
-2. Storage bucket `strategic-reports` for PDF files  
-3. New edge function `strategic-analysis` that processes form data through AI and returns structured JSON
-4. New page `StrategicAnalysis.tsx` with the full form and results display
-5. Client-side PDF export functionality
-6. Dashboard updated with "Strategic Reports" history section
-7. New sidebar nav item and route
+| `src/pages/ClientBriefingForm.tsx` | New public form page |
+| `src/pages/CRM.tsx` | Add client registration dialog + briefing requests list |
+| `src/pages/Dashboard.tsx` | Add briefing requests section |
+| `src/App.tsx` | Add public route |
 
