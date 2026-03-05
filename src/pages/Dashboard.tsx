@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { FolderOpen, FileText, Lightbulb, BookOpen, Plus } from "lucide-react";
+import { FolderOpen, FileText, Lightbulb, BookOpen, Plus, Target, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface Project { id: string; name: string | null; client_name: string | null; platform: string | null; status: string | null; created_at: string | null; }
 interface Script { id: string; title: string | null; script: string | null; created_at: string | null; }
 interface Idea { id: string; idea: string | null; created_at: string | null; }
+interface StrategicReport { id: string; business_name: string; status: string | null; created_at: string; }
 
 const Dashboard = () => {
   const { user, isAdmin } = useAuth();
@@ -21,13 +23,14 @@ const Dashboard = () => {
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [recentScripts, setRecentScripts] = useState<Script[]>([]);
   const [recentIdeas, setRecentIdeas] = useState<Idea[]>([]);
+  const [recentReports, setRecentReports] = useState<StrategicReport[]>([]);
 
   useEffect(() => {
     if (!user) return;
     const uid = user.id;
 
     const fetch = async () => {
-      const [projCount, scriptCount, ideaCount, briefCount, projRecent, scriptRecent, ideaRecent] = await Promise.all([
+      const [projCount, scriptCount, ideaCount, briefCount, projRecent, scriptRecent, ideaRecent, reportsRecent] = await Promise.all([
         supabase.from("projects").select("id", { count: "exact", head: true }).eq("user_id", uid),
         supabase.from("scripts").select("id", { count: "exact", head: true }).eq("user_id", uid),
         supabase.from("ideas").select("id", { count: "exact", head: true }).eq("user_id", uid),
@@ -35,6 +38,7 @@ const Dashboard = () => {
         supabase.from("projects").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
         supabase.from("scripts").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
         supabase.from("ideas").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
+        supabase.from("strategic_reports").select("id, business_name, status, created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
       ]);
 
       setStats({
@@ -46,6 +50,7 @@ const Dashboard = () => {
       setRecentProjects((projRecent.data as Project[]) || []);
       setRecentScripts((scriptRecent.data as Script[]) || []);
       setRecentIdeas((ideaRecent.data as Idea[]) || []);
+      setRecentReports((reportsRecent.data as StrategicReport[]) || []);
     };
 
     fetch();
@@ -139,6 +144,36 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Strategic Reports Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Relatórios Estratégicos
+            </CardTitle>
+            <Link to="/analise-estrategica">
+              <Button size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-1" />
+                Nova Análise
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentReports.length === 0 && <p className="text-sm text-muted-foreground">Nenhum relatório estratégico ainda.</p>}
+            {recentReports.map((r) => (
+              <div key={r.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
+                <span className="font-medium truncate">{r.business_name}</span>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-xs px-2 py-0.5 rounded", r.status === "completed" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground")}>
+                    {r.status === "completed" ? "Concluído" : "Processando"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("pt-BR")}</span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
