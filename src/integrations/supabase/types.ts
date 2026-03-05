@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      briefings: {
+        Row: {
+          content_style: string | null
+          created_at: string | null
+          goal: string | null
+          id: string
+          project_id: string | null
+          target_audience: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content_style?: string | null
+          created_at?: string | null
+          goal?: string | null
+          id?: string
+          project_id?: string | null
+          target_audience?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content_style?: string | null
+          created_at?: string | null
+          goal?: string | null
+          id?: string
+          project_id?: string | null
+          target_audience?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
@@ -97,6 +135,41 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          created_at: string | null
+          id: string
+          idea: string | null
+          project_id: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          idea?: string | null
+          project_id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          idea?: string | null
+          project_id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ideas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -226,24 +299,71 @@ export type Database = {
       }
       projects: {
         Row: {
+          client_name: string | null
           created_at: string | null
           id: string
           name: string | null
+          objective: string | null
+          platform: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          objective?: string | null
+          platform?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          objective?: string | null
+          platform?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      scripts: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_id: string | null
+          script: string | null
+          title: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          name?: string | null
+          project_id?: string | null
+          script?: string | null
+          title?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          name?: string | null
+          project_id?: string | null
+          script?: string | null
+          title?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scripts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
