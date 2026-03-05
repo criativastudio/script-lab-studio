@@ -1,0 +1,1 @@
+ALTER TABLE public.briefing_requests ADD COLUMN city text, ADD COLUMN niche text;
