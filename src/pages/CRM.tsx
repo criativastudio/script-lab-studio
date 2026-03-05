@@ -550,12 +550,21 @@ const CRM = () => {
         }
         const projectId = ideaProjectId;
         if (projectId) {
-          await supabase.from("scripts").insert({
+          const { data: scriptData } = await supabase.from("scripts").insert({
             user_id: user.id,
             project_id: projectId,
             title: data.title || idea.title,
             script: data.script,
-          });
+          }).select("id").single();
+
+          // Update memory entry with script_id if it was created by the edge function
+          if (scriptData?.id && strategicContext?.id) {
+            await supabase.from("client_content_memory")
+              .update({ script_id: scriptData.id } as any)
+              .eq("context_id", strategicContext.id)
+              .eq("idea_id", idea.id)
+              .is("script_id", null);
+          }
         }
         successCount++;
       }
@@ -764,7 +773,19 @@ const CRM = () => {
           script={viewingScript}
           project={viewingProject ? { id: viewingProject.project_id || "", name: viewingProject.project_name, client_name: viewingProject.business_name, objective: null, platform: null, status: viewingProject.status, created_at: viewingProject.created_at } : null}
           open={!!viewingScript}
-          onOpenChange={(open) => { if (!open) { setViewingScript(null); setViewingProject(null); } }}
+          onOpenChange={(open) => {
+            if (!open) {
+              // Mark script as selected in content memory (preference learning)
+              if (viewingScript?.id && strategicContext?.id) {
+                supabase.from("client_content_memory")
+                  .update({ was_selected: true } as any)
+                  .eq("script_id", viewingScript.id)
+                  .then(() => {});
+              }
+              setViewingScript(null);
+              setViewingProject(null);
+            }
+          }}
         />
 
         {/* Hidden PDF print container */}

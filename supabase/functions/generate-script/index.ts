@@ -15,6 +15,8 @@ const toneRules: Record<string, string> = {
   vendas_diretas: `Tom de VENDAS DIRETAS: Foque em benefícios e transformação. Use gatilhos mentais (escassez, prova social, autoridade). Apresente o problema → agite → resolva. CTAs diretos e urgentes. Use "imagine poder...", "e se eu te dissesse que...", "últimas vagas...", "resultado garantido...".`,
 };
 
+const CONTENT_CATEGORIES = ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"];
+
 function getToneInstructions(communicationStyle: string | null): string {
   if (!communicationStyle) return "";
   const key = communicationStyle.toLowerCase().replace(/[^a-zà-ú_]/g, "_");
@@ -22,6 +24,62 @@ function getToneInstructions(communicationStyle: string | null): string {
     if (key.includes(k)) return v;
   }
   return `Adapte o tom de comunicação para: ${communicationStyle}`;
+}
+
+function buildMemoryBlocks(memoryEntries: any[]): string {
+  if (!memoryEntries || memoryEntries.length === 0) return "";
+
+  const topics = memoryEntries.map(m => m.topic).filter(Boolean);
+  const hooks = memoryEntries.map(m => m.hook).filter(Boolean);
+  
+  // Category distribution
+  const catCounts: Record<string, number> = {};
+  const catSelected: Record<string, number> = {};
+  for (const cat of CONTENT_CATEGORIES) {
+    catCounts[cat] = 0;
+    catSelected[cat] = 0;
+  }
+  for (const m of memoryEntries) {
+    if (m.content_category && catCounts[m.content_category] !== undefined) {
+      catCounts[m.content_category]++;
+      if (m.was_selected) catSelected[m.content_category]++;
+    }
+  }
+
+  const total = memoryEntries.length;
+  const catDistribution = CONTENT_CATEGORIES
+    .map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`)
+    .join("\n  ");
+
+  // Find under-represented categories
+  const avgCount = total / CONTENT_CATEGORIES.length;
+  const underRepresented = CONTENT_CATEGORIES.filter(c => catCounts[c] < avgCount * 0.5);
+  const preferred = CONTENT_CATEGORIES
+    .filter(c => catSelected[c] > 0)
+    .sort((a, b) => catSelected[b] - catSelected[a]);
+
+  let block = `
+MEMÓRIA DE CONTEÚDO DO CLIENTE (${total} entradas anteriores):
+
+TÓPICOS JÁ GERADOS (NÃO repita):
+- ${topics.slice(0, 50).join("\n- ")}
+
+GANCHOS JÁ USADOS (evolua e melhore, NÃO repita):
+- ${hooks.slice(0, 30).join("\n- ")}
+
+DISTRIBUIÇÃO DE CATEGORIAS:
+  ${catDistribution}`;
+
+  if (preferred.length > 0) {
+    block += `\n\nPREFERÊNCIA DO CLIENTE (priorize estes estilos): ${preferred.join(", ")}`;
+  }
+  if (underRepresented.length > 0) {
+    block += `\n\nCATEGORIAS SUB-REPRESENTADAS (considere usar): ${underRepresented.join(", ")}`;
+  }
+
+  block += `\n\nVocê DEVE criar um ângulo completamente novo e diferente dos listados acima. Evolua os ganchos para versões mais impactantes.`;
+
+  return block;
 }
 
 serve(async (req) => {
@@ -76,9 +134,20 @@ Contexto do Projeto (Layer 2 — Campanha):
         }
       }
 
-      // Content Memory: query previous scripts to avoid repetition
+      // Content Memory: query client_content_memory for rich history
       let memoryBlock = "";
-      if (ctx?.user_id) {
+      if (ctx?.id) {
+        const { data: memoryEntries } = await supabase
+          .from("client_content_memory")
+          .select("*")
+          .eq("context_id", ctx.id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+        memoryBlock = buildMemoryBlocks(memoryEntries || []);
+      }
+
+      // Fallback: if no memory entries yet, use scripts table
+      if (!memoryBlock && ctx?.user_id) {
         const { data: prevScripts } = await supabase
           .from("scripts")
           .select("title")
@@ -126,6 +195,8 @@ ETAPA 3 — BRIEFING ESTRATÉGICO: Defina o objetivo do vídeo, a mensagem centr
 ETAPA 4 — ROTEIRO DE FALA: Escreva o texto completo que será falado, palavra por palavra, otimizado para a plataforma e duração.
 
 ETAPA 5 — CTA: Crie uma chamada para ação alinhada com a etapa do funil (topo = engajamento, meio = consideração, fundo = conversão).
+
+CATEGORIZAÇÃO: Classifique este roteiro em UMA categoria: educational, authority, story, case_study, tips, myth_breaking, behind_scenes
 
 ${toneInstructions}
 
@@ -176,8 +247,14 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
                   type: "string",
                   description: "Sugestão de estilo de gravação: enquadramento, cenário, edição, ritmo.",
                 },
+                content_category: {
+                  type: "string",
+                  enum: ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"],
+                  description: "Categoria do conteúdo gerado.",
+                },
               },
-              required: ["hook", "strategic_briefing", "video_structure", "speaking_script", "cta", "recording_style"],
+              required: ["hook", "strategic_briefing", "video_structure", "speaking_script", "cta", "recording_style", "content_category"],
+              additionalProperties: false,
             },
           },
         },
@@ -263,6 +340,24 @@ ${args.recording_style}`;
       // Update idea status
       if (idea_id) {
         await supabase.from("content_ideas").update({ status: "used" }).eq("id", idea_id);
+      }
+
+      // Save to client_content_memory
+      if (structured && ctx?.id && user_id) {
+        try {
+          await supabase.from("client_content_memory").insert({
+            user_id,
+            context_id: ctx.id,
+            idea_id: idea_id || null,
+            topic: ideaText,
+            hook: structured.hook,
+            content_category: structured.content_category || null,
+            angle: structured.strategic_briefing?.substring(0, 500) || null,
+            was_selected: false,
+          });
+        } catch (memErr) {
+          console.error("Failed to save content memory:", memErr);
+        }
       }
 
       return new Response(JSON.stringify({ 

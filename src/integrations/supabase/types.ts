@@ -129,6 +129,70 @@ export type Database = {
           },
         ]
       }
+      client_content_memory: {
+        Row: {
+          angle: string | null
+          content_category: string | null
+          context_id: string
+          created_at: string | null
+          hook: string | null
+          id: string
+          idea_id: string | null
+          script_id: string | null
+          topic: string | null
+          user_id: string
+          was_selected: boolean | null
+        }
+        Insert: {
+          angle?: string | null
+          content_category?: string | null
+          context_id: string
+          created_at?: string | null
+          hook?: string | null
+          id?: string
+          idea_id?: string | null
+          script_id?: string | null
+          topic?: string | null
+          user_id: string
+          was_selected?: boolean | null
+        }
+        Update: {
+          angle?: string | null
+          content_category?: string | null
+          context_id?: string
+          created_at?: string | null
+          hook?: string | null
+          id?: string
+          idea_id?: string | null
+          script_id?: string | null
+          topic?: string | null
+          user_id?: string
+          was_selected?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_content_memory_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "client_strategic_contexts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_content_memory_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "content_ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_content_memory_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_strategic_contexts: {
         Row: {
           business_name: string
@@ -227,6 +291,7 @@ export type Database = {
       }
       content_ideas: {
         Row: {
+          content_category: string | null
           context_id: string | null
           created_at: string | null
           description: string | null
@@ -237,6 +302,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          content_category?: string | null
           context_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -247,6 +313,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          content_category?: string | null
           context_id?: string | null
           created_at?: string | null
           description?: string | null

@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const CONTENT_CATEGORIES = ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -60,7 +62,51 @@ Quantidade de vídeos: ${proj.video_count || count}`;
 
     const existingTopics = (existingIdeas || []).map((i: any) => i.title).join("\n- ");
 
-    const systemPrompt = `Você é um estrategista de conteúdo especializado em marketing digital. Gere ideias de conteúdo para vídeos usando a função fornecida. As ideias devem ser específicas, acionáveis e relevantes para o negócio do cliente.`;
+    // Load content memory for category distribution and preferences
+    let memoryBlock = "";
+    const { data: memoryEntries } = await supabase
+      .from("client_content_memory")
+      .select("content_category, was_selected")
+      .eq("context_id", context_id)
+      .limit(200);
+
+    if (memoryEntries && memoryEntries.length > 0) {
+      const catCounts: Record<string, number> = {};
+      const catSelected: Record<string, number> = {};
+      for (const cat of CONTENT_CATEGORIES) {
+        catCounts[cat] = 0;
+        catSelected[cat] = 0;
+      }
+      for (const m of memoryEntries) {
+        if (m.content_category && catCounts[m.content_category] !== undefined) {
+          catCounts[m.content_category]++;
+          if (m.was_selected) catSelected[m.content_category]++;
+        }
+      }
+
+      const avgCount = memoryEntries.length / CONTENT_CATEGORIES.length;
+      const underRepresented = CONTENT_CATEGORIES.filter(c => catCounts[c] < avgCount * 0.5);
+      const preferred = CONTENT_CATEGORIES
+        .filter(c => catSelected[c] > 0)
+        .sort((a, b) => catSelected[b] - catSelected[a]);
+
+      const catDistribution = CONTENT_CATEGORIES
+        .map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`)
+        .join(", ");
+
+      memoryBlock = `\nDISTRIBUIÇÃO DE CATEGORIAS ATUAL: ${catDistribution}`;
+      if (preferred.length > 0) {
+        memoryBlock += `\nCATEGORIAS PREFERIDAS PELO CLIENTE: ${preferred.join(", ")} — gere mais ideias nessas categorias.`;
+      }
+      if (underRepresented.length > 0) {
+        memoryBlock += `\nCATEGORIAS SUB-REPRESENTADAS: ${underRepresented.join(", ")} — inclua ideias nessas categorias para balancear.`;
+      }
+    }
+
+    const systemPrompt = `Você é um estrategista de conteúdo especializado em marketing digital. Gere ideias de conteúdo para vídeos usando a função fornecida. As ideias devem ser específicas, acionáveis e relevantes para o negócio do cliente.
+
+Distribua as ideias entre estas categorias de conteúdo: educational, authority, story, case_study, tips, myth_breaking, behind_scenes.
+Cada ideia DEVE ser classificada em uma dessas categorias.`;
 
     const userPrompt = `
 Contexto Estratégico do Cliente:
@@ -77,10 +123,11 @@ Contexto Estratégico do Cliente:
 - Plataformas: ${(ctx.main_platforms || []).join(", ") || "Não informado"}
 - Estilo de comunicação: ${ctx.communication_style || "Não informado"}
 ${projectInfo}
+${memoryBlock}
 
 ${existingTopics ? `Tópicos já existentes (NÃO repita estes):\n- ${existingTopics}` : ""}
 
-Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter um título claro e uma breve descrição de 1-2 frases.`;
+Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter um título claro, uma breve descrição de 1-2 frases e uma categoria de conteúdo.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -109,8 +156,13 @@ Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter u
                     properties: {
                       title: { type: "string", description: "Clear, concise idea title" },
                       description: { type: "string", description: "Brief 1-2 sentence description" },
+                      content_category: {
+                        type: "string",
+                        enum: ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"],
+                        description: "Content category for this idea",
+                      },
                     },
-                    required: ["title", "description"],
+                    required: ["title", "description", "content_category"],
                     additionalProperties: false,
                   },
                 },
@@ -153,7 +205,7 @@ Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter u
     const result = JSON.parse(toolCall.function.arguments);
     const ideas = result.ideas || [];
 
-    // Insert ideas into database
+    // Insert ideas into database with content_category
     if (ideas.length > 0) {
       const inserts = ideas.map((idea: any) => ({
         user_id,
@@ -161,6 +213,7 @@ Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter u
         context_id,
         title: idea.title,
         description: idea.description || null,
+        content_category: idea.content_category || null,
         status: "pending",
       }));
       await supabase.from("content_ideas").insert(inserts);
