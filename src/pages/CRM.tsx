@@ -17,7 +17,8 @@ import {
   Plus, ArrowLeft, FileText, BookOpen, Trash2, Loader2,
   Link as LinkIcon, Copy, Users, Download, Eye, Edit2,
   Mail, Phone, Video, Calendar, Bot, ChevronDown, FolderPlus,
-  Target, Megaphone, MessageSquare, Lightbulb, Hash, Sparkles
+  Target, Megaphone, MessageSquare, Lightbulb, Hash,
+  Sparkles,
 } from "lucide-react";
 import { ScriptViewer } from "@/components/ScriptViewer";
 
