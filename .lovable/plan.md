@@ -1,41 +1,56 @@
 
 
-# Supabase Integration: Projects, Briefings, Scripts, Ideas
+# AI Script Generator
 
-## Current State
+## Summary
 
-The database tables and RLS policies are already in place. The pages have basic Supabase queries for listing/counting. What's **missing** is the full CRUD workflow:
+Create an edge function `generate-script` that uses Lovable AI (LOVABLE_API_KEY is already available) to generate marketing video scripts. Add a new standalone page accessible from the sidebar, and also integrate a "Generate with AI" button inside the CRM project detail scripts tab.
 
-- **CRM page**: Lists projects but has no way to view/manage briefings or scripts within a project
-- **No briefing creation** UI linked to a project
-- **No script creation** UI linked to a briefing/project
-- **No ideas creation** UI anywhere
-- Foreign keys `briefings.project_id -> projects.id` and `scripts.project_id -> projects.id` need to be added to the actual DB (they exist in types but not in the schema)
+## Architecture
 
-## Plan
+```text
+Browser (form) → supabase.functions.invoke("generate-script", { body }) → Edge Function → Lovable AI Gateway → response → save to scripts table → display
+```
 
-### 1. Database Migration: Add foreign keys
+## 1. Edge Function: `supabase/functions/generate-script/index.ts`
 
-Add foreign key constraints so briefings and scripts are properly linked to projects:
-- `briefings.project_id` references `projects.id` (ON DELETE CASCADE)
-- `scripts.project_id` references `projects.id` (ON DELETE CASCADE)
+- Accepts: `{ briefing, target_audience, platform, video_duration, project_id, user_id }`
+- Builds a system prompt optimized for marketing video scriptwriting
+- Calls Lovable AI Gateway (non-streaming, using `google/gemini-3-flash-preview`)
+- Returns the generated script text
+- Validates inputs server-side
 
-### 2. Expand CRM page with project detail panel
+## 2. Update `supabase/config.toml`
 
-When a user clicks a project row, show an expandable section or detail panel containing:
-- **Briefings tab**: List briefings for that project + "Add Briefing" form (goal, target_audience, content_style)
-- **Scripts tab**: List scripts for that project + "Add Script" form (title, script text)
-- **Ideas tab**: List ideas for that project + "Add Idea" form (idea text)
+Add the function config with `verify_jwt = false` (validate auth in code).
 
-Each insert sets `user_id = auth.uid()` and `project_id` to the selected project.
+## 3. New Page: `src/pages/ScriptGenerator.tsx`
 
-### 3. Update Dashboard with quick-add actions
+Standalone AI script generator page with:
+- Form fields: Briefing (textarea), Target Audience (input), Platform (select), Video Duration (select: 15s, 30s, 60s, 3min, 5min+)
+- Optional: project selector dropdown to link the script to an existing project
+- "Gerar Roteiro" button with loading state
+- Output area showing the generated script with markdown rendering
+- "Salvar Roteiro" button that inserts into `scripts` table with `user_id`, `project_id` (if selected), `title` (auto-generated from briefing), and `script` content
 
-Add a small "Nova Ideia" quick-add input on the Dashboard so users can capture ideas without navigating away.
+## 4. Update `src/App.tsx`
 
-### 4. Files Modified
+Add route `/gerador` for the new page.
 
-- `src/pages/CRM.tsx` -- Add expandable project detail with briefings/scripts/ideas CRUD
-- `supabase/migrations/` -- Add foreign key constraints
-- `src/pages/Dashboard.tsx` -- Minor: add quick-add idea input
+## 5. Update `src/components/DashboardLayout.tsx`
+
+Add "Gerador IA" nav item with Sparkles icon, between Projetos and Análises.
+
+## 6. CRM Integration
+
+Add a "Gerar com IA" button in the Scripts tab of the expanded project detail. When clicked, opens a dialog pre-filled with the project's briefing data, calls the same edge function, and auto-saves the result linked to that project.
+
+## Files
+
+1. `supabase/functions/generate-script/index.ts` -- new edge function
+2. `supabase/config.toml` -- add function entry
+3. `src/pages/ScriptGenerator.tsx` -- new page
+4. `src/App.tsx` -- add route
+5. `src/components/DashboardLayout.tsx` -- add nav item
+6. `src/pages/CRM.tsx` -- add AI generate button in scripts tab
 
