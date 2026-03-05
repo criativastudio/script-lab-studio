@@ -14,11 +14,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
+import {
   Plus, ArrowLeft, FileText, BookOpen, Trash2, Loader2,
   Link as LinkIcon, Copy, Users, Download, Eye, Edit2,
   Mail, Phone, Video, Calendar, Bot, ChevronDown, FolderPlus,
   Target, Megaphone, MessageSquare, Lightbulb, Hash,
-  Sparkles, Search, X,
+  Sparkles, Search, X, Power, Filter,
 } from "lucide-react";
 import { ScriptViewer } from "@/components/ScriptViewer";
 
@@ -28,6 +33,7 @@ interface BriefingRequest {
   status: string; token: string; created_at: string; persona: string | null;
   positioning: string | null; tone_of_voice: string | null; content_strategy: string | null;
   project_id: string | null; form_answers: any; city: string | null; niche: string | null;
+  is_active: boolean;
 }
 interface Briefing { id: string; goal: string | null; target_audience: string | null; content_style: string | null; created_at: string | null; project_id: string | null; }
 interface Script { id: string; title: string | null; script: string | null; created_at: string | null; project_id: string | null; }
@@ -68,6 +74,7 @@ const CRM = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [filterNiche, setFilterNiche] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
 
   // New project dialog (for existing client)
   const [newProjectOpen, setNewProjectOpen] = useState(false);
@@ -139,11 +146,15 @@ const CRM = () => {
         (group.contact_name && group.contact_name.toLowerCase().includes(term));
       const matchesCity = !filterCity || group.projects.some(p => p.city === filterCity);
       const matchesNiche = !filterNiche || group.projects.some(p => p.niche === filterNiche);
-      return matchesSearch && matchesCity && matchesNiche;
+      const matchesActive = showInactive || group.projects.some(p => p.is_active !== false);
+      return matchesSearch && matchesCity && matchesNiche && matchesActive;
     });
-  }, [clientGroups, searchTerm, filterCity, filterNiche]);
+  }, [clientGroups, searchTerm, filterCity, filterNiche, showInactive]);
 
   const hasActiveFilters = searchTerm || filterCity || filterNiche;
+
+  // Check if group is inactive (all projects inactive)
+  const isGroupInactive = (group: ClientGroup) => group.projects.every(p => p.is_active === false);
 
   const selectedGroup = useMemo(() => {
     if (!selectedBusinessName) return null;
@@ -342,6 +353,40 @@ const CRM = () => {
     toast({ title: "Item removido!" });
   };
 
+  // Deactivate/Reactivate client
+  const handleToggleActive = async (group: ClientGroup) => {
+    const allInactive = group.projects.every(p => p.is_active === false);
+    const newValue = allInactive; // if all inactive, reactivate (true); otherwise deactivate (false)
+    const ids = group.projects.map(p => p.id);
+    const { error } = await supabase.from("briefing_requests").update({ is_active: newValue } as any).in("id", ids);
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    await fetchClients();
+    toast({ title: newValue ? "Cliente reativado!" : "Cliente desativado!" });
+    if (!newValue) { setSelectedBusinessName(null); setOpenProjects(new Set()); }
+  };
+
+  // Delete client and all associated data
+  const handleDeleteClient = async (group: ClientGroup) => {
+    try {
+      // Delete briefings and scripts for each project
+      for (const project of group.projects) {
+        if (project.project_id) {
+          await supabase.from("scripts").delete().eq("project_id", project.project_id);
+          await supabase.from("briefings").delete().eq("project_id", project.project_id);
+        }
+      }
+      // Delete all briefing_requests
+      const ids = group.projects.map(p => p.id);
+      await supabase.from("briefing_requests").delete().in("id", ids);
+      await fetchClients();
+      setSelectedBusinessName(null);
+      setOpenProjects(new Set());
+      toast({ title: "Cliente excluído com sucesso!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    }
+  };
+
   // PDF
   const downloadPdf = (type: "briefing" | "script", item: Briefing | Script, project: BriefingRequest) => {
     const allScripts = type === "script" ? [item as Script] : [];
@@ -408,10 +453,39 @@ const CRM = () => {
                   {first.contact_email && <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{first.contact_email}</span>}
                   {first.contact_whatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" />{first.contact_whatsapp}</span>}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={downloadAllPdf}>
                     <Download className="h-4 w-4 mr-1.5" />PDF Completo
                   </Button>
+                  <Button
+                    variant={isGroupInactive(selectedGroup) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleActive(selectedGroup)}
+                  >
+                    <Power className="h-4 w-4 mr-1.5" />
+                    {isGroupInactive(selectedGroup) ? "Reativar" : "Desativar"}
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4 mr-1.5" />Excluir
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Isso removerá permanentemente todos os projetos, briefings e roteiros de <strong>{first.business_name}</strong>. Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteClient(selectedGroup)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Excluir Permanentemente
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3" }); } }}>
                     <DialogTrigger asChild>
                       <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
@@ -707,7 +781,7 @@ const CRM = () => {
               )}
               {pdfData.client.content_strategy && (
                 <div className="pdf-section">
-                  <div className="pdf-section-title">Estratégia de Conteúdo</div>
+                  <div className="pdf-section-title">Funil de Conteúdo</div>
                   <div className="pdf-card"><div className="pdf-content">{pdfData.client.content_strategy}</div></div>
                 </div>
               )}
@@ -818,6 +892,10 @@ const CRM = () => {
               <X className="h-4 w-4" />
             </Button>
           )}
+          <div className="flex items-center gap-2">
+            <Switch checked={showInactive} onCheckedChange={setShowInactive} id="show-inactive" />
+            <Label htmlFor="show-inactive" className="text-sm text-muted-foreground cursor-pointer whitespace-nowrap">Mostrar inativos</Label>
+          </div>
         </div>
 
         {/* Client Cards Grid */}
@@ -843,10 +921,12 @@ const CRM = () => {
             {filteredGroups.map((group) => {
               const latestStatus = group.projects[0].status;
               const totalVideos = group.projects.reduce((sum, p) => sum + p.video_quantity, 0);
+              const inactive = isGroupInactive(group);
+              const funnelStrategy = group.projects.find(p => p.content_strategy)?.content_strategy;
               return (
                 <Card
                   key={group.business_name}
-                  className="cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all group"
+                  className={`cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all group ${inactive ? "opacity-60" : ""}`}
                   onClick={() => setSelectedBusinessName(group.business_name.trim().toLowerCase())}
                 >
                   <CardContent className="p-5">
@@ -857,9 +937,12 @@ const CRM = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                          {group.business_name}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                            {group.business_name}
+                          </h3>
+                          {inactive && <Badge variant="outline" className="text-[10px] shrink-0">Inativo</Badge>}
+                        </div>
                         {group.contact_name && <p className="text-xs text-muted-foreground truncate">{group.contact_name}</p>}
                         <div className="flex items-center gap-2 mt-2.5">
                           <Badge variant="secondary" className={`text-[10px] ${briefingStatusColors[latestStatus] || ""}`}>
@@ -872,6 +955,12 @@ const CRM = () => {
                             <Video className="h-3 w-3" />{totalVideos}
                           </span>
                         </div>
+                        {funnelStrategy && (
+                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1 truncate">
+                            <Filter className="h-3 w-3 shrink-0 text-primary" />
+                            <span className="truncate">{funnelStrategy}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CardContent>
