@@ -44,7 +44,7 @@ export default function SocialProof() {
           <h2 className="font-display text-xl md:text-3xl font-light tracking-tight mb-6">
             Quem usa, <span className="text-gradient-primary">recomenda</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base font-light max-w-2xl mx-auto">
             Veja o que nossos usuários estão dizendo.
           </p>
         </motion.div>
@@ -87,7 +87,7 @@ export default function SocialProof() {
                   <div className="text-xs text-muted-foreground">{t.role}</div>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-xs font-light text-muted-foreground leading-relaxed">
                 "{t.quote}"
               </p>
             </motion.div>

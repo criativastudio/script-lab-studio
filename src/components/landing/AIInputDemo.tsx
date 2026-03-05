@@ -86,10 +86,10 @@ export default function AIInputDemo() {
             Qual nicho você quer{" "}
             <span className="text-gradient-primary">transformar?</span>
           </h2>
-          <p className="text-muted-foreground text-lg mb-4 max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base font-light mb-4 max-w-2xl mx-auto">
             Diga à IA o seu segmento e receba roteiros sob medida.
           </p>
-          <p className="text-sm text-muted-foreground mb-12">
+          <p className="text-xs font-light text-muted-foreground mb-12">
             Descreva seu nicho e a IA gera o roteiro ideal.
           </p>
         </motion.div>

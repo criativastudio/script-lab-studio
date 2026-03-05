@@ -85,7 +85,7 @@ export default function FeatureTabs() {
           <h2 className="font-display text-xl md:text-3xl font-light tracking-tight mb-6">
             Tudo em <span className="text-gradient-primary">uma plataforma</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base font-light max-w-2xl mx-auto">
             Ferramentas profissionais para criadores que levam conteúdo a sério.
           </p>
         </motion.div>
@@ -140,7 +140,7 @@ export default function FeatureTabs() {
                   </div>
                   <h3 className="text-2xl font-bold">{current.content.headline}</h3>
                 </div>
-                <p className="text-muted-foreground text-base mb-8 max-w-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm font-light mb-8 max-w-lg leading-relaxed">
                   {current.content.body}
                 </p>
                 <div className="flex flex-wrap gap-3">

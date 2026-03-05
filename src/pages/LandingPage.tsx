@@ -182,7 +182,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground mb-12"
+            className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
             Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação.
             Sem escrever uma linha sequer.
@@ -203,7 +203,7 @@ export default function LandingPage() {
               onClick={() => {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-sm font-medium text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-xs font-light text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
             >
               Ver como funciona
             </button>
@@ -214,7 +214,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-xs text-muted-foreground mt-6"
+            className="text-xs font-light text-muted-foreground mt-6"
           >
             Sem cartão de crédito • Setup em 30 segundos
           </motion.p>
@@ -258,7 +258,7 @@ export default function LandingPage() {
                 <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-light leading-[1.1] tracking-tight">
                   Veja a plataforma <span className="text-gradient-primary">em ação</span>
                 </h2>
-                <p className="max-w-lg text-base text-muted-foreground">
+                <p className="max-w-lg text-sm font-light text-muted-foreground">
                   Interface intuitiva para criar roteiros profissionais.
                 </p>
               </motion.div>
@@ -289,7 +289,7 @@ export default function LandingPage() {
             <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-lg leading-relaxed">
+            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-base font-light leading-relaxed">
               Em três passos simples, você sai da ideia ao roteiro pronto.
             </p>
           </motion.div>
@@ -308,7 +308,7 @@ export default function LandingPage() {
                   {s.num}
                 </div>
                 <h3 className="mb-2 font-semibold text-lg">{s.title}</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">{s.desc}</p>
+                <p className="text-xs font-light text-muted-foreground max-w-xs">{s.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -329,7 +329,7 @@ export default function LandingPage() {
             <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg leading-relaxed">
+            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base font-light leading-relaxed">
               A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
             </p>
           </motion.div>
@@ -352,7 +352,7 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg text-foreground">{p.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{p.desc}</p>
+                      <p className="mt-1 text-xs font-light text-muted-foreground">{p.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -376,7 +376,7 @@ export default function LandingPage() {
             <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg">
+            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base font-light">
               Veja como um roteiro é estruturado cena a cena.
             </p>
           </motion.div>
@@ -399,7 +399,7 @@ export default function LandingPage() {
               </div>
               <div className="glass-card rounded-xl p-4 flex-1 transition-all duration-300 hover:-translate-y-0.5">
                 <h4 className="font-semibold mb-1">{s.title}</h4>
-                <p className="text-sm text-muted-foreground">{s.desc}</p>
+                <p className="text-xs font-light text-muted-foreground">{s.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -443,7 +443,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold text-foreground">{b.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-2">{b.desc}</p>
+                        <p className="text-xs font-light text-muted-foreground mt-2">{b.desc}</p>
                       </div>
                     </div>
                   </div>
@@ -469,7 +469,7 @@ export default function LandingPage() {
             <h2 className="font-display text-xl font-light md:text-3xl mb-6 tracking-tight">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
-            <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-lg">
+            <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-base font-light">
               Do criador solo à agência, temos o plano certo.
             </p>
           </motion.div>
@@ -492,7 +492,7 @@ export default function LandingPage() {
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">Mais popular</Badge>
                 )}
                 <h3 className="text-xl font-bold mb-1">{p.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{p.desc}</p>
+                <p className="text-xs font-light text-muted-foreground mb-4">{p.desc}</p>
                 <div className="mb-6">
                   <span className="text-4xl font-extrabold">{p.price}</span>
                   <span className="text-muted-foreground text-sm">{p.period}</span>
@@ -533,7 +533,7 @@ export default function LandingPage() {
           <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
             Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
           </h2>
-          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base font-light">
             Roteiros profissionais prontos para gravação em minutos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
