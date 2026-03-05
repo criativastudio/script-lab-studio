@@ -1,89 +1,58 @@
 
 
-# Fix Light Mode + PDF Export
+# Padronização de Paleta de Cores (#cbacef e #f5cea5)
 
-## Problem
+## Overview
+Replace all blue/green/violet accent colors with the two-color palette: **#cbacef** (lavender) and **#f5cea5** (peach/cream). Headlines alternate between these colors, buttons use them exclusively.
 
-1. **Light mode**: The hero section uses a hardcoded dark background (`bg-[hsl(220_25%_4%)]`), hardcoded white text colors, hardcoded dark borders, and the final CTA section also has hardcoded dark colors. These don't adapt to light mode.
-
-2. **PDF export**: The `@media print` styles in `index.css` already force white backgrounds for the `#pdf-print-container`, but the StrategicAnalysis page prints the entire page (not a dedicated container), so it inherits dark mode colors. Also, no explicit `color-scheme` or theme override is applied during print.
+## Color Conversion to HSL
+- `#cbacef` → approximately `268 64% 81%`
+- `#f5cea5` → approximately `30 82% 80%`
 
 ## Changes
 
-### 1. `src/pages/LandingPage.tsx` — Make Hero + Final CTA theme-aware
+### 1. `src/index.css` — Update CSS variables
 
-**Hero section (line 150):**
-- Replace `bg-[hsl(220_25%_4%)]` with `bg-background` (or a dark/light aware class like `dark:bg-[hsl(220_25%_4%)] bg-[hsl(210_20%_98%)]`)
-- Replace hardcoded `text-white` with `text-foreground`
-- Replace hardcoded `text-[hsl(215_16%_56%)]` with `text-muted-foreground`
-- Replace hardcoded `text-[hsl(215_16%_46%)]` with `text-muted-foreground`
-- Replace hardcoded `text-[hsl(210_20%_80%)]` with `text-muted-foreground`
-- Replace hardcoded border colors on secondary CTA button with `border-border`
-- Replace hardcoded `text-[hsl(215_16%_36%)]` trust icons with `text-muted-foreground`
+Replace hero accent and primary colors in both `:root` and `.dark`:
+- `--primary`: change from blue (`217 91% 60%`) to lavender (`268 64% 81%`)
+- `--primary-foreground`: keep white or use dark text for contrast on light bg → `260 20% 15%`
+- `--hero-blue` → `268 64% 81%` (lavender)
+- `--hero-pink` → `30 82% 80%` (peach)
+- `--hero-violet` → `268 64% 81%` (lavender, same)
+- `--accent`: change from green (`142 71% 45%`) to peach (`30 82% 80%`)
+- `--accent-foreground`: dark text `30 20% 15%`
+- `--ring`: match primary lavender
 
-**Final CTA section (line 525):**
-- Replace `bg-[hsl(220_25%_6%)]` with `bg-card dark:bg-[hsl(220_25%_6%)]`
-- Replace `border-[hsl(220_20%_14%)]` with `border-border`
-- Replace `text-white` with `text-foreground`
-- Replace hardcoded `text-[hsl(215_16%_56%)]` with `text-muted-foreground`
-- Replace hardcoded outline button colors with `border-border text-foreground`
-
-### 2. `src/components/landing/HeroAnimation.tsx` — Theme-aware skeleton
-
-- Replace `from-white/[0.04]` with `from-foreground/[0.04]`
-- These are subtle decorative elements, mostly fine, but the glass reflection should adapt
-
-### 3. `src/components/landing/FeatureTabs.tsx` — Glass surface shine
-
-- Replace `from-white/[0.03]` with `from-foreground/[0.03]` (line 126)
-- Replace `via-white/[0.08]` in SocialProof with `via-foreground/[0.08]`
-
-### 4. `src/components/landing/SocialProof.tsx` — Top edge shine
-
-- Replace `via-white/[0.08]` with `via-foreground/[0.08]`
-
-### 5. `src/index.css` — Glass card light mode fix
-
-- Update `.glass-card` to use theme-aware rgba values:
-  - Light mode: use slightly darker backgrounds instead of `rgba(255,255,255,0.04)`
-  - Add: `.glass-card { @apply bg-card/50 dark:bg-white/[0.04]; }`
-- Update `.glass-surface` similarly
-
-### 6. `src/index.css` — PDF print styles: force light theme
-
-Add to the existing `@media print` block:
+Update `.text-gradient-primary` to gradient between `#cbacef` and `#f5cea5`:
 ```css
-@media print {
-  :root {
-    --background: 210 20% 98%;
-    --foreground: 220 25% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --border: 214 32% 91%;
-  }
-  
-  body {
-    background: white !important;
-    color: #1a1a2e !important;
-  }
-}
+background: linear-gradient(135deg, #cbacef 0%, #f5cea5 100%);
 ```
 
-This forces all CSS variable-based colors to their light-mode values when printing, regardless of the active theme.
+### 2. `src/pages/LandingPage.tsx` — Button colors
 
-### 7. `src/pages/StrategicAnalysis.tsx` — Use dedicated print container
+- Hero primary CTA button (line 199): replace `bg-primary` glow with lavender-based shadow
+- Hero badge (line 162): update `border-[hsl(var(--hero-blue)/0.3)]` and `bg-[hsl(var(--hero-blue)/0.08)]` — these already use CSS vars, so updating vars handles it
+- Plan check icons (line 497): `text-primary` will auto-update
+- All `Button` components use `bg-primary` via the variant system, so updating CSS vars covers them
 
-Wrap the report output in a `#pdf-print-container` div for print, matching the CRM pattern, so the existing print CSS applies. Or simply ensure the `@media print` variable overrides (from change #6) cover this page too — which they will.
+### 3. `src/components/landing/SocialProof.tsx` — Stats gradient
 
-## Files Modified
+Uses `text-gradient-primary` class — auto-handled by CSS var change.
+
+### 4. `src/components/landing/AIInputDemo.tsx` & `FeatureTabs.tsx`
+
+Uses `text-gradient-primary` and `bg-primary` — auto-handled.
+
+### 5. `tailwind.config.ts` — No changes needed
+
+Colors reference CSS vars which we're updating.
+
+## Summary of Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/LandingPage.tsx` | Replace hardcoded dark colors with theme-aware classes |
-| `src/components/landing/HeroAnimation.tsx` | Replace `white/` with `foreground/` for subtle overlays |
-| `src/components/landing/SocialProof.tsx` | Replace `white/` with `foreground/` |
-| `src/components/landing/FeatureTabs.tsx` | Replace `white/` with `foreground/` |
-| `src/index.css` | Fix glass-card/glass-surface for light mode; force light CSS vars in `@media print` |
+| `src/index.css` | Update `--primary`, `--accent`, `--hero-*`, `--ring` vars + gradient class |
+| `src/pages/LandingPage.tsx` | Minor: update any remaining hardcoded blue/green hex references |
+
+Most changes are centralized in CSS variables — the component code already uses semantic tokens.
 
