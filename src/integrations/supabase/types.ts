@@ -365,6 +365,63 @@ export type Database = {
           },
         ]
       }
+      strategic_reports: {
+        Row: {
+          brand_positioning: string | null
+          business_name: string
+          content_funnel: string | null
+          content_references: string | null
+          created_at: string | null
+          id: string
+          objectives: string | null
+          pdf_url: string | null
+          persona: string | null
+          positioning: string | null
+          production_capacity: string | null
+          script_ideas: Json | null
+          status: string | null
+          target_audience: string | null
+          tone_of_voice: string | null
+          user_id: string
+        }
+        Insert: {
+          brand_positioning?: string | null
+          business_name: string
+          content_funnel?: string | null
+          content_references?: string | null
+          created_at?: string | null
+          id?: string
+          objectives?: string | null
+          pdf_url?: string | null
+          persona?: string | null
+          positioning?: string | null
+          production_capacity?: string | null
+          script_ideas?: Json | null
+          status?: string | null
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          user_id: string
+        }
+        Update: {
+          brand_positioning?: string | null
+          business_name?: string
+          content_funnel?: string | null
+          content_references?: string | null
+          created_at?: string | null
+          id?: string
+          objectives?: string | null
+          pdf_url?: string | null
+          persona?: string | null
+          positioning?: string | null
+          production_capacity?: string | null
+          script_ideas?: Json | null
+          status?: string | null
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null

@@ -2,3 +2,6 @@ project_id = "nxmsdrnxrpgmrzprpzij"
 
 [functions.generate-script]
 verify_jwt = false
+
+[functions.strategic-analysis]
+verify_jwt = false
