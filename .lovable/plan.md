@@ -1,50 +1,65 @@
 
 
-# Professional Script Formatting System
+# Refactor CRM into Client-Centric Management System
 
 ## Summary
 
-Create a `ScriptViewer` component that transforms raw script text into a visually structured, professional production brief. Integrate it into the CRM's expanded project view — when a user clicks a script, it opens in a dialog with the full formatted layout.
+Replace the current table-based Projects/Briefings UI with a modern card-based Clients system. The CRM page becomes a client card grid. Clicking a card navigates to a client detail view (same page, no new routes) showing briefings and scripts organized by date with edit and instant PDF download buttons, plus a "Generate with Agent" button.
 
-## Approach
+## Architecture
 
-The AI-generated scripts already contain structured text (titles, hooks, scenes, narration, CTA sections). The component will parse this text by detecting section headers and render each part in a professionally styled card layout with icons, two-column scene/dialogue layout, and clean typography.
+The CRM page will have two views managed by state:
+- **List view**: Client cards grid + "Add New Client" button
+- **Detail view**: Full client dashboard when a card is clicked (back button to return)
 
-## New Component: `src/components/ScriptViewer.tsx`
+Data source: `briefing_requests` table already stores clients (business_name, contact_name, etc.) and links to projects/scripts. Each briefing_request IS a client record.
 
-A dialog-based viewer that receives a `Script` object and the parent `Project` data, then renders:
+## Changes
 
-1. **Header Card** — Script title, client name, objective, platform, estimated duration (parsed or from project data). Uses `Clapperboard`, `User`, `Target`, `Monitor`, `Clock` icons.
+### 1. `src/components/DashboardLayout.tsx`
+- Rename nav item: `"Projetos"` -> `"Clientes"`, keep same `/crm` route and `FolderOpen` icon (or switch to `Users`)
 
-2. **Strategic Overview** — Short paragraph about the marketing intention (parsed from script text or first paragraph). Icon: `Lightbulb`.
+### 2. `src/pages/CRM.tsx` — Full refactor
 
-3. **Hook Section** — Highlighted opening line in an accent-bordered card. Icon: `Zap`.
+**List View (default)**:
+- Page title: "Clientes"
+- "Adicionar Novo Cliente" button (reuses existing briefing request dialog)
+- Responsive card grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`)
+- Each card: client avatar initial, business_name, project_name, status badge, video count, date
+- Click card -> sets `selectedClient` state to show detail view
 
-4. **Script Body** — Two-column grid layout:
-   - Left: Scene descriptions / camera direction (muted background)
-   - Right: Dialogue / narration
-   - Parsed by detecting patterns like `[CENA]`, `CENA:`, `Narração:`, `Texto:` etc. from the AI output.
-   - Icon: `Film`.
+**Detail View (when client selected)**:
+- Back button to return to list
+- Header: client name, business, contact info, status badge
+- "Generate with Agent" button — calls `process-briefing` edge function using stored client data to regenerate/create new briefings+scripts
+- Two sections: Briefings and Scripts, sorted by date descending
+- Each item card shows: title/goal, date, two action buttons:
+  - **Edit** — opens inline edit dialog (briefing: goal/audience/style fields; script: title/content textarea)
+  - **Download PDF** — instant PDF generation with NO extra form. Uses client data auto-filled (business_name, project_name from briefing_request) and calls `window.print()` directly
+- The ScriptViewer dialog remains for viewing formatted scripts (eye icon)
 
-5. **Emotional Triggers** — Badges listing persuasion triggers (authority, curiosity, urgency, transformation). Icon: `Heart`.
+**PDF (no-form download)**:
+- When user clicks "Download PDF" on a script or briefing, auto-populate all PDF fields from the client record and trigger print immediately — no config dialog needed
+- Keep the hidden print container but auto-fill from client data
 
-6. **Visual Suggestions** — Bullet list of recommended shots/B-roll. Icon: `Camera`.
+**"Generate with Agent" button**:
+- Uses stored `form_answers` from the `briefing_requests` record
+- Calls `process-briefing` edge function with the client's token
+- Shows loading state, then refreshes data on completion
+- If no form_answers exist yet (client hasn't filled form), shows a toast message
 
-7. **Editing & Rhythm** — Pacing, cuts, transitions, music suggestions. Icon: `Music`.
+### 3. Keep existing functionality
+- `ScriptViewer` component stays
+- Print CSS stays
+- Briefing request creation dialog stays (now labeled "Adicionar Novo Cliente")
+- All Supabase queries remain the same, just reorganized in the UI
 
-**Parsing logic**: The component will split the script text by known section markers (case-insensitive regex for "GANCHO", "HOOK", "CENA", "SCENE", "VISUAL", "EDIÇÃO", "CTA", "GATILHO", "TRIGGER", etc.) and map each to the appropriate section. Unrecognized content goes into the Script Body.
+## Files Modified
 
-## CRM Integration (`src/pages/CRM.tsx`)
-
-- Add state: `viewingScript: Script | null`
-- In the scripts list (lines 447-457), make each script card clickable — opens the `ScriptViewer` dialog
-- Add an "eye" icon button next to the delete button
-- Import and render `<ScriptViewer>` at the bottom of the component
-
-## Files
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/components/ScriptViewer.tsx` | **Create** — Full professional script viewer component with parsing + formatted layout |
-| `src/pages/CRM.tsx` | **Modify** — Add script click handler, import ScriptViewer, render dialog |
+| `src/components/DashboardLayout.tsx` | Rename "Projetos" to "Clientes", change icon to Users |
+| `src/pages/CRM.tsx` | Full UI refactor: card grid list + client detail view with edit/download/generate |
+
+No database changes needed — all data already exists in `briefing_requests`, `projects`, `briefings`, `scripts` tables.
 
