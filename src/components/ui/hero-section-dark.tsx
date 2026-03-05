@@ -111,7 +111,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
           </div>
 
           {/* Heading */}
-          <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="font-display text-2xl font-light leading-[1.1] tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
             {subtitle.regular}
             <span className="text-gradient-primary">{subtitle.gradient}</span>
           </h1>
