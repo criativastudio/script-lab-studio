@@ -20,7 +20,7 @@ function useScrollReveal() {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.15 }
+      { threshold: 0.12 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -34,7 +34,7 @@ function Section({ children, className = "", id }: { children: React.ReactNode; 
     <section
       id={id}
       ref={ref}
-      className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+      className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"} ${className}`}
     >
       {children}
     </section>
@@ -118,15 +118,17 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Grid pattern overlay */}
+      <div className="fixed inset-0 bg-grid-pattern pointer-events-none z-0" />
+
       {/* ── NAVBAR ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/30 bg-background/70 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
           <span className="text-lg font-bold tracking-tight">
-            Script<span className="text-primary">Lab</span>
+            Script<span className="text-gradient-primary">Lab</span>
           </span>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-8">
             {navLinks.map((l) => (
               <a key={l.href} href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {l.label}
@@ -144,20 +146,18 @@ export default function LandingPage() {
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            <Button size="sm" className="hidden md:inline-flex" onClick={() => navigate("/auth")}>
-              Começar grátis
+            <Button size="sm" className="hidden md:inline-flex gap-1.5" onClick={() => navigate("/auth")}>
+              Começar grátis <ArrowRight className="h-3.5 w-3.5" />
             </Button>
 
-            {/* Mobile hamburger */}
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl px-4 pb-4 pt-2 space-y-3">
+          <div className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-2xl px-4 pb-4 pt-2 space-y-3">
             {navLinks.map((l) => (
               <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground">
                 {l.label}
@@ -170,155 +170,189 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center gap-8 px-4 pt-20 pb-16 text-center overflow-hidden">
-        {/* Background glow */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
+      {/* ── HERO — SPLIT LAYOUT ── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+        {/* Glow orbs */}
+        <div className="glow-orb w-[500px] h-[500px] bg-primary/15 -top-20 -left-40" />
+        <div className="glow-orb w-[400px] h-[400px] bg-[hsl(260_80%_65%/0.1)] -bottom-20 right-0" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.08)_0%,transparent_50%)]" />
 
-        <Badge variant="secondary" className="relative z-10 text-xs tracking-widest uppercase">
-          Plataforma de roteiros com IA
-        </Badge>
+        <div className="relative z-10 mx-auto max-w-7xl w-full px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
+          {/* Left — text */}
+          <div className="flex flex-col gap-6 text-center md:text-left order-2 md:order-1">
+            <Badge variant="secondary" className="self-center md:self-start text-xs tracking-widest uppercase shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
+              Plataforma de roteiros com IA
+            </Badge>
 
-        <h1 className="relative z-10 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
-          Crie Briefings e Roteiros de Vídeo{" "}
-          <span className="text-primary">em Minutos</span>
-        </h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
+              Crie Briefings e Roteiros de Vídeo{" "}
+              <span className="text-gradient-primary">em Minutos</span>
+            </h1>
 
-        <p className="relative z-10 max-w-xl text-base text-muted-foreground md:text-lg">
-          Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação.
-        </p>
+            <p className="max-w-lg text-base md:text-lg text-muted-foreground mx-auto md:mx-0">
+              Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação.
+            </p>
 
-        <Button size="lg" className="relative z-10 gap-2 text-base" onClick={() => navigate("/auth")}>
-          Começar grátis <ArrowRight className="h-4 w-4" />
-        </Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+              <Button size="lg" className="gap-2 text-base shadow-[0_0_30px_hsl(var(--primary)/0.3)]" onClick={() => navigate("/auth")}>
+                Começar gratuitamente <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2 text-base" onClick={() => document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" })}>
+                Como funciona
+              </Button>
+            </div>
+          </div>
 
-        <div className="relative z-10 mt-4">
-          <HeroAnimation />
+          {/* Right — animation */}
+          <div className="flex justify-center order-1 md:order-2">
+            <HeroAnimation />
+          </div>
         </div>
+
+        {/* Gradient divider */}
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </section>
 
       {/* ── PROBLEMA ── */}
-      <Section id="problema" className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-6xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">O problema</Badge>
-          <h2 className="text-3xl font-bold md:text-4xl mb-4">Por que seus vídeos não performam?</h2>
-          <p className="mx-auto mb-12 max-w-2xl text-muted-foreground">
+      <Section id="problema" className="relative py-24 md:py-32 px-4">
+        <div className="glow-orb w-[300px] h-[300px] bg-primary/8 top-0 right-20" />
+        <div className="mx-auto max-w-6xl text-center relative z-10">
+          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase shadow-[0_0_10px_hsl(var(--primary)/0.15)]">O problema</Badge>
+          <h2 className="text-3xl font-bold md:text-5xl mb-4">
+            Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
+          </h2>
+          <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg">
             A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {problems.map((p) => (
               <div
                 key={p.title}
-                className="group rounded-2xl border border-border/50 bg-card/50 p-6 text-left backdrop-blur-xl transition-all hover:border-primary/30 hover:shadow-[0_0_30px_hsl(var(--primary)/0.1)]"
+                className="group glass-card rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] transition-shadow">
                   <p.icon className="h-5 w-5" />
                 </div>
-                <h3 className="mb-2 font-semibold">{p.title}</h3>
+                <h3 className="mb-2 font-semibold text-lg">{p.title}</h3>
                 <p className="text-sm text-muted-foreground">{p.desc}</p>
               </div>
             ))}
           </div>
         </div>
+        {/* Gradient divider */}
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </Section>
 
       {/* ── SOLUÇÃO ── */}
-      <Section id="solucao" className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-5xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">A solução</Badge>
-          <h2 className="text-3xl font-bold md:text-4xl mb-4">Como funciona</h2>
-          <p className="mx-auto mb-14 max-w-2xl text-muted-foreground">
+      <Section id="solucao" className="relative py-24 md:py-32 px-4">
+        <div className="glow-orb w-[350px] h-[350px] bg-[hsl(260_80%_65%/0.06)] bottom-10 left-10" />
+        <div className="mx-auto max-w-5xl text-center relative z-10">
+          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase shadow-[0_0_10px_hsl(var(--primary)/0.15)]">A solução</Badge>
+          <h2 className="text-3xl font-bold md:text-5xl mb-4">
+            Como <span className="text-gradient-primary">funciona</span>
+          </h2>
+          <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-lg">
             Em três passos simples, você sai da ideia ao roteiro pronto.
           </p>
-          <div className="grid gap-8 md:grid-cols-3">
-            {steps.map((s, i) => (
+          <div className="grid gap-8 md:grid-cols-3 relative">
+            {/* Connecting gradient line */}
+            <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-[2px] shimmer-border" />
+            {steps.map((s) => (
               <div key={s.num} className="relative flex flex-col items-center text-center">
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-border" />
-                )}
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary font-bold text-lg">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/8 border border-primary/20 text-primary font-bold text-xl shadow-[0_0_25px_hsl(var(--primary)/0.15)] transition-shadow hover:shadow-[0_0_40px_hsl(var(--primary)/0.25)]">
                   {s.num}
                 </div>
                 <h3 className="mb-2 font-semibold text-lg">{s.title}</h3>
-                <p className="text-sm text-muted-foreground">{s.desc}</p>
+                <p className="text-sm text-muted-foreground max-w-xs">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </Section>
 
       {/* ── EXEMPLO DE ROTEIRO ── */}
-      <Section className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Exemplo</Badge>
-          <h2 className="text-3xl font-bold md:text-4xl mb-4">Roteiro gerado pela plataforma</h2>
-          <p className="mx-auto mb-12 max-w-xl text-muted-foreground">
+      <Section className="relative py-24 md:py-32 px-4">
+        <div className="glow-orb w-[250px] h-[250px] bg-primary/6 top-20 right-0" />
+        <div className="mx-auto max-w-3xl text-center relative z-10">
+          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase shadow-[0_0_10px_hsl(var(--primary)/0.15)]">Exemplo</Badge>
+          <h2 className="text-3xl font-bold md:text-5xl mb-4">
+            Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
+          </h2>
+          <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg">
             Veja como um roteiro é estruturado cena a cena.
           </p>
         </div>
-        <div className="mx-auto max-w-2xl space-y-0">
+        <div className="mx-auto max-w-2xl space-y-0 relative z-10">
           {scenes.map((s, i) => (
             <div key={s.num} className="relative flex gap-4 pb-8">
-              {/* Timeline line */}
               {i < scenes.length - 1 && (
-                <div className="absolute left-[18px] top-10 bottom-0 w-px bg-border" />
+                <div className="absolute left-[18px] top-10 bottom-0 w-px bg-gradient-to-b from-primary/40 to-border/20" />
               )}
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
                 {s.num}
               </div>
-              <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-xl p-4 flex-1">
+              <div className="glass-card rounded-xl p-4 flex-1 transition-all duration-300 hover:-translate-y-0.5">
                 <h4 className="font-semibold mb-1">{s.title}</h4>
                 <p className="text-sm text-muted-foreground">{s.desc}</p>
               </div>
             </div>
           ))}
         </div>
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </Section>
 
       {/* ── BENEFÍCIOS ── */}
-      <Section className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-6xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Benefícios</Badge>
-          <h2 className="text-3xl font-bold md:text-4xl mb-12">Tudo que você precisa para criar conteúdo estratégico</h2>
+      <Section className="relative py-24 md:py-32 px-4">
+        <div className="glow-orb w-[400px] h-[400px] bg-primary/6 -bottom-20 left-1/2 -translate-x-1/2" />
+        <div className="mx-auto max-w-6xl text-center relative z-10">
+          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase shadow-[0_0_10px_hsl(var(--primary)/0.15)]">Benefícios</Badge>
+          <h2 className="text-3xl font-bold md:text-5xl mb-14">
+            Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
+          </h2>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((b) => (
-              <div key={b.title} className="flex flex-col items-center text-center p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div key={b.title} className="group flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:bg-card/30">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8 text-primary ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:shadow-[0_0_25px_hsl(var(--primary)/0.2)] transition-all">
                   <b.icon className="h-6 w-6" />
                 </div>
-                <h3 className="mb-2 font-semibold">{b.title}</h3>
+                <h3 className="mb-2 font-semibold text-lg">{b.title}</h3>
                 <p className="text-sm text-muted-foreground">{b.desc}</p>
               </div>
             ))}
           </div>
         </div>
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </Section>
 
       {/* ── PLANOS ── */}
-      <Section id="planos" className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-6xl text-center">
-          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Planos</Badge>
-          <h2 className="text-3xl font-bold md:text-4xl mb-4">Escolha o plano ideal</h2>
-          <p className="mx-auto mb-14 max-w-xl text-muted-foreground">
+      <Section id="planos" className="relative py-24 md:py-32 px-4">
+        <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
+        <div className="mx-auto max-w-6xl text-center relative z-10">
+          <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase shadow-[0_0_10px_hsl(var(--primary)/0.15)]">Planos</Badge>
+          <h2 className="text-3xl font-bold md:text-5xl mb-4">
+            Escolha o <span className="text-gradient-primary">plano ideal</span>
+          </h2>
+          <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-lg">
             Do criador solo à agência, temos o plano certo.
           </p>
           <div className="grid gap-6 md:grid-cols-3 items-start">
             {plans.map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-2xl border p-8 text-left transition-all ${
+                className={`relative rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-1 ${
                   p.highlight
-                    ? "border-primary bg-primary/5 shadow-[0_0_40px_hsl(var(--primary)/0.15)] scale-[1.02]"
-                    : "border-border/50 bg-card/50"
+                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15)] scale-[1.03] animate-border-glow"
+                    : "glass-card"
                 }`}
               >
                 {p.highlight && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Mais popular</Badge>
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">Mais popular</Badge>
                 )}
                 <h3 className="text-xl font-bold mb-1">{p.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{p.desc}</p>
                 <div className="mb-6">
-                  <span className="text-3xl font-extrabold">{p.price}</span>
+                  <span className="text-4xl font-extrabold">{p.price}</span>
                   <span className="text-muted-foreground text-sm">{p.period}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
@@ -330,7 +364,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  className="w-full"
+                  className={`w-full ${p.highlight ? "shadow-[0_0_20px_hsl(var(--primary)/0.3)]" : ""}`}
                   variant={p.highlight ? "default" : "outline"}
                   onClick={() => navigate("/auth")}
                 >
@@ -343,26 +377,27 @@ export default function LandingPage() {
       </Section>
 
       {/* ── CTA FINAL ── */}
-      <Section className="py-20 md:py-28 px-4">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-primary/20 bg-primary/5 p-10 md:p-16 text-center relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.1)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 text-3xl font-bold md:text-4xl mb-4">
-            Pare de gravar vídeos sem estratégia
+      <Section className="py-24 md:py-32 px-4">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-primary/20 bg-primary/5 p-10 md:p-20 text-center relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
+          <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+          <h2 className="relative z-10 text-3xl font-bold md:text-5xl mb-4">
+            Pare de gravar vídeos <span className="text-gradient-primary">sem estratégia</span>
           </h2>
-          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg">
             Comece agora e tenha roteiros profissionais prontos para gravação.
           </p>
-          <Button size="lg" className="relative z-10 gap-2 text-base" onClick={() => navigate("/auth")}>
+          <Button size="lg" className="relative z-10 gap-2 text-base shadow-[0_0_30px_hsl(var(--primary)/0.3)]" onClick={() => navigate("/auth")}>
             Começar gratuitamente <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </Section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-border/50 py-12 px-4">
+      <footer className="border-t border-border/30 py-14 px-4">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
           <span className="text-sm font-bold">
-            Script<span className="text-primary">Lab</span> Studio
+            Script<span className="text-gradient-primary">Lab</span> Studio
           </span>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Termos</a>
