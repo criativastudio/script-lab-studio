@@ -424,25 +424,33 @@ export default function LandingPage() {
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 grid-rows-none gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((b, i) => (
-              <motion.div
+              <motion.li
                 key={b.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                whileHover={{ y: -4 }}
-                className="group flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:bg-card/40 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
+                className="min-h-[14rem] list-none"
               >
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8 text-primary ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:shadow-[0_0_25px_hsl(var(--primary)/0.2)] transition-all">
-                  <b.icon className="h-6 w-6" />
+                <div className="relative h-full rounded-2xl border p-2 md:rounded-3xl md:p-3">
+                  <GlowingEffect spread={40} glow proximity={64} disabled={false} />
+                  <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D] md:p-6">
+                    <div className="relative flex flex-1 flex-col justify-between gap-3">
+                      <div className="w-fit rounded-lg border border-primary/20 p-2">
+                        <b.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-foreground">{b.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-2">{b.desc}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mb-2 font-semibold text-lg">{b.title}</h3>
-                <p className="text-sm text-muted-foreground">{b.desc}</p>
-              </motion.div>
+              </motion.li>
             ))}
-          </div>
+          </ul>
         </div>
         <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
