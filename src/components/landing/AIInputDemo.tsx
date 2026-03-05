@@ -26,8 +26,11 @@ export default function AIInputDemo() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typed, setTyped] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isManual, setIsManual] = useState(false);
 
   useEffect(() => {
+    if (isManual) return;
+
     const word = industries[currentIndex];
 
     if (!isDeleting && typed === word) {
@@ -51,7 +54,12 @@ export default function AIInputDemo() {
     }, speed);
 
     return () => clearTimeout(timeout);
-  }, [typed, isDeleting, currentIndex]);
+  }, [typed, isDeleting, currentIndex, isManual]);
+
+  const handleChipClick = (chip: string) => {
+    setIsManual(true);
+    setTyped(chip);
+  };
 
   return (
     <section className="relative py-28 md:py-36 overflow-hidden">
@@ -78,8 +86,11 @@ export default function AIInputDemo() {
             Qual nicho você quer{" "}
             <span className="text-gradient-primary">transformar?</span>
           </h2>
-          <p className="text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg mb-4 max-w-2xl mx-auto">
             Diga à IA o seu segmento e receba roteiros sob medida.
+          </p>
+          <p className="text-sm text-muted-foreground mb-12">
+            Descreva seu nicho e a IA gera o roteiro ideal.
           </p>
         </motion.div>
 
@@ -114,12 +125,24 @@ export default function AIInputDemo() {
           {chips.map((chip) => (
             <span
               key={chip}
+              onClick={() => handleChipClick(chip)}
               className="inline-flex items-center rounded-full border border-border/40 bg-card/40 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               {chip}
             </span>
           ))}
         </motion.div>
+
+        {/* Preview hint */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-6 text-xs text-muted-foreground/60"
+        >
+          ↓ Veja um exemplo de roteiro gerado abaixo
+        </motion.p>
       </div>
       <div className="section-fade-bottom" />
     </section>
