@@ -6,16 +6,14 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/crm", label: "Projetos", icon: FolderOpen },
+  { href: "/crm", label: "Clientes", icon: FolderOpen },
   { href: "/gerador", label: "Gerador IA", icon: Sparkles },
   { href: "/analise-estrategica", label: "Análise Estratégica", icon: Target },
   { href: "/metrics", label: "Análises", icon: BarChart3 },
   { href: "/whatsapp", label: "Distribuição", icon: Send },
 ];
 
-const adminItems = [
-  { href: "/admin", label: "Admin", icon: Shield },
-];
+const adminItems = [{ href: "/admin", label: "Admin", icon: Shield }];
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, isAdmin, signOut } = useAuth();
@@ -46,7 +44,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                 location.pathname === item.href
                   ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -65,7 +63,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <p className="text-xs text-sidebar-foreground/50">{isAdmin ? "Admin" : "Produtor"}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground" onClick={handleSignOut}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={handleSignOut}
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Sair
           </Button>
