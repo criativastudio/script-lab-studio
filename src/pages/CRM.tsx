@@ -532,11 +532,13 @@ const CRM = () => {
       const ideas = contentIdeas.filter(i => selectedIdeas.has(i.id));
       let successCount = 0;
       for (const idea of ideas) {
+        const ideaProjectId = idea.project_id || selectedGroup?.projects.find(p => p.project_id)?.project_id;
         const { data, error } = await supabase.functions.invoke("generate-script", {
           body: {
             context_id: strategicContext.id,
             idea_id: idea.id,
             idea_title: idea.title,
+            project_id: ideaProjectId,
             platform: "Instagram Reels",
             video_duration: "60s",
             user_id: user.id,
@@ -546,7 +548,7 @@ const CRM = () => {
           console.error("Script gen error for idea:", idea.title, error || data?.error);
           continue;
         }
-        const projectId = idea.project_id || selectedGroup?.projects.find(p => p.project_id)?.project_id;
+        const projectId = ideaProjectId;
         if (projectId) {
           await supabase.from("scripts").insert({
             user_id: user.id,
