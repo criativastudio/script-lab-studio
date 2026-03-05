@@ -93,6 +93,22 @@ export default {
           "50%": { transform: "rotateY(15deg) rotateX(-5deg)" },
           "100%": { transform: "rotateY(-15deg) rotateX(5deg)" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "border-glow": {
+          "0%, 100%": { opacity: "0.4", boxShadow: "0 0 15px hsl(var(--primary) / 0.2)" },
+          "50%": { opacity: "1", boxShadow: "0 0 30px hsl(var(--primary) / 0.4)" },
+        },
+        "typing-cursor": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -100,6 +116,10 @@ export default {
         "float": "float 4s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
         "rotate-3d": "rotate-3d 8s ease-in-out infinite",
+        "shimmer": "shimmer 3s linear infinite",
+        "gradient-shift": "gradient-shift 6s ease infinite",
+        "border-glow": "border-glow 3s ease-in-out infinite",
+        "typing-cursor": "typing-cursor 1s step-end infinite",
       },
     },
   },
