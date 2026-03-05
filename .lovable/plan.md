@@ -1,64 +1,50 @@
-# Headlines em duas linhas, gradiente animado e espaçamento reduzido
 
-## Mudanças
 
-### 1. `src/index.css` — Gradiente animado alternando cores
+# Aumentar headlines (+10%) e textos descritivos (+5%) nas seções 2-11
 
-Atualizar `.text-gradient-primary` para usar uma animação suave que alterna entre #cbacef e #f5cea5:
+## Lógica
 
-```css
-.text-gradient-primary {
-  background: linear-gradient(90deg, #cbacef, #f5cea5, #cbacef, #f5cea5);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-text-shift 6s ease infinite;
-}
+- **Headlines** atuais: `text-xl md:text-3xl` → **`text-2xl md:text-4xl`** (+10%)
+- **Textos descritivos** abaixo das headlines atuais: `text-base font-light` → **`text-base md:text-lg font-light`** (+5%); onde é `text-sm` → **`text-sm md:text-base font-light`**
 
-@keyframes gradient-text-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-```
+## Mudanças por arquivo
 
-### 2. `src/pages/LandingPage.tsx` — Headlines em duas linhas + espaçamento
+### `src/pages/LandingPage.tsx`
 
-**Hero headline (linha 174):** Adicionar `max-w-3xl mx-auto` para forçar quebra em duas linhas e reduzir `leading` para mínimo:
+| Seção | Linha | Elemento | Antes | Depois |
+|-------|-------|----------|-------|--------|
+| 3 - Product Scroll | 258 | h2 | `text-xl sm:text-2xl md:text-3xl` | `text-2xl sm:text-3xl md:text-4xl` |
+| 3 | 261 | p | `text-sm font-light` | `text-sm md:text-base font-light` |
+| 5 - Workflow | 289 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 5 | 292 | p | `text-base font-light` | `text-base md:text-lg font-light` |
+| 6 - Problema | 329 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 6 | 332 | p | `text-base font-light` | `text-base md:text-lg font-light` |
+| 7 - Roteiro | 376 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 7 | 379 | p | `text-base font-light` | `text-base md:text-lg font-light` |
+| 8 - Benefícios | 423 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 9 - Planos | 469 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 9 | 472 | p | `text-base font-light` | `text-base md:text-lg font-light` |
+| 10 - Final CTA | 533 | h2 | `text-xl md:text-3xl` | `text-2xl md:text-4xl` |
+| 10 | 536 | p | `text-base font-light` | `text-base md:text-lg font-light` |
 
-```tsx
-className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
-```
+### `src/components/landing/AIInputDemo.tsx`
+- h2 (linha 85): `text-xl md:text-3xl` → `text-2xl md:text-4xl`
+- p desc (linha 88): `text-base font-light` → `text-base md:text-lg font-light`
 
-Quebrar o texto com `<br className="hidden md:block" />` ou usar `max-w` para forçar a quebra natural.
+### `src/components/landing/FeatureTabs.tsx`
+- h2 (linha 77): `text-xl md:text-3xl` → `text-2xl md:text-4xl`
+- p desc (linha 80): `text-base font-light` → `text-base md:text-lg font-light`
 
-**Todas as seções com `py-28 md:py-36`** → reduzir para `py-16 md:py-24`:
-
-- Seção AI Workflow Steps (linha 280): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Problema (linha 320): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Exemplo de Roteiro (linha 367): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Benefícios (linha 414): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Planos (linha 451): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Final CTA (linha 517): `py-28 md:py-36` → `py-16 md:py-24`
-
-**Headlines longas — forçar duas linhas com max-width:**
-
-- Hero: "Roteiros Profissionais em Minutos" → adicionar `max-w-2xl mx-auto`
-- Benefícios (linha 423): "Tudo que você precisa para criar conteúdo estratégico" → adicionar `max-w-xl mx-auto`
-- Final CTA (linha 526): "Comece a Criar Roteiros com IA Hoje" → adicionar `max-w-md mx-auto`
-
-### 3. Componentes filhos — Reduzir espaçamento
-
-- `AIInputDemo.tsx` (linha 65): `py-28 md:py-36` → `py-16 md:py-24`
-- `FeatureTabs.tsx` (linha 75): `py-28 md:py-36` → `py-16 md:py-24`, e `mb-20` → `mb-12`
-- `SocialProof.tsx` (linha 35): `py-28 md:py-36` → `py-16 md:py-24`
+### `src/components/landing/SocialProof.tsx`
+- h2 (linha 43): `text-xl md:text-3xl` → `text-2xl md:text-4xl`
+- p desc (linha 46): `text-base font-light` → `text-base md:text-lg font-light`
 
 ## Arquivos modificados
 
-| Arquivo                                  | Mudança                                                              |
-| ---------------------------------------- | -------------------------------------------------------------------- |
-| `src/index.css`                          | Gradiente animado alternando cores                                   |
-| `src/pages/LandingPage.tsx`              | Headlines com max-w para duas linhas + reduzir py em todas as seções |
-| `src/components/landing/AIInputDemo.tsx` | Reduzir padding vertical                                             |
-| `src/components/landing/FeatureTabs.tsx` | Reduzir padding vertical                                             |
-| `src/components/landing/SocialProof.tsx` | Reduzir padding vertical                                             |
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/LandingPage.tsx` | Headlines +10%, desc +5% em 8 seções |
+| `src/components/landing/AIInputDemo.tsx` | Headline +10%, desc +5% |
+| `src/components/landing/FeatureTabs.tsx` | Headline +10%, desc +5% |
+| `src/components/landing/SocialProof.tsx` | Headline +10%, desc +5% |
+
