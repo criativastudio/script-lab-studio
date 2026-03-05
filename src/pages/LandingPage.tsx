@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import HeroAnimation from "@/components/landing/HeroAnimation";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 /* ── scroll-reveal hook ── */
 function useScrollReveal() {
@@ -225,17 +226,21 @@ export default function LandingPage() {
           <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg">
             A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
           </p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {problems.map((p) => (
-              <div
-                key={p.title}
-                className="group glass-card rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] transition-shadow">
-                  <p.icon className="h-5 w-5" />
+              <div key={p.title} className="group/card relative min-h-[14rem] rounded-2xl border border-border/40 bg-card/50 p-2">
+                <GlowingEffect spread={40} glow proximity={64} inactiveZone={0.01} borderWidth={2} disabled={false} />
+                <div className="relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-xl border border-border/30 bg-card p-6">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                      <p.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-foreground">{p.title}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{p.desc}</p>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mb-2 font-semibold text-lg">{p.title}</h3>
-                <p className="text-sm text-muted-foreground">{p.desc}</p>
               </div>
             ))}
           </div>
