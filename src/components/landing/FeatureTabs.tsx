@@ -72,34 +72,35 @@ export default function FeatureTabs() {
   const current = features[active];
 
   return (
-    <section className="relative py-24 md:py-32 px-4">
+    <section className="relative py-28 md:py-36 px-4">
+      <div className="section-fade-top" />
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4">
+          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-6">
             Tudo em <span className="text-gradient-primary">uma plataforma</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Ferramentas profissionais para criadores que levam conteúdo a sério.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 lg:gap-10">
-          {/* Left: Tabs - sticky on desktop, horizontal scroll on mobile */}
+          {/* Left: Tabs */}
           <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 lg:sticky lg:top-24 lg:self-start scrollbar-none">
             {features.map((f, i) => (
               <button
                 key={f.id}
                 onClick={() => setActive(i)}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition-all duration-300 whitespace-nowrap lg:whitespace-normal min-w-[180px] lg:min-w-0",
+                  "flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition-all duration-200 whitespace-nowrap lg:whitespace-normal min-w-[180px] lg:min-w-0",
                   active === i
-                    ? "bg-primary/10 border border-primary/30 text-foreground shadow-[0_0_20px_hsl(var(--primary)/0.1)]"
+                    ? "bg-primary/10 border border-primary/30 border-l-[3px] border-l-primary text-foreground shadow-[0_0_20px_hsl(var(--primary)/0.1)]"
                     : "border border-transparent text-muted-foreground hover:text-foreground hover:bg-card/50"
                 )}
               >
@@ -120,7 +121,9 @@ export default function FeatureTabs() {
           </div>
 
           {/* Right: Content panel */}
-          <div className="relative min-h-[320px] rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm p-8 md:p-10 overflow-hidden">
+          <div className="relative min-h-[320px] rounded-2xl glass-surface p-8 md:p-10 overflow-hidden">
+            {/* Inner top shine */}
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.03] to-transparent rounded-t-2xl pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.05)_0%,transparent_60%)]" />
             <AnimatePresence mode="wait">
               <motion.div
@@ -128,16 +131,16 @@ export default function FeatureTabs() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className="relative z-10"
               >
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <current.icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-2xl font-bold">{current.content.headline}</h3>
                 </div>
-                <p className="text-muted-foreground text-base mb-8 max-w-lg">
+                <p className="text-muted-foreground text-base mb-8 max-w-lg leading-relaxed">
                   {current.content.body}
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -155,6 +158,7 @@ export default function FeatureTabs() {
           </div>
         </div>
       </div>
+      <div className="section-fade-bottom" />
     </section>
   );
 }

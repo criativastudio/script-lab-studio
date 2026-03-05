@@ -41,7 +41,7 @@ export const ContainerScroll = ({
       <div
         className="py-10 md:py-40 w-full relative"
         style={{
-          perspective: "1000px",
+          perspective: "1600px",
         }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
@@ -88,11 +88,13 @@ export const Card = ({
         rotateX: rotate,
         scale,
         boxShadow:
-          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
+          "0 40px 80px rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1)",
       }}
-      className="max-w-5xl -mt-12 mx-auto h-[30rem] md:h-[40rem] w-full border-4 border-border/20 p-2 md:p-6 bg-background/80 rounded-[30px] shadow-2xl"
+      className="max-w-5xl -mt-12 mx-auto h-[30rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
     >
-      <div className="h-full w-full overflow-hidden rounded-2xl bg-background/50 md:rounded-2xl md:p-4">
+      {/* Glass reflection overlay */}
+      <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/[0.04] to-transparent rounded-t-[30px] pointer-events-none z-10" />
+      <div className="h-full w-full overflow-hidden rounded-2xl bg-background/50 md:rounded-2xl md:p-4 relative">
         {children}
       </div>
     </motion.div>

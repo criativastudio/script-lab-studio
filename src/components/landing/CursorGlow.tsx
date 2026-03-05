@@ -24,14 +24,15 @@ export default function CursorGlow() {
     <div
       className="pointer-events-none fixed z-[60] rounded-full mix-blend-screen"
       style={{
-        width: 340,
-        height: 340,
-        left: pos.x - 170,
-        top: pos.y - 170,
+        width: 280,
+        height: 280,
+        left: pos.x - 140,
+        top: pos.y - 140,
         background:
-          "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, hsl(217 91% 60% / 0.06) 40%, transparent 70%)",
+          "radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, hsl(217 91% 60% / 0.04) 40%, transparent 70%)",
         filter: "blur(30px)",
-        transition: "left 0.15s ease-out, top 0.15s ease-out",
+        willChange: "left, top",
+        transition: "left 0.12s ease-out, top 0.12s ease-out",
       }}
     />
   );

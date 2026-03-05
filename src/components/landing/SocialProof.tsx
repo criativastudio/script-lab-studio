@@ -26,19 +26,19 @@ const testimonials = [
 
 export default function SocialProof() {
   return (
-    <section className="relative py-24 md:py-32 px-4">
+    <section className="relative py-28 md:py-36 px-4">
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4">
+          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-6">
             Quem usa, <span className="text-gradient-primary">recomenda</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Veja o que nossos usuários estão dizendo.
           </p>
         </motion.div>
@@ -52,9 +52,11 @@ export default function SocialProof() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               whileHover={{ y: -4 }}
-              className="rounded-2xl border border-border/30 bg-card/40 backdrop-blur-sm p-6 transition-shadow duration-300 hover:shadow-[0_0_30px_hsl(var(--primary)/0.08)]"
+              className="relative rounded-2xl border border-border/30 bg-card/40 backdrop-blur-sm p-7 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden"
             >
-              <div className="flex items-center gap-3 mb-4">
+              {/* Top edge shine */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+              <div className="flex items-center gap-3 mb-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
                   {t.avatar}
                 </div>
