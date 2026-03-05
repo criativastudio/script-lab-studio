@@ -1,31 +1,64 @@
+# Headlines em duas linhas, gradiente animado e espaçamento reduzido
 
+## Mudanças
 
-# Corrigir cores do RainbowButton no modo claro
+### 1. `src/index.css` — Gradiente animado alternando cores
 
-## Problema
+Atualizar `.text-gradient-primary` para usar uma animação suave que alterna entre #cbacef e #f5cea5:
 
-O `RainbowButton` usa fundo escuro (`#121213`) no modo claro e fundo branco (`#fff`) no modo escuro — o contrário do esperado. O texto interno fica ilegível no modo claro.
+```css
+.text-gradient-primary {
+  background: linear-gradient(90deg, #cbacef, #f5cea5, #cbacef, #f5cea5);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-text-shift 6s ease infinite;
+}
 
-## Solução
+@keyframes gradient-text-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+```
 
-Inverter os gradientes de fundo e ajustar a cor do texto:
+### 2. `src/pages/LandingPage.tsx` — Headlines em duas linhas + espaçamento
 
-### `src/components/ui/rainbow-button.tsx`
+**Hero headline (linha 174):** Adicionar `max-w-3xl mx-auto` para forçar quebra em duas linhas e reduzir `leading` para mínimo:
 
-| Propriedade | Antes (light) | Depois (light) |
-|-------------|---------------|-----------------|
-| Background | `#121213` (preto) | `#fff` (branco) |
-| Background overlay | `rgba(18,18,19,...)` | `rgba(255,255,255,...)` |
-| Text color | `text-primary-foreground` | `text-foreground dark:text-background` |
+```tsx
+className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
+```
 
-| Propriedade | Antes (dark) | Depois (dark) |
-|-------------|--------------|----------------|
-| Background | `#fff` (branco) | `#121213` (preto) |
-| Background overlay | `rgba(255,255,255,...)` | `rgba(18,18,19,...)` |
+Quebrar o texto com `<br className="hidden md:block" />` ou usar `max-w` para forçar a quebra natural.
 
-Ou seja, trocar as linhas de light e dark mode entre si, e ajustar o texto para ter contraste adequado em ambos os modos.
+**Todas as seções com `py-28 md:py-36`** → reduzir para `py-16 md:py-24`:
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/ui/rainbow-button.tsx` | Inverter gradientes light/dark e ajustar cor do texto |
+- Seção AI Workflow Steps (linha 280): `py-28 md:py-36` → `py-16 md:py-24`
+- Seção Problema (linha 320): `py-28 md:py-36` → `py-16 md:py-24`
+- Seção Exemplo de Roteiro (linha 367): `py-28 md:py-36` → `py-16 md:py-24`
+- Seção Benefícios (linha 414): `py-28 md:py-36` → `py-16 md:py-24`
+- Seção Planos (linha 451): `py-28 md:py-36` → `py-16 md:py-24`
+- Seção Final CTA (linha 517): `py-28 md:py-36` → `py-16 md:py-24`
 
+**Headlines longas — forçar duas linhas com max-width:**
+
+- Hero: "Roteiros Profissionais em Minutos" → adicionar `max-w-2xl mx-auto`
+- Benefícios (linha 423): "Tudo que você precisa para criar conteúdo estratégico" → adicionar `max-w-xl mx-auto`
+- Final CTA (linha 526): "Transforme Ideias em Roteiros Poderosos em Minutos" → adicionar `max-w-md mx-auto`
+
+### 3. Componentes filhos — Reduzir espaçamento
+
+- `AIInputDemo.tsx` (linha 65): `py-28 md:py-36` → `py-16 md:py-24`
+- `FeatureTabs.tsx` (linha 75): `py-28 md:py-36` → `py-16 md:py-24`, e `mb-20` → `mb-12`
+- `SocialProof.tsx` (linha 35): `py-28 md:py-36` → `py-16 md:py-24`
+
+## Arquivos modificados
+
+| Arquivo                                  | Mudança                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `src/index.css`                          | Gradiente animado alternando cores                                   |
+| `src/pages/LandingPage.tsx`              | Headlines com max-w para duas linhas + reduzir py em todas as seções |
+| `src/components/landing/AIInputDemo.tsx` | Reduzir padding vertical                                             |
+| `src/components/landing/FeatureTabs.tsx` | Reduzir padding vertical                                             |
+| `src/components/landing/SocialProof.tsx` | Reduzir padding vertical                                             |
