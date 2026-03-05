@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.process-briefing]
 verify_jwt = false
+
+[functions.manual-generate]
+verify_jwt = false
