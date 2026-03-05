@@ -61,6 +61,10 @@ Respostas do formulário:
 3. Problema resolvido: ${answers.problem_solved || "Não informado"}
 4. Objetivo do negócio: ${JSON.stringify(answers.business_objectives || [])}
 5. Referências de conteúdo: ${JSON.stringify(answers.content_references || [])}
+6. Estilo de comunicação: ${JSON.stringify(answers.communication_style || [])}
+7. Plataformas principais: ${JSON.stringify(answers.main_platforms || [])}
+8. Dores do cliente: ${answers.pain_points || "Não informado"}
+9. Diferenciais: ${answers.differentiators || "Não informado"}
 
 Gere exatamente ${videoCount} roteiros estratégicos diferentes para este cliente. Cada roteiro deve ser completo e pronto para produção.
 `;
@@ -120,19 +124,17 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes para este client
     if (!response.ok) {
       const errText = await response.text();
       console.error("AI Gateway error:", response.status, errText);
+      await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
       if (response.status === 429) {
-        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
         return new Response(JSON.stringify({ error: "Payment required for AI processing." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
       return new Response(JSON.stringify({ error: "AI processing failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -197,6 +199,44 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes para este client
       project_id: project.id,
       status: "completed",
     }).eq("id", br.id);
+
+    // 5. Create/update strategic context from form answers
+    const contextData: Record<string, any> = {
+      user_id: br.user_id,
+      business_name: br.business_name,
+      business_niche: br.niche || null,
+      products_services: answers.about_business || null,
+      target_audience: answers.typical_customer || result.persona || null,
+      customer_persona: result.persona || null,
+      tone_of_voice: result.tone_of_voice || null,
+      market_positioning: result.positioning || null,
+      pain_points: answers.pain_points || answers.problem_solved || null,
+      differentiators: answers.differentiators || null,
+      marketing_objectives: Array.isArray(answers.business_objectives)
+        ? answers.business_objectives.join(", ")
+        : (answers.business_objectives || null),
+      main_platforms: Array.isArray(answers.main_platforms) ? answers.main_platforms : [],
+      communication_style: Array.isArray(answers.communication_style)
+        ? answers.communication_style.join(", ")
+        : (answers.communication_style || null),
+      is_completed: true,
+    };
+
+    // Upsert: try update first, then insert
+    const { data: existingCtx } = await supabase
+      .from("client_strategic_contexts")
+      .select("id")
+      .eq("user_id", br.user_id)
+      .eq("business_name", br.business_name)
+      .single();
+
+    if (existingCtx) {
+      await supabase.from("client_strategic_contexts")
+        .update(contextData)
+        .eq("id", existingCtx.id);
+    } else {
+      await supabase.from("client_strategic_contexts").insert(contextData);
+    }
 
     return new Response(JSON.stringify({
       success: true,
