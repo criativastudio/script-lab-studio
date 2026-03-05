@@ -54,17 +54,18 @@ export default function AIInputDemo() {
   }, [typed, isDeleting, currentIndex]);
 
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden">
+    <section className="relative py-28 md:py-36 overflow-hidden">
       {/* Holographic mesh gradient background */}
       <div
         className="absolute inset-0"
         style={{
           background:
             "linear-gradient(135deg, hsl(var(--holo-blue)) 0%, hsl(var(--holo-violet)) 40%, hsl(var(--holo-pink)) 80%, hsl(var(--holo-blue)) 100%)",
-          opacity: 0.4,
+          opacity: 0.35,
         }}
       />
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+      <div className="section-fade-top" />
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 text-center">
         <motion.div
@@ -73,11 +74,11 @@ export default function AIInputDemo() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 tracking-tight">
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 tracking-tight">
             Qual nicho você quer{" "}
             <span className="text-gradient-primary">transformar?</span>
           </h2>
-          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
             Diga à IA o seu segmento e receba roteiros sob medida.
           </p>
         </motion.div>
@@ -90,13 +91,13 @@ export default function AIInputDemo() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative mx-auto max-w-xl"
         >
-          <div className="relative flex items-center rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-[0_0_40px_hsl(var(--primary)/0.08)] px-5 py-4 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_0_60px_hsl(var(--primary)/0.15)]">
+          <div className="relative flex items-center rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-[0_8px_40px_hsl(var(--primary)/0.06),0_2px_12px_rgba(0,0,0,0.08)] px-5 py-4 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_8px_60px_hsl(var(--primary)/0.12),0_0_0_1px_hsl(var(--primary)/0.15)]">
             <Sparkles className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
             <div className="flex-1 text-left">
               <span className="text-foreground">{typed}</span>
               <span className="inline-block w-0.5 h-5 bg-primary ml-0.5 animate-typing-cursor align-middle" />
             </div>
-            <button className="ml-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform hover:scale-110 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+            <button className="ml-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all duration-200 hover:scale-110 hover:shadow-[0_0_24px_hsl(var(--primary)/0.4)] active:scale-95">
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -108,18 +109,19 @@ export default function AIInputDemo() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-6 flex flex-wrap justify-center gap-2"
+          className="mt-8 flex flex-wrap justify-center gap-2"
         >
           {chips.map((chip) => (
             <span
               key={chip}
-              className="inline-flex items-center rounded-full border border-border/40 bg-card/40 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-200 cursor-pointer"
+              className="inline-flex items-center rounded-full border border-border/40 bg-card/40 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               {chip}
             </span>
           ))}
         </motion.div>
       </div>
+      <div className="section-fade-bottom" />
     </section>
   );
 }

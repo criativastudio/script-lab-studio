@@ -98,7 +98,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* ── NAVBAR ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/20 bg-background/60 backdrop-blur-2xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/20 bg-background/60 backdrop-blur-2xl shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
           <span className="text-lg font-bold tracking-tight">
             Script<span className="text-gradient-primary">Lab</span>
@@ -170,7 +170,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-white mb-6"
+            className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-white mb-8"
           >
             Crie na Velocidade{" "}
             <span className="text-gradient-primary">do Pensamento</span>
@@ -181,7 +181,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto max-w-2xl text-base md:text-lg text-[hsl(215_16%_56%)] mb-10"
+            className="mx-auto max-w-2xl text-base md:text-lg text-[hsl(215_16%_56%)] mb-12"
           >
             Transforme ideias em roteiros profissionais com IA.
             Briefing inteligente, persona estratégica e scripts prontos para gravação.
@@ -196,7 +196,7 @@ export default function LandingPage() {
           >
             <button
               onClick={() => navigate("/auth")}
-              className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] hover:scale-105"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] hover:scale-105 active:scale-[0.98]"
             >
               Começar gratuitamente
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -224,7 +224,7 @@ export default function LandingPage() {
         <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(var(--hero-pink)/0.08)] -bottom-20 right-0" />
 
-        <div className="relative z-10" style={{ perspective: "1400px", transformStyle: "preserve-3d" as const }}>
+        <div className="relative z-10" style={{ perspective: "1600px", transformStyle: "preserve-3d" as const }}>
           <ContainerScroll
             titleComponent={
               <motion.div
@@ -247,7 +247,7 @@ export default function LandingPage() {
           </ContainerScroll>
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* ── 4. INTERACTIVE FEATURES ── */}
@@ -256,7 +256,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── 5. AI WORKFLOW STEPS ── */}
-      <section id="solucao" className="relative py-24 md:py-32 px-4">
+      <section id="solucao" className="relative py-28 md:py-36 px-4">
         <div className="mx-auto max-w-5xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -265,10 +265,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">A solução</Badge>
-            <h2 className="font-display text-3xl font-bold md:text-5xl mb-4 tracking-tight">
+            <h2 className="font-display text-3xl font-bold md:text-5xl mb-6 tracking-tight">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-lg">
+            <p className="mx-auto mb-16 max-w-2xl text-muted-foreground text-lg leading-relaxed">
               Em três passos simples, você sai da ideia ao roteiro pronto.
             </p>
           </motion.div>
@@ -292,11 +292,11 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* ── 6. PROBLEMA ── */}
-      <section id="problema" className="relative py-24 md:py-32 px-4">
+      <section id="problema" className="relative py-28 md:py-36 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -305,10 +305,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">O problema</Badge>
-            <h2 className="font-display text-3xl font-bold md:text-5xl mb-4 tracking-tight">
+            <h2 className="font-display text-3xl font-bold md:text-5xl mb-6 tracking-tight">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg">
+            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg leading-relaxed">
               A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
             </p>
           </motion.div>
@@ -320,7 +320,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.03 }}
                 className="group/card relative min-h-[14rem] rounded-2xl border border-border/40 bg-card/50 p-2"
               >
                 <GlowingEffect spread={40} glow proximity={64} inactiveZone={0.01} borderWidth={2} disabled={false} />
@@ -339,11 +339,11 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* ── EXEMPLO DE ROTEIRO ── */}
-      <section className="relative py-24 md:py-32 px-4">
+      <section className="relative py-28 md:py-36 px-4">
         <div className="mx-auto max-w-3xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -352,7 +352,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Exemplo</Badge>
-            <h2 className="font-display text-3xl font-bold md:text-5xl mb-4 tracking-tight">
+            <h2 className="font-display text-3xl font-bold md:text-5xl mb-6 tracking-tight">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
             <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg">
@@ -383,14 +383,14 @@ export default function LandingPage() {
             </motion.div>
           ))}
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* ── 7. SOCIAL PROOF ── */}
       <SocialProof />
 
       {/* ── BENEFÍCIOS ── */}
-      <section className="relative py-24 md:py-32 px-4">
+      <section className="relative py-28 md:py-36 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -412,7 +412,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
                 whileHover={{ y: -4 }}
-                className="group flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:bg-card/30"
+                className="group flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:bg-card/40 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
               >
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8 text-primary ring-1 ring-primary/20 group-hover:ring-primary/40 group-hover:shadow-[0_0_25px_hsl(var(--primary)/0.2)] transition-all">
                   <b.icon className="h-6 w-6" />
@@ -423,11 +423,11 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" className="relative py-24 md:py-32 px-4">
+      <section id="planos" className="relative py-28 md:py-36 px-4">
         <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
@@ -437,7 +437,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Planos</Badge>
-            <h2 className="font-display text-3xl font-bold md:text-5xl mb-4 tracking-tight">
+            <h2 className="font-display text-3xl font-bold md:text-5xl mb-6 tracking-tight">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
             <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-lg">
@@ -455,7 +455,7 @@ export default function LandingPage() {
                 whileHover={{ y: -4 }}
                 className={`relative rounded-2xl p-8 text-left transition-all duration-300 ${
                   p.highlight
-                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15)] scale-[1.03] animate-border-glow"
+                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] scale-[1.03]"
                     : "glass-card"
                 }`}
               >
@@ -477,7 +477,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  className={`w-full rounded-full ${p.highlight ? "shadow-[0_0_20px_hsl(var(--primary)/0.3)]" : ""}`}
+                  className={`w-full rounded-full transition-all duration-300 ${p.highlight ? "shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.35)]" : ""}`}
                   variant={p.highlight ? "default" : "outline"}
                   onClick={() => navigate("/auth")}
                 >
@@ -490,7 +490,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. FINAL CTA ── */}
-      <section className="py-24 md:py-32 px-4">
+      <section className="py-28 md:py-36 px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -499,7 +499,7 @@ export default function LandingPage() {
           className="mx-auto max-w-3xl rounded-3xl bg-[hsl(220_25%_6%)] border border-[hsl(220_20%_14%)] p-10 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-3xl font-bold md:text-5xl mb-4 text-white tracking-tight">
+          <h2 className="relative z-10 font-display text-3xl font-bold md:text-5xl mb-6 text-white tracking-tight">
             Comece a criar com IA <span className="text-gradient-primary">hoje</span>
           </h2>
           <p className="relative z-10 text-[hsl(215_16%_56%)] mb-8 max-w-md mx-auto text-lg">
@@ -508,7 +508,7 @@ export default function LandingPage() {
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
             <Button
               size="lg"
-              className="gap-2 text-base rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
+              className="gap-2 text-base rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] active:scale-[0.98]"
               onClick={() => navigate("/auth")}
             >
               Começar gratuitamente <ArrowRight className="h-4 w-4" />
