@@ -123,9 +123,9 @@ export default function LandingPage() {
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            <Button size="sm" className="hidden md:inline-flex gap-1.5 rounded-full" onClick={() => navigate("/auth")}>
+            <RainbowButton className="hidden md:inline-flex gap-1.5 h-9 px-4 text-sm rounded-full" onClick={() => navigate("/auth")}>
               Começar grátis <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
+            </RainbowButton>
 
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -140,9 +140,9 @@ export default function LandingPage() {
                 {l.label}
               </a>
             ))}
-            <Button size="sm" className="w-full rounded-full" onClick={() => navigate("/auth")}>
+            <RainbowButton className="w-full rounded-full h-9 text-sm" onClick={() => navigate("/auth")}>
               Começar grátis
-            </Button>
+            </RainbowButton>
           </div>
         )}
       </nav>
@@ -497,13 +497,12 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className={`w-full rounded-full transition-all duration-300 ${p.highlight ? "shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.35)]" : ""}`}
-                  variant={p.highlight ? "default" : "outline"}
+                <RainbowButton
+                  className="w-full rounded-full"
                   onClick={() => navigate("/auth")}
                 >
                   {p.price === "Grátis" ? "Começar grátis" : "Assinar agora"}
-                </Button>
+                </RainbowButton>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
                   {p.price === "Grátis" ? "Sem compromisso" : "Cancele quando quiser"}
                 </p>
@@ -530,13 +529,12 @@ export default function LandingPage() {
             Roteiros profissionais prontos para gravação em minutos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
-            <Button
-              size="lg"
-              className="gap-2 text-base rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] active:scale-[0.98]"
+            <RainbowButton
+              className="gap-2 text-base rounded-full"
               onClick={() => navigate("/auth")}
             >
               Garantir meu acesso grátis <ArrowRight className="h-4 w-4" />
-            </Button>
+            </RainbowButton>
             <Button
               size="lg"
               variant="outline"
