@@ -1,65 +1,65 @@
 
 
-# Refactor CRM into Client-Centric Management System
+# Collapsible Project Blocks, Multi-Project Clients, and PDF/UI Improvements
 
 ## Summary
 
-Replace the current table-based Projects/Briefings UI with a modern card-based Clients system. The CRM page becomes a client card grid. Clicking a card navigates to a client detail view (same page, no new routes) showing briefings and scripts organized by date with edit and instant PDF download buttons, plus a "Generate with Agent" button.
+Refactor the CRM client detail view to group briefing_requests by `business_name` as "clients" with multiple projects. Each project appears as a collapsible block. Add ability to create new projects for existing clients. Modernize PDF output and overall UI.
 
-## Architecture
+## Data Architecture
 
-The CRM page will have two views managed by state:
-- **List view**: Client cards grid + "Add New Client" button
-- **Detail view**: Full client dashboard when a card is clicked (back button to return)
-
-Data source: `briefing_requests` table already stores clients (business_name, contact_name, etc.) and links to projects/scripts. Each briefing_request IS a client record.
+Currently each `briefing_request` = one client+project. To support multiple projects per client:
+- **List view**: Group `briefing_requests` by `business_name` — show one card per unique business, with project count
+- **Detail view**: Show all `briefing_requests` for that business as collapsible project blocks
+- **New project**: Pre-fills business_name, contact info from existing client, creates a new `briefing_request`
 
 ## Changes
 
-### 1. `src/components/DashboardLayout.tsx`
-- Rename nav item: `"Projetos"` -> `"Clientes"`, keep same `/crm` route and `FolderOpen` icon (or switch to `Users`)
+### 1. `src/pages/CRM.tsx` — Major refactor
 
-### 2. `src/pages/CRM.tsx` — Full refactor
+**List View**:
+- Group clients array by `business_name` into a `Map<string, BriefingRequest[]>`
+- Each card shows: business name, contact info (from first record), total project count, latest status
+- Click opens detail view with all projects for that business
 
-**List View (default)**:
-- Page title: "Clientes"
-- "Adicionar Novo Cliente" button (reuses existing briefing request dialog)
-- Responsive card grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`)
-- Each card: client avatar initial, business_name, project_name, status badge, video count, date
-- Click card -> sets `selectedClient` state to show detail view
+**Detail View**:
+- Header shows client info (business_name, contact from first record)
+- "Adicionar Novo Projeto" button — opens dialog pre-filled with client info (business_name, contact), user just enters project_name + video_quantity
+- "Download PDF Completo" downloads all projects' data
+- Each project = a `Collapsible` block (from existing `@radix-ui/react-collapsible`):
+  - Trigger: project name, status badge, date, video count
+  - Content: strategic data (persona, positioning, strategy), briefings list, scripts list — each with edit/view/download/delete buttons
+- Generate with Agent available per-project
 
-**Detail View (when client selected)**:
-- Back button to return to list
-- Header: client name, business, contact info, status badge
-- "Generate with Agent" button — calls `process-briefing` edge function using stored client data to regenerate/create new briefings+scripts
-- Two sections: Briefings and Scripts, sorted by date descending
-- Each item card shows: title/goal, date, two action buttons:
-  - **Edit** — opens inline edit dialog (briefing: goal/audience/style fields; script: title/content textarea)
-  - **Download PDF** — instant PDF generation with NO extra form. Uses client data auto-filled (business_name, project_name from briefing_request) and calls `window.print()` directly
-- The ScriptViewer dialog remains for viewing formatted scripts (eye icon)
+**PDF (no-form instant download)**:
+- Per-project PDF: downloads that project's briefing + scripts
+- Full client PDF: all projects concatenated with page breaks
 
-**PDF (no-form download)**:
-- When user clicks "Download PDF" on a script or briefing, auto-populate all PDF fields from the client record and trigger print immediately — no config dialog needed
-- Keep the hidden print container but auto-fill from client data
+### 2. `src/index.css` — PDF styling overhaul
 
-**"Generate with Agent" button**:
-- Uses stored `form_answers` from the `briefing_requests` record
-- Calls `process-briefing` edge function with the client's token
-- Shows loading state, then refreshes data on completion
-- If no form_answers exist yet (client hasn't filled form), shows a toast message
+Modernize print styles:
+- Switch to sans-serif font (`Inter`, `Helvetica Neue`, system-ui)
+- Add cover page with large business name, project name, date, status
+- Improve section cards with left accent borders
+- Two-column metadata layout
+- Script cards with numbered headers, proper spacing
+- Better page break handling
+- Subtle color accents instead of heavy borders
 
-### 3. Keep existing functionality
-- `ScriptViewer` component stays
-- Print CSS stays
-- Briefing request creation dialog stays (now labeled "Adicionar Novo Cliente")
-- All Supabase queries remain the same, just reorganized in the UI
+### 3. UI/UX improvements (in CRM.tsx)
+
+- Client cards: subtle gradient hover, better spacing, project count badge
+- Collapsible triggers: clean row with chevron animation
+- Briefing/script item cards: improved typography, icon consistency
+- Strategic sections (persona, positioning, etc.): render as styled cards with icons instead of raw text
+- Better empty states
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/DashboardLayout.tsx` | Rename "Projetos" to "Clientes", change icon to Users |
-| `src/pages/CRM.tsx` | Full UI refactor: card grid list + client detail view with edit/download/generate |
+| `src/pages/CRM.tsx` | Group by business, collapsible project blocks, new project dialog, improved cards/UI |
+| `src/index.css` | Modern PDF print styles with sans-serif, cover page, accent borders |
 
-No database changes needed — all data already exists in `briefing_requests`, `projects`, `briefings`, `scripts` tables.
+No database changes needed.
 
