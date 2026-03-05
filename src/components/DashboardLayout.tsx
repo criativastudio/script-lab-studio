@@ -1,8 +1,9 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,6 +22,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const { user, profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,6 +67,15 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <p className="text-xs text-sidebar-foreground/50">{isAdmin ? "Admin" : "Produtor"}</p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+            {theme === "dark" ? "Modo Claro" : "Modo Escuro"}
+          </Button>
           <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sair
