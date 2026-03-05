@@ -123,7 +123,7 @@ export default function FeatureTabs() {
           {/* Right: Content panel */}
           <div className="relative min-h-[320px] rounded-2xl glass-surface p-8 md:p-10 overflow-hidden">
             {/* Inner top shine */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.03] to-transparent rounded-t-2xl pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-foreground/[0.03] to-transparent rounded-t-2xl pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.05)_0%,transparent_60%)]" />
             <AnimatePresence mode="wait">
               <motion.div
