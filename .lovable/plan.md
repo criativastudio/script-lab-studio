@@ -1,71 +1,103 @@
 
-# Criacao de Usuarios via Admin (Multi-Tenant)
 
-## Resumo
+# Adapt SaaS to Strategic Intelligence Platform for Audiovisual Production
 
-Implementar um fluxo seguro onde apenas admins podem criar usuarios. A criacao acontece via uma Edge Function que usa a Service Role Key do Supabase para criar o usuario no Auth, vincular ao cliente (empresa), definir o perfil e atribuir a role "client".
+## Summary
 
-## O que sera criado
+Transform the existing law-firm SaaS into an audiovisual production intelligence platform by rewriting all 5 existing pages and adding RLS to the `projects`, `briefings`, `scripts`, and `ideas` tables. No new pages created -- only content and branding changes.
 
-### 1. Edge Function: `create-user`
+## Database Changes (Migration)
 
-Uma funcao backend segura em `supabase/functions/create-user/index.ts` que:
+The existing tables need schema updates and RLS policies:
 
-- Valida que o chamador e admin (via `getClaims` + consulta `user_roles`)
-- Recebe: `email`, `password`, `full_name`, `office_name`, `client_name`, `plan` (basic/premium), e opcionalmente `client_id` (empresa existente)
-- Cria a empresa na tabela `clients` se `client_id` nao for informado
-- Cria o usuario no Supabase Auth via `supabase.auth.admin.createUser()` com `email_confirm: true` (ja confirmado)
-- Insere o perfil em `profiles` vinculando `user_id` ao `client_id`
-- Insere a role "client" em `user_roles`
-- Retorna os dados do usuario criado
+### 1. `projects` table -- add columns
+- `client_name text`
+- `objective text`
+- `platform text`
+- `status text default 'active'`
 
-### 2. Atualizacao do Painel Admin (`src/pages/Admin.tsx`)
+### 2. `scripts` table -- add `user_id`
+- `user_id uuid` (to link to auth user)
+- `title text`
 
-Adicionar um novo dialog "Criar Usuario" com formulario contendo:
+### 3. `ideas` table -- add `user_id`
+- `user_id uuid`
+- `status text default 'new'`
 
-- Select para escolher empresa existente OU campos para criar nova (nome da empresa)
-- Nome do usuario
-- Email
-- Senha
-- Plano (basic / premium) -- armazenado como campo extra, mas como a instrucao diz "nao alterar estrutura do banco", o plano sera salvo no `raw_user_meta_data` do Auth ou ignorado por enquanto
+### 4. `briefings` table -- add `user_id`
+- `user_id uuid`
 
-### 3. Configuracao do config.toml
+### 5. RLS policies for all 4 tables
+Each table gets:
+- Users can CRUD their own rows (`auth.uid() = user_id`)
+- Admins can see all (`has_role(auth.uid(), 'admin')`)
 
-Adicionar a entrada da edge function com `verify_jwt = false` (validacao manual no codigo).
+For `briefings`, `scripts` -- access via `project_id` join to projects where `user_id = auth.uid()`, OR direct `user_id` column.
 
-## Fluxo de Seguranca
+## Page Rewrites
 
-```text
-Admin (frontend)
-  |
-  v
-Edge Function (create-user)
-  |-- Valida JWT do chamador
-  |-- Verifica role "admin" na tabela user_roles
-  |-- Cria empresa (se necessario) via Service Role
-  |-- Cria usuario via auth.admin.createUser()
-  |-- Insere profile + role via Service Role
-  |
-  v
-Usuario criado, pronto para login
-```
+### Auth (`src/pages/Auth.tsx`)
+- Rebrand: "ScriptLab Studio" with Film/Clapperboard icon
+- Tagline: "Plataforma de Inteligencia Estrategica para Producao Audiovisual"
+- Keep login-only (remove signup toggle since admin-provisioned)
 
-## Detalhes Tecnicos
+### Dashboard (`src/pages/Dashboard.tsx`)
+- Title: "Content Intelligence Dashboard"
+- Cards: Total Projects, Scripts Generated, Ideas, Active Briefings
+- Recent projects list (last 5 from `projects`)
+- Recent scripts list (last 5 from `scripts`)
+- Recent ideas (last 5 from `ideas`)
 
-**Edge Function** (`supabase/functions/create-user/index.ts`):
-- Usa CORS headers padrao
-- Usa `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (ja configurados como secrets)
-- Valida inputs com checagens basicas (email, senha minima 6 chars, nome obrigatorio)
-- Usa `createClient` com service role para operacoes admin
-- Usa outro client com o token do chamador para verificar a role
+### CRM -> Projects Manager (`src/pages/CRM.tsx`)
+- Title: "Gerenciador de Projetos"
+- Table listing projects with columns: client_name, objective, platform, status, created_at
+- Dialog to create new project (client_name, objective, platform)
+- Click project to expand/view linked briefings and scripts
+- Filter by status
 
-**Frontend** (`src/pages/Admin.tsx`):
-- Novo botao "Criar Usuario" ao lado do "Novo Cliente"
-- Dialog com formulario: select de empresa existente, nome, email, senha, plano
-- Chama `supabase.functions.invoke("create-user", { body: ... })`
-- Feedback via toast de sucesso/erro
+### Metrics -> Content Performance Analytics (`src/pages/Metrics.tsx`)
+- Title: "Analise de Desempenho de Conteudo"
+- Cards: Scripts generated (count), Ideas created, Projects active, Briefings completed
+- Breakdown by platform (from projects.platform)
+- Activity timeline (recent items by date)
 
-**config.toml**:
-- Adicionar `[functions.create-user]` com `verify_jwt = false`
+### WhatsApp -> Content Distribution Hub (`src/pages/WhatsApp.tsx`)
+- Title: "Distribuicao de Conteudo"
+- Keep WhatsApp connection functionality
+- Add a section listing recent scripts/ideas that can be "sent" (copy to clipboard or share link)
+- Maintain existing WhatsApp connection card
 
-**Nota sobre o campo "Plano"**: Como a instrucao pede para nao alterar a estrutura do banco, o plano sera armazenado no `raw_user_meta_data` do usuario Auth, acessivel via `user.user_metadata.plan`. Futuramente pode ser migrado para uma coluna dedicada.
+### Admin (`src/pages/Admin.tsx`)
+- Keep user management (CreateUserDialog)
+- Replace client/flow management with:
+  - Platform analytics: total users, projects, scripts counts
+  - Subscription management: list from `subscriptions` table
+  - Keep user creation dialog
+
+### DashboardLayout (`src/components/DashboardLayout.tsx`)
+- Rebrand sidebar: "ScriptLab Studio" / "Producao Audiovisual"
+- Update nav icons and labels:
+  - Dashboard (LayoutDashboard)
+  - Projetos (FolderOpen)
+  - Analises (BarChart3)
+  - Distribuicao (Send)
+  - Admin (Shield)
+
+## Files Modified
+
+1. **Migration SQL** -- add columns + RLS to projects/briefings/scripts/ideas
+2. `src/pages/Auth.tsx` -- rebrand
+3. `src/pages/Dashboard.tsx` -- full rewrite to content intelligence
+4. `src/pages/CRM.tsx` -- rewrite to projects manager
+5. `src/pages/Metrics.tsx` -- rewrite to content analytics
+6. `src/pages/WhatsApp.tsx` -- rewrite to distribution hub
+7. `src/pages/Admin.tsx` -- adapt admin controls
+8. `src/components/DashboardLayout.tsx` -- rebrand + new nav labels
+
+## Technical Notes
+
+- All queries use `supabase.from("table").select(...).eq("user_id", user.id)` for user-scoped data
+- Admin views use unfiltered queries (RLS allows via `has_role`)
+- The `useAuth` hook remains unchanged -- `user.id` is used directly instead of `clientId` for these new tables
+- Existing multi-tenant tables (clients, leads, conversations, etc.) are untouched but hidden from nav
+
