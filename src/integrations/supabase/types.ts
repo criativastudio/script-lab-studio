@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      briefing_requests: {
+        Row: {
+          business_name: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_whatsapp: string | null
+          content_strategy: string | null
+          created_at: string | null
+          form_answers: Json | null
+          id: string
+          persona: string | null
+          positioning: string | null
+          project_id: string | null
+          project_name: string
+          status: string
+          token: string
+          tone_of_voice: string | null
+          user_id: string
+          video_quantity: number
+        }
+        Insert: {
+          business_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          content_strategy?: string | null
+          created_at?: string | null
+          form_answers?: Json | null
+          id?: string
+          persona?: string | null
+          positioning?: string | null
+          project_id?: string | null
+          project_name: string
+          status?: string
+          token?: string
+          tone_of_voice?: string | null
+          user_id: string
+          video_quantity?: number
+        }
+        Update: {
+          business_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          content_strategy?: string | null
+          created_at?: string | null
+          form_answers?: Json | null
+          id?: string
+          persona?: string | null
+          positioning?: string | null
+          project_id?: string | null
+          project_name?: string
+          status?: string
+          token?: string
+          tone_of_voice?: string | null
+          user_id?: string
+          video_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       briefings: {
         Row: {
           content_style: string | null
