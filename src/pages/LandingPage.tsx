@@ -171,7 +171,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8"
+            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
             Roteiros Profissionais{" "}
             <span className="text-gradient-primary">com IA em Minutos</span>
@@ -277,7 +277,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── 5. AI WORKFLOW STEPS ── */}
-      <section id="solucao" className="relative py-28 md:py-36 px-4">
+      <section id="solucao" className="relative py-16 md:py-24 px-4">
         <div className="mx-auto max-w-5xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -317,7 +317,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 6. PROBLEMA ── */}
-      <section id="problema" className="relative py-28 md:py-36 px-4">
+      <section id="problema" className="relative py-16 md:py-24 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -364,7 +364,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── EXEMPLO DE ROTEIRO ── */}
-      <section className="relative py-28 md:py-36 px-4">
+      <section className="relative py-16 md:py-24 px-4">
         <div className="mx-auto max-w-3xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -411,7 +411,7 @@ export default function LandingPage() {
       <SocialProof />
 
       {/* ── BENEFÍCIOS ── */}
-      <section className="relative py-28 md:py-36 px-4">
+      <section className="relative py-16 md:py-24 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -420,7 +420,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Benefícios</Badge>
-            <h2 className="font-display text-xl font-light md:text-3xl mb-14 tracking-tight">
+            <h2 className="font-display text-xl font-light md:text-3xl mb-14 tracking-tight max-w-xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
@@ -448,7 +448,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" className="relative py-28 md:py-36 px-4">
+      <section id="planos" className="relative py-16 md:py-24 px-4">
         <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
@@ -514,7 +514,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. FINAL CTA ── */}
-      <section className="py-28 md:py-36 px-4">
+      <section className="py-16 md:py-24 px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -523,7 +523,7 @@ export default function LandingPage() {
           className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-10 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-foreground tracking-tight">
+          <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
             Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
           </h2>
           <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg">
