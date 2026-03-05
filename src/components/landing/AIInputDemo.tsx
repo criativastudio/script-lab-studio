@@ -82,7 +82,7 @@ export default function AIInputDemo() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 tracking-tight">
+          <h2 className="font-display text-xl md:text-3xl font-light mb-6 tracking-tight">
             Qual nicho você quer{" "}
             <span className="text-gradient-primary">transformar?</span>
           </h2>
