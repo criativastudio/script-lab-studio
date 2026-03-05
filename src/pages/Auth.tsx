@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -85,9 +85,9 @@ const Auth = () => {
                 <Label htmlFor="password">Senha</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <RainbowButton type="submit" className="w-full" disabled={loading}>
                 {loading ? "Carregando..." : isSignUp ? "Criar conta" : "Entrar"}
-              </Button>
+              </RainbowButton>
             </form>
             <div className="mt-4 text-center text-sm text-muted-foreground">
               {isSignUp ? (
