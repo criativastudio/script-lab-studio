@@ -1,45 +1,34 @@
 
 
-# Adicionar busca e filtros na lista de Clientes (CRM)
+# Desativar/Excluir Clientes + Mostrar Funil nos Cards e PDFs
 
-## Problema
+## 1. Migração de banco de dados
 
-A lista de clientes não tem busca nem filtros. Com muitos clientes cadastrados, fica difícil encontrar um específico. Além disso, os campos "cidade" e "nicho/segmento" não existem no banco de dados.
+Adicionar coluna `is_active` (boolean, default true) na tabela `briefing_requests` para permitir desativação de clientes sem perder dados.
 
-## Solução
+## 2. Desativar e Excluir cliente
 
-### 1. Migração de banco de dados
+Na view de detalhe do cliente (header com info de contato), adicionar dois botões:
 
-Adicionar duas novas colunas à tabela `briefing_requests`:
-- `city` (text, nullable)
-- `niche` (text, nullable)
+- **Desativar**: Marca todos os `briefing_requests` daquele `business_name` como `is_active = false`. O cliente some da lista principal mas pode ser reativado.
+- **Excluir**: Dialog de confirmação (AlertDialog) que deleta todos os `briefing_requests`, `briefings` e `scripts` associados.
 
-### 2. UI de busca e filtros (lista de clientes)
+Na lista de clientes, filtrar por `is_active = true` por padrão, com um toggle/switch "Mostrar inativos" para ver todos.
 
-Adicionar acima do grid de cards:
-- **Input de busca** por nome (business_name, contact_name) com ícone de Search
-- **Select de cidade** populado dinamicamente a partir das cidades cadastradas
-- **Select de nicho/segmento** populado dinamicamente a partir dos nichos cadastrados
-- Botão para limpar filtros
+Cards de clientes inativos terão opacidade reduzida e badge "Inativo".
 
-Filtragem client-side no array `clientGroups` usando `useMemo`.
+## 3. Mostrar tipo de funil nos cards e PDFs
 
-### 3. Formulário de criação de cliente
+O campo `content_strategy` já existe e contém a estratégia de funil. Mudanças:
 
-Adicionar campos "Cidade" e "Nicho/Segmento" no dialog de "Novo Cliente" e incluí-los no insert do Supabase.
+- **Cards da lista**: Adicionar uma linha com ícone de funil e texto truncado do `content_strategy` (se existir em algum projeto do grupo).
+- **Card de detalhe do projeto**: Já exibe via `StrategicCard` — sem mudança necessária.
+- **PDF**: Já exibe `content_strategy` como "Estratégia de Conteúdo" (linha 708). Renomear label para "Funil de Conteúdo" para ficar mais claro.
 
 ## Arquivos modificados
 
 | Arquivo | Mudança |
 |---------|---------|
-| Migração SQL | Adicionar colunas `city` e `niche` em `briefing_requests` |
-| `src/pages/CRM.tsx` | Estado de filtros, inputs de busca/filtro, lógica de filtragem, campos no form de criação |
-| `src/integrations/supabase/types.ts` | Atualizado automaticamente após migração |
-
-## Detalhes técnicos
-
-- Filtro por nome: `toLowerCase().includes(searchTerm)` no `business_name` e `contact_name`
-- Filtros de cidade/nicho: comparação exata com valor do Select
-- Listas de opções dos Selects: extraídas com `Set` dos valores únicos presentes nos dados
-- Interface `BriefingRequest` atualizada com `city` e `niche`
+| Migração SQL | Adicionar `is_active` boolean default true em `briefing_requests` |
+| `src/pages/CRM.tsx` | Botões desativar/excluir, filtro de inativos, funil nos cards, label do PDF |
 
