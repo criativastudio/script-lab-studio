@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import HeroAnimation from "@/components/landing/HeroAnimation";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 /* ── scroll-reveal hook ── */
 function useScrollReveal() {
@@ -170,43 +171,43 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* ── HERO — SPLIT LAYOUT ── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+      {/* ── HERO — CONTAINER SCROLL ── */}
+      <section className="relative overflow-hidden pt-16">
         {/* Glow orbs */}
         <div className="glow-orb w-[500px] h-[500px] bg-primary/15 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(260_80%_65%/0.1)] -bottom-20 right-0" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.08)_0%,transparent_50%)]" />
 
-        <div className="relative z-10 mx-auto max-w-7xl w-full px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
-          {/* Left — text */}
-          <div className="flex flex-col gap-6 text-center md:text-left order-2 md:order-1">
-            <Badge variant="secondary" className="self-center md:self-start text-xs tracking-widest uppercase shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
-              Plataforma de roteiros com IA
-            </Badge>
+        <div className="relative z-10">
+          <ContainerScroll
+            titleComponent={
+              <div className="flex flex-col items-center gap-6">
+                <Badge variant="secondary" className="text-xs tracking-widest uppercase shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
+                  Plataforma de roteiros com IA
+                </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-              Crie Briefings e Roteiros de Vídeo{" "}
-              <span className="text-gradient-primary">em Minutos</span>
-            </h1>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
+                  Crie Briefings e Roteiros de Vídeo{" "}
+                  <span className="text-gradient-primary">em Minutos</span>
+                </h1>
 
-            <p className="max-w-lg text-base md:text-lg text-muted-foreground mx-auto md:mx-0">
-              Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação.
-            </p>
+                <p className="max-w-lg text-base md:text-lg text-muted-foreground">
+                  Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação.
+                </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-              <Button size="lg" className="gap-2 text-base shadow-[0_0_30px_hsl(var(--primary)/0.3)]" onClick={() => navigate("/auth")}>
-                Começar gratuitamente <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button size="lg" variant="outline" className="gap-2 text-base" onClick={() => document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" })}>
-                Como funciona
-              </Button>
-            </div>
-          </div>
-
-          {/* Right — animation */}
-          <div className="flex justify-center order-1 md:order-2">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button size="lg" className="gap-2 text-base shadow-[0_0_30px_hsl(var(--primary)/0.3)]" onClick={() => navigate("/auth")}>
+                    Começar gratuitamente <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button size="lg" variant="outline" className="gap-2 text-base" onClick={() => document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" })}>
+                    Como funciona
+                  </Button>
+                </div>
+              </div>
+            }
+          >
             <HeroAnimation />
-          </div>
+          </ContainerScroll>
         </div>
 
         {/* Gradient divider */}
