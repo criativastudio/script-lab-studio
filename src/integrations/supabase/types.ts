@@ -25,6 +25,7 @@ export type Database = {
           created_at: string | null
           form_answers: Json | null
           id: string
+          is_active: boolean
           niche: string | null
           persona: string | null
           positioning: string | null
@@ -46,6 +47,7 @@ export type Database = {
           created_at?: string | null
           form_answers?: Json | null
           id?: string
+          is_active?: boolean
           niche?: string | null
           persona?: string | null
           positioning?: string | null
@@ -67,6 +69,7 @@ export type Database = {
           created_at?: string | null
           form_answers?: Json | null
           id?: string
+          is_active?: boolean
           niche?: string | null
           persona?: string | null
           positioning?: string | null
