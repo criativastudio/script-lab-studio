@@ -1,12 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FolderOpen, BarChart3, Send, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderOpen, BarChart3, Send, Shield, LogOut, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/crm", label: "Projetos", icon: FolderOpen },
+  { href: "/gerador", label: "Gerador IA", icon: Sparkles },
   { href: "/metrics", label: "Análises", icon: BarChart3 },
   { href: "/whatsapp", label: "Distribuição", icon: Send },
 ];

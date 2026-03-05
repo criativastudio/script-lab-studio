@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2 } from "lucide-react";
+import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2 } from "lucide-react";
 
 interface Project {
   id: string; name: string | null; client_name: string | null; objective: string | null;
@@ -44,6 +44,7 @@ const CRM = () => {
   const [briefingForm, setBriefingForm] = useState({ goal: "", target_audience: "", content_style: "" });
   const [scriptForm, setScriptForm] = useState({ title: "", script: "" });
   const [ideaForm, setIdeaForm] = useState({ idea: "" });
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const fetchProjects = async () => {
     if (!user) return;
@@ -247,6 +248,42 @@ const CRM = () => {
                                 </TabsContent>
 
                                 <TabsContent value="scripts" className="space-y-4 mt-4">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={isGeneratingAI || briefings.length === 0}
+                                    onClick={async () => {
+                                      if (!user || !expandedId || briefings.length === 0) return;
+                                      const b = briefings[0];
+                                      const project = projects.find(p => p.id === expandedId);
+                                      setIsGeneratingAI(true);
+                                      const { data, error } = await supabase.functions.invoke("generate-script", {
+                                        body: {
+                                          briefing: b.goal || "Marketing video",
+                                          target_audience: b.target_audience || "Público geral",
+                                          platform: project?.platform || "Instagram Reels",
+                                          video_duration: "60 segundos",
+                                        },
+                                      });
+                                      setIsGeneratingAI(false);
+                                      if (error || data?.error) {
+                                        toast({ title: "Erro ao gerar", description: data?.error || error?.message, variant: "destructive" });
+                                        return;
+                                      }
+                                      const title = `IA: ${(b.goal || "Roteiro").substring(0, 50)}`;
+                                      await supabase.from("scripts").insert({
+                                        title, script: data.script, project_id: expandedId, user_id: user.id,
+                                      });
+                                      fetchProjectDetails(expandedId);
+                                      toast({ title: "Roteiro gerado e salvo!" });
+                                    }}
+                                  >
+                                    {isGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                    {isGeneratingAI ? "Gerando..." : "Gerar com IA"}
+                                  </Button>
+                                  {briefings.length === 0 && (
+                                    <p className="text-xs text-muted-foreground">Adicione um briefing primeiro para gerar com IA.</p>
+                                  )}
                                   {scripts.map((s) => (
                                     <Card key={s.id}>
                                       <CardContent className="p-3 flex justify-between items-start">

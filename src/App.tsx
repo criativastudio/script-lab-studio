@@ -11,6 +11,7 @@ import CRM from "./pages/CRM";
 import Metrics from "./pages/Metrics";
 import WhatsApp from "./pages/WhatsApp";
 import Admin from "./pages/Admin";
+import ScriptGenerator from "./pages/ScriptGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/crm" element={<ProtectedRoute><CRM /></ProtectedRoute>} />
             <Route path="/metrics" element={<ProtectedRoute><Metrics /></ProtectedRoute>} />
             <Route path="/whatsapp" element={<ProtectedRoute><WhatsApp /></ProtectedRoute>} />
+            <Route path="/gerador" element={<ProtectedRoute><ScriptGenerator /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
