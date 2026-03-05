@@ -1,64 +1,45 @@
-# Headlines em duas linhas, gradiente animado e espaçamento reduzido
 
-## Mudanças
 
-### 1. `src/index.css` — Gradiente animado alternando cores
+# Adicionar busca e filtros na lista de Clientes (CRM)
 
-Atualizar `.text-gradient-primary` para usar uma animação suave que alterna entre #cbacef e #f5cea5:
+## Problema
 
-```css
-.text-gradient-primary {
-  background: linear-gradient(90deg, #cbacef, #f5cea5, #cbacef, #f5cea5);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-text-shift 6s ease infinite;
-}
+A lista de clientes não tem busca nem filtros. Com muitos clientes cadastrados, fica difícil encontrar um específico. Além disso, os campos "cidade" e "nicho/segmento" não existem no banco de dados.
 
-@keyframes gradient-text-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-```
+## Solução
 
-### 2. `src/pages/LandingPage.tsx` — Headlines em duas linhas + espaçamento
+### 1. Migração de banco de dados
 
-**Hero headline (linha 174):** Adicionar `max-w-3xl mx-auto` para forçar quebra em duas linhas e reduzir `leading` para mínimo:
+Adicionar duas novas colunas à tabela `briefing_requests`:
+- `city` (text, nullable)
+- `niche` (text, nullable)
 
-```tsx
-className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
-```
+### 2. UI de busca e filtros (lista de clientes)
 
-Quebrar o texto com `<br className="hidden md:block" />` ou usar `max-w` para forçar a quebra natural.
+Adicionar acima do grid de cards:
+- **Input de busca** por nome (business_name, contact_name) com ícone de Search
+- **Select de cidade** populado dinamicamente a partir das cidades cadastradas
+- **Select de nicho/segmento** populado dinamicamente a partir dos nichos cadastrados
+- Botão para limpar filtros
 
-**Todas as seções com `py-28 md:py-36`** → reduzir para `py-16 md:py-24`:
+Filtragem client-side no array `clientGroups` usando `useMemo`.
 
-- Seção AI Workflow Steps (linha 280): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Problema (linha 320): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Exemplo de Roteiro (linha 367): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Benefícios (linha 414): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Planos (linha 451): `py-28 md:py-36` → `py-16 md:py-24`
-- Seção Final CTA (linha 517): `py-28 md:py-36` → `py-16 md:py-24`
+### 3. Formulário de criação de cliente
 
-**Headlines longas — forçar duas linhas com max-width:**
-
-- Hero: "Roteiros Profissionais em Minutos" → adicionar `max-w-2xl mx-auto`
-- Benefícios (linha 423): "Tudo que você precisa para criar conteúdo estratégico" → adicionar `max-w-xl mx-auto`
-- Final CTA (linha 526): "Transforme Ideias em Roteiros Poderosos em Minutos" → adicionar `max-w-md mx-auto`
-
-### 3. Componentes filhos — Reduzir espaçamento
-
-- `AIInputDemo.tsx` (linha 65): `py-28 md:py-36` → `py-16 md:py-24`
-- `FeatureTabs.tsx` (linha 75): `py-28 md:py-36` → `py-16 md:py-24`, e `mb-20` → `mb-12`
-- `SocialProof.tsx` (linha 35): `py-28 md:py-36` → `py-16 md:py-24`
+Adicionar campos "Cidade" e "Nicho/Segmento" no dialog de "Novo Cliente" e incluí-los no insert do Supabase.
 
 ## Arquivos modificados
 
-| Arquivo                                  | Mudança                                                              |
-| ---------------------------------------- | -------------------------------------------------------------------- |
-| `src/index.css`                          | Gradiente animado alternando cores                                   |
-| `src/pages/LandingPage.tsx`              | Headlines com max-w para duas linhas + reduzir py em todas as seções |
-| `src/components/landing/AIInputDemo.tsx` | Reduzir padding vertical                                             |
-| `src/components/landing/FeatureTabs.tsx` | Reduzir padding vertical                                             |
-| `src/components/landing/SocialProof.tsx` | Reduzir padding vertical                                             |
+| Arquivo | Mudança |
+|---------|---------|
+| Migração SQL | Adicionar colunas `city` e `niche` em `briefing_requests` |
+| `src/pages/CRM.tsx` | Estado de filtros, inputs de busca/filtro, lógica de filtragem, campos no form de criação |
+| `src/integrations/supabase/types.ts` | Atualizado automaticamente após migração |
+
+## Detalhes técnicos
+
+- Filtro por nome: `toLowerCase().includes(searchTerm)` no `business_name` e `contact_name`
+- Filtros de cidade/nicho: comparação exata com valor do Select
+- Listas de opções dos Selects: extraídas com `Set` dos valores únicos presentes nos dados
+- Interface `BriefingRequest` atualizada com `city` e `niche`
+
