@@ -1,158 +1,90 @@
 
 
-# Phase 1: Strategic Context + Content Ideas + Enhanced Projects
+# UI/UX Flow Redesign — CRM Page
 
 ## Overview
 
-Implement the core new flow: **Client → Strategic Context → Projects → Content Ideas → Scripts**, keeping all existing functionality intact. This phase covers items 1, 2, 3, 4, 7, and 8 from the request. Calendar (5) and AI Memory (6) will be Phase 2.
+Redesign the CRM page with a modern SaaS aesthetic: break the monolithic 1400-line CRM.tsx into focused components, improve card design with rounded-xl corners and soft shadows, add step-based visual flow indicators, enhance client/project/idea cards with quick actions, and add a basic content calendar view.
 
----
+All existing logic and handlers stay intact — this is a visual and structural reorganization.
 
-## Database Changes
+## Architecture: Component Extraction
 
-### New table: `client_strategic_contexts`
+The current CRM.tsx contains everything in one file. We'll extract into dedicated components:
 
-One row per client (business_name group). Stores permanent brand information.
+| New Component | Purpose |
+|---|---|
+| `src/components/crm/ClientListView.tsx` | Client grid with search/filters, enhanced cards showing niche, project count, last script date, quick action buttons |
+| `src/components/crm/ClientDetailView.tsx` | Header + tabbed layout container for selected client |
+| `src/components/crm/StrategicContextTab.tsx` | Strategic context display/edit form |
+| `src/components/crm/ProjectsTab.tsx` | Project cards with enhanced fields, collapsible briefings/scripts |
+| `src/components/crm/ContentIdeasTab.tsx` | Ideas grid with generate/select/edit/delete, responsive card layout |
+| `src/components/crm/ContentCalendarTab.tsx` | **New** — Weekly calendar view organizing ideas into weeks |
+| `src/components/crm/StepIndicator.tsx` | **New** — Visual step flow bar (Clients → Context → Projects → Ideas → Scripts → Export) |
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | uuid NOT NULL | Owner |
-| business_name | text NOT NULL | Links to briefing_requests group |
-| business_niche | text | |
-| products_services | text | |
-| target_audience | text | |
-| customer_persona | text | |
-| tone_of_voice | text | |
-| market_positioning | text | |
-| pain_points | text | |
-| differentiators | text | |
-| marketing_objectives | text | |
-| main_platforms | text[] | Array of platforms |
-| communication_style | text | educational, authority, casual, etc. |
-| is_completed | boolean DEFAULT false | Whether form was filled |
-| created_at / updated_at | timestamptz | |
+`CRM.tsx` becomes the orchestrator: holds state, passes handlers as props.
 
-RLS: Users can CRUD own rows (by user_id). Admins can manage all.
+## Design Changes
 
-### New table: `content_ideas`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | uuid NOT NULL | |
-| project_id | uuid | FK to projects |
-| context_id | uuid | FK to client_strategic_contexts |
-| title | text NOT NULL | The idea topic |
-| description | text | |
-| status | text DEFAULT 'pending' | pending, selected, used, discarded |
-| created_at | timestamptz | |
-
-RLS: Users can CRUD own rows. Admins can manage all.
-
-### Alter `projects` table
-
-Add new columns for enhanced project structure:
-
-| Column | Type |
-|--------|------|
-| campaign_objective | text |
-| funnel_stage | text | top, middle, bottom |
-| content_style | text |
-| publishing_frequency | text |
-| video_count | integer |
-| context_id | uuid | FK to client_strategic_contexts |
-
----
-
-## Edge Functions
-
-### `generate-ideas` (NEW)
-
-Receives: `context_id`, `project_id`, `count` (default 10)
-
-Loads the strategic context + project info, calls AI to generate content ideas. Returns array of idea objects. Inserts into `content_ideas` table.
-
-### `generate-script` (UPDATED)
-
-Updated to accept optional `context_id` and `idea_id`. When provided, loads strategic context and idea to enrich the prompt with brand voice, persona, positioning, etc. Falls back to current behavior when not provided (backward compatible).
-
-### `process-briefing` (UPDATED)
-
-After processing the client form, also populate/create the `client_strategic_contexts` row from the form answers (mapping about_business → products_services, typical_customer → customer_persona, etc.).
-
----
-
-## UI Changes
-
-### Client Detail View (CRM.tsx)
-
-Replace the flat project list with a **tabbed layout**:
+### 1. Step Flow Indicator (new component)
+A horizontal step bar at the top of the client detail view showing the 6 steps. The active step highlights based on which tab is selected. Uses numbered circles connected by lines.
 
 ```text
-┌─────────────────────────────────────────────┐
-│ [← Back]  Client Name                      │
-│ Contact info bar                            │
-├─────────────────────────────────────────────┤
-│ [Contexto Estratégico] [Projetos] [Ideias]  │
-├─────────────────────────────────────────────┤
-│                                             │
-│  Tab content area                           │
-│                                             │
-└─────────────────────────────────────────────┘
+①─────②─────③─────④─────⑤─────⑥
+Client  Context  Projects  Ideas  Scripts  Export
 ```
 
-**Tab 1 - Contexto Estratégico**: Shows/edits all strategic context fields. Badge showing "Preenchido" or "Pendente". Link to send form to client if not completed.
+### 2. Client Cards (list view)
+- `rounded-2xl` with `shadow-sm hover:shadow-md`
+- Show: business niche badge, active project count, last script date
+- Quick action buttons on hover: "Ver Contexto", "Projetos", "Gerar Ideias"
+- More whitespace, larger avatar
 
-**Tab 2 - Projetos**: Current project list (collapsible cards) with enhanced fields (funnel stage, campaign objective, content style). "Novo Projeto" dialog updated with new fields.
+### 3. Project Cards (projects tab)
+- Grid layout instead of collapsible list
+- Each card shows: name, platform badge, video count, funnel stage badge, status
+- Quick buttons: "Gerar Ideias", "Criar Roteiros", "Ver Calendário"
 
-**Tab 3 - Ideias de Conteúdo**: 
-- "Gerar Ideias" button that calls `generate-ideas`
-- List of ideas with checkboxes to select, inline edit, delete, add custom
-- "Gerar Roteiros" button that generates scripts from selected ideas
+### 4. Content Idea Cards (ideas tab)
+- Switch from list to responsive grid (2-3 columns)
+- Each card: title, description, platform badge, funnel stage, hook preview
+- Actions: Generate Script, Edit, Delete
+- Selected state with primary border glow
 
-### Client Briefing Form (ClientBriefingForm.tsx)
+### 5. Script Viewer Enhancement
+- Keep existing ScriptViewer dialog
+- Add section headers with icons for Hook, Briefing, Structure, Script, CTA
+- Add action buttons: "Regenerar Hook", "Melhorar Roteiro", "Mudar Tom", "Exportar"
 
-Add more questions to map to strategic context fields:
-- Communication style (multi-select chips)
-- Main platforms (multi-select chips)
-- Pain points (textarea)
-- Differentiators (textarea)
+### 6. Content Calendar Tab (new)
+- New 4th tab: "Calendário"
+- Groups ideas by week (Week 1, Week 2, etc.)
+- Simple card-based weekly layout (not full calendar widget)
+- Auto-distributes selected ideas across weeks based on publishing frequency
 
-These get saved to `form_answers` and `process-briefing` maps them to `client_strategic_contexts`.
+### 7. Global Design Tokens
+- Cards: `rounded-2xl shadow-sm border-border/50`
+- Transitions: `transition-all duration-200`
+- More `p-6` padding, `gap-4` spacing
+- Muted icon accents using `text-primary/60`
 
-### New Project Dialog
+## Files Modified
 
-Add fields: Campaign objective, Funnel stage (select: Top/Middle/Bottom), Content style, Publishing frequency, Number of videos. Context is auto-inherited from the client.
-
-### Script Generation (within project)
-
-Updated to pull strategic context automatically. Each script generated from a selected content idea includes: Hook, Strategic briefing, Video structure, Speaking script, CTA, Suggested recording style.
-
-Batch generation options: 1, 3, 5, 10, 15 scripts.
-
----
+| File | Change |
+|---|---|
+| `src/components/crm/StepIndicator.tsx` | New — visual step flow component |
+| `src/components/crm/ClientListView.tsx` | New — extracted & redesigned client grid |
+| `src/components/crm/ClientDetailView.tsx` | New — extracted detail container with tabs |
+| `src/components/crm/StrategicContextTab.tsx` | New — extracted context tab |
+| `src/components/crm/ProjectsTab.tsx` | New — extracted & redesigned projects tab |
+| `src/components/crm/ContentIdeasTab.tsx` | New — extracted & redesigned ideas tab with grid cards |
+| `src/components/crm/ContentCalendarTab.tsx` | New — weekly calendar view |
+| `src/pages/CRM.tsx` | Refactored to orchestrator, imports sub-components |
 
 ## Compatibility
-
-- All existing routes, tables, and flows remain intact
-- `briefing_requests` table untouched structurally
-- Current briefing link system works as before
-- `process-briefing` edge function extended (not replaced)
-- Old scripts/briefings remain accessible
-
----
-
-## Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| SQL migration | CREATE `client_strategic_contexts`, `content_ideas`; ALTER `projects` |
-| `supabase/functions/generate-ideas/index.ts` | New edge function |
-| `supabase/functions/generate-script/index.ts` | Extend with context support |
-| `supabase/functions/process-briefing/index.ts` | Map answers → strategic context |
-| `src/pages/CRM.tsx` | Tabbed client detail, ideas UI, enhanced project creation |
-| `src/pages/ClientBriefingForm.tsx` | Additional questions for context |
-| `src/integrations/supabase/types.ts` | Auto-updated after migration |
-| `supabase/config.toml` | Add generate-ideas function |
+- All existing handlers, state, and Supabase calls remain identical
+- No database changes
+- No route changes
+- PDF printing still works
+- All dialogs (edit, manual create, script viewer) preserved
 
