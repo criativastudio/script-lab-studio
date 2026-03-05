@@ -1,39 +1,51 @@
 
 
-# Replace All Headlines with Blauer Nue Medium Font
+# Replace Headlines with Blauer Nue Light + Reduce Size by 40%
 
 ## Overview
-Replace the current headline font (DM Serif Display) with **Blauer Nue Medium** across all landing page headlines. Blauer Nue is not available on Google Fonts, so it needs to be self-hosted.
+Copy all uploaded font files to `public/fonts/`, switch headlines from Blauer Nue Medium to **Blauer Nue Light**, and reduce all headline sizes by ~40%.
 
 ## Changes
 
-### 1. Add Font Files
-- Download/add `BlauerNue-Medium.woff2` and `BlauerNue-Medium.woff` to `public/fonts/`
+### 1. Copy Font Files to `public/fonts/`
+Copy all 4 uploaded `.otf` files:
+- `Blauer-Nue-Light-iF6626350c6db36.otf` → `public/fonts/BlauerNue-Light.otf`
+- `Blauer-Nue-Medium-iF6626350c78103.otf` → `public/fonts/BlauerNue-Medium.otf`
+- `Blauer-Nue-Regular-iF6626350c83fdf.otf` → `public/fonts/BlauerNue-Regular.otf`
+- `Blauer-Nue-Thin-iF6626350c96c3e.otf` → `public/fonts/BlauerNue-Thin.otf`
 
-### 2. `src/index.css` — Register `@font-face`
-Add at the top (before `@tailwind`):
+### 2. `src/index.css` — Update `@font-face` to Light `.otf`
+Replace the existing `@font-face` block to point to the Light variant:
 ```css
 @font-face {
   font-family: 'Blauer Nue';
-  src: url('/fonts/BlauerNue-Medium.woff2') format('woff2'),
-       url('/fonts/BlauerNue-Medium.woff') format('woff');
-  font-weight: 500;
+  src: url('/fonts/BlauerNue-Light.otf') format('opentype');
+  font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 ```
 
-### 3. `tailwind.config.ts` — Update `font-display`
-Change the `display` font family from `DM Serif Display` to `Blauer Nue`:
-```ts
-display: ['"Blauer Nue"', 'sans-serif'],
-```
+### 3. Reduce headline sizes by ~40% across all files
 
-### 4. `index.html` — Remove DM Serif Display Google Font import
-Remove the Google Fonts link for `DM Serif Display` (keep Inter).
+Current → New sizes (40% reduction):
 
-### Impact
-All elements using `font-display` class (every `h1`/`h2` headline across LandingPage, FeatureTabs, SocialProof, AIInputDemo, hero-section-dark) will automatically use Blauer Nue Medium. No per-component changes needed.
+| Current | New |
+|---------|-----|
+| `text-7xl` (4.5rem) | `text-4xl` (2.25rem) |
+| `lg:text-7xl` | `lg:text-5xl` |
+| `md:text-6xl` | `md:text-4xl` |
+| `sm:text-5xl` | `sm:text-3xl` |
+| `md:text-5xl` | `md:text-3xl` |
+| `text-4xl` | `text-2xl` |
+| `text-3xl` | `text-xl` |
 
-**Note:** You'll need to provide or upload the Blauer Nue Medium font files (`.woff2`/`.woff`) since it's not a free Google Font.
+**Files affected:**
+- `src/pages/LandingPage.tsx` — all `h2` headings + hero `h1`
+- `src/components/landing/SocialProof.tsx` — h2
+- `src/components/landing/AIInputDemo.tsx` — h2
+- `src/components/landing/FeatureTabs.tsx` — h2
+- `src/components/ui/hero-section-dark.tsx` — h1
+
+Also change `font-bold` to `font-light` on headlines to match the Light weight.
 
