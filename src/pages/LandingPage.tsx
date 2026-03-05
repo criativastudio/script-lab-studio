@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import HeroAnimation from "@/components/landing/HeroAnimation";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { HeroSection } from "@/components/ui/hero-section-dark";
 
 /* ── scroll-reveal hook ── */
 function useScrollReveal() {
@@ -172,38 +173,42 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* ── HERO — CONTAINER SCROLL ── */}
-      <section className="relative overflow-hidden pt-16">
-        {/* Glow orbs */}
-        <div className="glow-orb w-[500px] h-[500px] bg-primary/15 -top-20 -left-40" />
-        <div className="glow-orb w-[400px] h-[400px] bg-[hsl(260_80%_65%/0.1)] -bottom-20 right-0" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.08)_0%,transparent_50%)]" />
+      {/* ── HERO SECTION (NEW) ── */}
+      <HeroSection
+        title="Plataforma de roteiros com IA"
+        subtitle={{
+          regular: "Crie briefings e roteiros de vídeo ",
+          gradient: "em minutos",
+        }}
+        description="Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação."
+        ctaText="Começar gratuitamente"
+        onCtaClick={() => navigate("/auth")}
+        gridOptions={{
+          angle: 65,
+          opacity: 0.4,
+          cellSize: 50,
+          lightLineColor: "hsl(280 30% 60% / 0.15)",
+          darkLineColor: "hsl(280 30% 60% / 0.1)",
+        }}
+      />
 
-        <div className="relative z-10">
+      {/* ── 3D SCROLL SHOWCASE ── */}
+      <section className="relative overflow-hidden">
+        {/* Glow orbs */}
+        <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
+        <div className="glow-orb w-[400px] h-[400px] bg-[hsl(330_60%_65%/0.08)] -bottom-20 right-0" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06)_0%,transparent_50%)]" />
+
+        <div className="relative z-10" style={{ perspective: "1400px", transformStyle: "preserve-3d" }}>
           <ContainerScroll
             titleComponent={
-              <div className="flex flex-col items-center gap-6">
-                <Badge variant="secondary" className="text-xs tracking-widest uppercase shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
-                  Plataforma de roteiros com IA
-                </Badge>
-
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-                  Crie Briefings e Roteiros de Vídeo{" "}
-                  <span className="text-gradient-primary">em Minutos</span>
-                </h1>
-
-                <p className="max-w-lg text-base md:text-lg text-muted-foreground">
-                  Transforme ideias em vídeos estratégicos com briefing inteligente, definição de persona e roteiros prontos para gravação.
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.1] tracking-tight">
+                  Veja a plataforma <span className="text-gradient-primary">em ação</span>
+                </h2>
+                <p className="max-w-lg text-base text-muted-foreground">
+                  Interface intuitiva para criar roteiros profissionais.
                 </p>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button size="lg" className="gap-2 text-base shadow-[0_0_30px_hsl(var(--primary)/0.3)]" onClick={() => navigate("/auth")}>
-                    Começar gratuitamente <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button size="lg" variant="outline" className="gap-2 text-base" onClick={() => document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" })}>
-                    Como funciona
-                  </Button>
-                </div>
               </div>
             }
           >
