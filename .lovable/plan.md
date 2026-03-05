@@ -1,64 +1,39 @@
 
 
-# Conversion + Psychological UX Optimization
+# Replace All Headlines with Blauer Nue Medium Font
 
 ## Overview
-Optimize messaging, CTA strategy, trust signals, and information hierarchy across the landing page without changing layout or visual identity.
+Replace the current headline font (DM Serif Display) with **Blauer Nue Medium** across all landing page headlines. Blauer Nue is not available on Google Fonts, so it needs to be self-hosted.
 
 ## Changes
 
-### 1. `src/pages/LandingPage.tsx` — Hero Messaging + Trust + CTAs
+### 1. Add Font Files
+- Download/add `BlauerNue-Medium.woff2` and `BlauerNue-Medium.woff` to `public/fonts/`
 
-**Hero section (lines 162-212):**
-- Badge text: "Plataforma de roteiros com IA" → "Usado por +10.000 criadores de conteúdo"
-- Headline: "Crie na Velocidade do Pensamento" → "Roteiros Profissionais com IA em Minutos"
-- Description: rewrite to outcome-focused: "Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação. Sem escrever uma linha sequer."
-- Primary CTA: "Começar gratuitamente" → "Começar grátis agora"
-- Add micro-text below CTA buttons: `<p className="text-xs text-muted-foreground mt-4">Sem cartão de crédito • Setup em 30 segundos</p>`
-- Add trust logos row below micro-text: 5-6 muted brand/platform icons (Instagram, YouTube, TikTok, Meta) showing supported platforms
+### 2. `src/index.css` — Register `@font-face`
+Add at the top (before `@tailwind`):
+```css
+@font-face {
+  font-family: 'Blauer Nue';
+  src: url('/fonts/BlauerNue-Medium.woff2') format('woff2'),
+       url('/fonts/BlauerNue-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+```
 
-**AI Workflow Steps (lines 259-296):**
-- Add outcome-focused subtitles to each step card emphasizing benefit not just action
-- Step 1 desc: "Defina objetivo, público e estilo — a IA faz o resto."
-- Step 2 desc: "Persona, tom de voz e funil são gerados automaticamente."
-- Step 3 desc: "Receba roteiros cena a cena, prontos para gravar em minutos."
+### 3. `tailwind.config.ts` — Update `font-display`
+Change the `display` font family from `DM Serif Display` to `Blauer Nue`:
+```ts
+display: ['"Blauer Nue"', 'sans-serif'],
+```
 
-**Final CTA (lines 492-528):**
-- Headline: "Comece a criar com IA hoje" → "Comece a Criar Roteiros com IA Hoje"
-- Add urgency text: `<p className="text-xs text-primary/70 mt-3">Acesso antecipado com vagas limitadas.</p>`
-- Primary CTA: "Começar gratuitamente" → "Garantir meu acesso grátis"
-- Secondary: "Ver demonstração" → "Assistir demo"
+### 4. `index.html` — Remove DM Serif Display Google Font import
+Remove the Google Fonts link for `DM Serif Display` (keep Inter).
 
-**Pricing section (lines 430-490):**
-- Add micro-text under each plan CTA: "Cancele quando quiser" for paid plans
-- Add "Sem compromisso" under free plan CTA
+### Impact
+All elements using `font-display` class (every `h1`/`h2` headline across LandingPage, FeatureTabs, SocialProof, AIInputDemo, hero-section-dark) will automatically use Blauer Nue Medium. No per-component changes needed.
 
-### 2. `src/components/landing/AIInputDemo.tsx` — Engagement Optimization
-
-- Add helper text above input: `<p className="text-sm text-muted-foreground mb-4">Descreva seu nicho e a IA gera o roteiro ideal.</p>`
-- Make chips clickable: onClick sets the typed text to the chip value
-- Add a result preview hint below chips: "↓ Veja um exemplo de roteiro gerado abaixo"
-
-### 3. `src/components/landing/SocialProof.tsx` — Stronger Testimonials
-
-- Update quotes to be more specific with measurable outcomes:
-  - Ana Clara: include "reduzi de 4 horas para 20 minutos"
-  - Roberto Silva: include "3x mais conteúdo"
-  - Juliana Mendes: include "sem depender de copywriter externo"
-- Add a stats row above testimonials: "10.000+ criadores | 50.000+ roteiros gerados | 4.8/5 avaliação"
-
-### 4. `src/components/landing/FeatureTabs.tsx` — Benefit-First Copy
-
-- Rewrite each feature description to lead with user benefit, not technical capability
-- Example: "Gerador No-Code" desc → "Crie roteiros completos sem escrever uma única linha de código."
-- Each content panel: ensure headline is benefit-oriented ("Arraste, configure, publique." etc.)
-
-## Files Modified
-
-| File | Focus |
-|------|-------|
-| `src/pages/LandingPage.tsx` | Hero messaging, trust signals, CTA copy, urgency, micro-text |
-| `src/components/landing/AIInputDemo.tsx` | Helper text, clickable chips, engagement hints |
-| `src/components/landing/SocialProof.tsx` | Specific outcome quotes, stats row |
-| `src/components/landing/FeatureTabs.tsx` | Benefit-first copy for features |
+**Note:** You'll need to provide or upload the Blauer Nue Medium font files (`.woff2`/`.woff`) since it's not a free Google Font.
 
