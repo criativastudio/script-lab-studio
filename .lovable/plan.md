@@ -1,54 +1,58 @@
 
 
-# Landing Page — ScriptLab Studio
+# Landing Page Visual Redesign — Premium SaaS Style
 
 ## Summary
 
-Create a full landing page at `/` (replacing the current redirect to `/dashboard`). The page will be a standalone, public-facing marketing page with futuristic dark aesthetic, glow effects, CSS-based 3D animated hero element, scroll animations, dark/light toggle, and all 8 sections specified. Authenticated users can still access `/dashboard` directly.
+Redesign the existing landing page to match the futuristic SaaS video reference: split hero layout (text left, 3D element right), stronger gradients/glow effects, grid background pattern, more dramatic visual hierarchy, enhanced glass-morphism cards, and smoother micro-animations. The uploaded image (`baixados.jfif`) will be analyzed for additional style cues.
 
-## Architecture
+## Key Visual Changes
 
-- **New file**: `src/pages/LandingPage.tsx` — single large component with all 8 sections
-- **New file**: `src/components/landing/HeroAnimation.tsx` — CSS-based 3D holographic animation (rotating platform/panels with glow, no heavy 3D library needed — pure CSS transforms + keyframes)
-- **Update**: `src/App.tsx` — change `/` route from `Navigate to /dashboard` to render `LandingPage`
-- **Update**: `src/index.css` — add landing-specific keyframes and glow utilities
-- **Update**: `tailwind.config.ts` — add custom keyframes for float, glow-pulse, rotate-3d animations
+### 1. Hero Section — Split Layout
+**Current**: Centered text + animation below.
+**New**: Two-column layout on desktop — headline/subheadline/CTA on the **left**, HeroAnimation on the **right**. Mobile stacks vertically. Add a mesh/grid background pattern with glow orbs, and subtle gradient lines.
 
-## Sections (all in LandingPage.tsx)
+### 2. Enhanced HeroAnimation
+**Current**: Small rotating 3D card with basic skeleton lines.
+**New**: Larger, more detailed holographic dashboard mockup with:
+- Animated typing effect on "script lines"
+- Glowing border pulse animation
+- Multiple layered floating panels at different depths
+- More particles with varied sizes
+- Stronger glow/shadow effects
 
-1. **Navbar** — fixed top bar with logo, nav links (Problema, Solução, Planos), dark/light toggle (Sun/Moon via `useTheme`), CTA button "Começar grátis" → `/auth`
+### 3. Background & Atmosphere
+- Add CSS grid/dot pattern overlay across the entire page
+- Multiple radial gradient glow orbs (primary blue + accent purple) positioned at different sections
+- Subtle noise texture via CSS
+- Gradient divider lines between sections
 
-2. **Hero** — full viewport, gradient background (deep blue/purple to black in dark mode), headline "Crie Briefings e Roteiros de Vídeo em Minutos", subheadline, CTA button, center 3D holographic animation (CSS perspective + rotating card panels with glow borders)
+### 4. Cards & Sections — Glass-morphism Upgrade
+- Problem cards: stronger `bg-white/[0.03]` dark glass, glowing border on hover with color transition
+- Solution steps: connected by animated gradient line instead of plain border
+- Benefits: icon containers with glow ring effect
+- Pricing cards: frosted glass with stronger depth, highlighted card gets animated border gradient
 
-3. **Problema** — 4 cards with icons (Lightbulb, ThumbsDown, FileX, Target from lucide) showing pain points, glass-morphism card style
+### 5. Typography & Spacing
+- Hero headline: `text-5xl md:text-7xl` with gradient text effect on key words
+- Section headings: add gradient underline accent
+- More vertical spacing between sections (`py-24 md:py-32`)
+- Badge pills with glow effect
 
-4. **Solução** — 3-step horizontal flow (numbered circles connected by lines), each step with icon + title + description
+### 6. New CSS Animations (tailwind.config.ts + index.css)
+- `shimmer`: moving gradient highlight for borders
+- `typing-cursor`: blinking cursor for hero sub-element
+- `gradient-shift`: slow-moving background gradient
+- `border-glow`: pulsing border glow on cards
 
-5. **Exemplo de Roteiro** — mock script card showing 5 scenes (Gancho → Problema → Desenvolvimento → Autoridade → CTA) in a vertical timeline with numbered badges
-
-6. **Benefícios** — icon grid (Clock, Brain, TrendingUp, Award, Layers) with benefit titles and descriptions
-
-7. **Planos** — 3 pricing cards (Starter Free, Creator Pro R$49, Scale Studio R$197), highlighted middle card with "Mais popular" badge, feature lists with check icons
-
-8. **CTA Final** — dark gradient section, "Pare de gravar vídeos sem estratégia", CTA button
-
-9. **Footer** — links, social icons, copyright
-
-## Visual Design
-
-- Dark mode by default for landing (force `dark` class on landing wrapper, with toggle to switch)
-- Glow effects via `box-shadow` with blue/purple hues and CSS `backdrop-filter: blur`
-- Glass-morphism cards: `bg-white/5 border border-white/10 backdrop-blur-xl`
-- Scroll animations: Intersection Observer hook to add `animate-fade-in` class on scroll
-- Hero 3D element: CSS `perspective` + `rotateY` + `rotateX` keyframe animation on a card stack representing the platform UI
-
-## Files
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/LandingPage.tsx` | New — full landing page |
-| `src/components/landing/HeroAnimation.tsx` | New — CSS 3D holographic element |
-| `src/App.tsx` | Route `/` → `LandingPage` instead of redirect |
-| `src/index.css` | Add glow, glass, float keyframes |
-| `tailwind.config.ts` | Add custom animation keyframes |
+| `src/pages/LandingPage.tsx` | Split hero layout, enhanced glass cards, gradient text, grid bg, more spacing |
+| `src/components/landing/HeroAnimation.tsx` | Larger, more detailed holographic panels, typing effect, stronger glow |
+| `tailwind.config.ts` | New keyframes: shimmer, gradient-shift, border-glow |
+| `src/index.css` | Grid pattern utility, gradient text class, noise overlay |
+
+No new dependencies. Pure CSS/Tailwind enhancements.
 
