@@ -27,9 +27,9 @@ const problems = [
 ];
 
 const steps = [
-  { icon: FileText, num: "01", title: "Crie seu briefing", desc: "Defina o escopo do vídeo: objetivo, público e estilo de conteúdo." },
-  { icon: Users, num: "02", title: "Defina persona e estratégia", desc: "Público-alvo, persona, tom de voz, posicionamento e funil." },
-  { icon: Mic, num: "03", title: "Gere roteiros prontos", desc: "Roteiros estruturados cena a cena, prontos para gravação." },
+  { icon: FileText, num: "01", title: "Crie seu briefing", desc: "Defina objetivo, público e estilo — a IA faz o resto." },
+  { icon: Users, num: "02", title: "Defina persona e estratégia", desc: "Persona, tom de voz e funil são gerados automaticamente." },
+  { icon: Mic, num: "03", title: "Gere roteiros prontos", desc: "Receba roteiros cena a cena, prontos para gravar em minutos." },
 ];
 
 const scenes = [
@@ -160,7 +160,7 @@ export default function LandingPage() {
             className="mb-6"
           >
             <span className="inline-flex items-center rounded-full border border-[hsl(var(--hero-blue)/0.3)] bg-[hsl(var(--hero-blue)/0.08)] px-4 py-1.5 text-xs font-medium text-[hsl(var(--hero-blue))]">
-              Plataforma de roteiros com IA
+              Usado por +10.000 criadores de conteúdo
               <ChevronRight className="ml-1 h-3 w-3" />
             </span>
           </motion.div>
@@ -172,8 +172,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-white mb-8"
           >
-            Crie na Velocidade{" "}
-            <span className="text-gradient-primary">do Pensamento</span>
+            Roteiros Profissionais{" "}
+            <span className="text-gradient-primary">com IA em Minutos</span>
           </motion.h1>
 
           {/* Description */}
@@ -183,8 +183,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-base md:text-lg text-[hsl(215_16%_56%)] mb-12"
           >
-            Transforme ideias em roteiros profissionais com IA.
-            Briefing inteligente, persona estratégica e scripts prontos para gravação.
+            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação.
+            Sem escrever uma linha sequer.
           </motion.p>
 
           {/* CTA */}
@@ -198,7 +198,7 @@ export default function LandingPage() {
               onClick={() => navigate("/auth")}
               className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] hover:scale-105 active:scale-[0.98]"
             >
-              Começar gratuitamente
+              Começar grátis agora
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <button
@@ -209,6 +209,29 @@ export default function LandingPage() {
             >
               Ver como funciona
             </button>
+          </motion.div>
+
+          {/* Micro-text */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-xs text-[hsl(215_16%_46%)] mt-6"
+          >
+            Sem cartão de crédito • Setup em 30 segundos
+          </motion.p>
+
+          {/* Trust platform icons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex items-center justify-center gap-6 mt-8 text-[hsl(215_16%_36%)]"
+          >
+            <Instagram className="h-4 w-4" />
+            <Youtube className="h-4 w-4" />
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61.01 3.91.02.09 1.46.56 2.95 1.54 4.02.98 1.08 2.34 1.66 3.7 1.93v3.89c-1.28-.07-2.56-.4-3.7-.97-.54-.27-1.04-.59-1.51-.95-.01 2.09.01 4.18-.01 6.27-.11 1.33-.58 2.64-1.37 3.72-.94 1.31-2.31 2.28-3.84 2.73-1.02.3-2.1.4-3.15.27-1.53-.19-2.98-.89-4.09-1.97-1.28-1.22-2.05-2.93-2.15-4.7-.02-.52-.01-1.04.03-1.55.2-1.67 1.02-3.24 2.25-4.35 1.39-1.27 3.28-2.02 5.19-1.95.02 1.42-.01 2.84-.02 4.26-.74-.14-1.55-.05-2.2.36-.52.3-.93.76-1.18 1.29-.17.36-.25.76-.26 1.16.04.98.5 1.93 1.26 2.53.72.59 1.69.87 2.6.75.74-.09 1.44-.46 1.92-1.03.3-.36.52-.79.59-1.25.09-.75.07-1.5.07-2.26V.02h3.32z"/></svg>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
           </motion.div>
         </div>
 
@@ -483,6 +506,9 @@ export default function LandingPage() {
                 >
                   {p.price === "Grátis" ? "Começar grátis" : "Assinar agora"}
                 </Button>
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  {p.price === "Grátis" ? "Sem compromisso" : "Cancele quando quiser"}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -500,7 +526,7 @@ export default function LandingPage() {
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
           <h2 className="relative z-10 font-display text-3xl font-bold md:text-5xl mb-6 text-white tracking-tight">
-            Comece a criar com IA <span className="text-gradient-primary">hoje</span>
+            Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
           </h2>
           <p className="relative z-10 text-[hsl(215_16%_56%)] mb-8 max-w-md mx-auto text-lg">
             Roteiros profissionais prontos para gravação em minutos.
@@ -511,7 +537,7 @@ export default function LandingPage() {
               className="gap-2 text-base rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] active:scale-[0.98]"
               onClick={() => navigate("/auth")}
             >
-              Começar gratuitamente <ArrowRight className="h-4 w-4" />
+              Garantir meu acesso grátis <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               size="lg"
@@ -521,9 +547,10 @@ export default function LandingPage() {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Ver demonstração
+              Assistir demo
             </Button>
           </div>
+          <p className="relative z-10 text-xs text-primary/70 mt-4">Acesso antecipado com vagas limitadas.</p>
         </motion.div>
       </section>
 

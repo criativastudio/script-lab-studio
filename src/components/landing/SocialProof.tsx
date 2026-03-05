@@ -1,5 +1,11 @@
 import { motion } from "framer-motion";
 
+const stats = [
+  { value: "10.000+", label: "criadores" },
+  { value: "50.000+", label: "roteiros gerados" },
+  { value: "4.8/5", label: "avaliação média" },
+];
+
 const testimonials = [
   {
     name: "Ana Clara",
@@ -33,7 +39,7 @@ export default function SocialProof() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-center mb-12"
         >
           <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-6">
             Quem usa, <span className="text-gradient-primary">recomenda</span>
@@ -41,6 +47,22 @@ export default function SocialProof() {
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Veja o que nossos usuários estão dizendo.
           </p>
+        </motion.div>
+
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex justify-center gap-8 md:gap-16 mb-16"
+        >
+          {stats.map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-gradient-primary">{s.value}</div>
+              <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+            </div>
+          ))}
         </motion.div>
 
         <div className="grid gap-6 md:grid-cols-3">
