@@ -17,7 +17,7 @@ import {
   Plus, ArrowLeft, FileText, BookOpen, Trash2, Loader2,
   Link as LinkIcon, Copy, Users, Download, Eye, Edit2,
   Mail, Phone, Video, Calendar, Bot, ChevronDown, FolderPlus,
-  Target, Megaphone, MessageSquare, Lightbulb, Hash
+  Target, Megaphone, MessageSquare, Lightbulb, Hash, Sparkles
 } from "lucide-react";
 import { ScriptViewer } from "@/components/ScriptViewer";
 
@@ -76,6 +76,11 @@ const CRM = () => {
 
   const [viewingScript, setViewingScript] = useState<Script | null>(null);
   const [viewingProject, setViewingProject] = useState<BriefingRequest | null>(null);
+
+  // Manual create dialog
+  const [manualCreateProjectId, setManualCreateProjectId] = useState<string | null>(null);
+  const [manualForm, setManualForm] = useState({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" });
+  const [manualGenerating, setManualGenerating] = useState(false);
 
   // Edit dialogs
   const [editingBriefing, setEditingBriefing] = useState<Briefing | null>(null);
@@ -195,6 +200,67 @@ const CRM = () => {
       toast({ title: "Erro ao gerar", description: err.message, variant: "destructive" });
     } finally {
       setGeneratingProject(null);
+    }
+  };
+
+  // Manual generate handler
+  const handleManualGenerate = async (project: BriefingRequest) => {
+    if (!user || !manualForm.objective || !manualForm.target_audience || !manualForm.platform) {
+      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+      return;
+    }
+    setManualGenerating(true);
+    try {
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("manual-generate", {
+        body: {
+          objective: manualForm.objective,
+          target_audience: manualForm.target_audience,
+          platform: manualForm.platform,
+          hook: manualForm.hook,
+          duration: manualForm.duration,
+          notes: manualForm.notes,
+          video_quantity: project.video_quantity,
+        },
+      });
+      if (fnError) throw fnError;
+      if (fnData?.error) throw new Error(fnData.error);
+
+      // Ensure project exists
+      let projectId = project.project_id;
+      if (!projectId) {
+        const { data: pData, error: pErr } = await supabase.from("projects").insert({
+          user_id: user.id, name: project.project_name, client_name: project.business_name,
+          platform: manualForm.platform, objective: manualForm.objective,
+        }).select("id").single();
+        if (pErr) throw pErr;
+        projectId = pData.id;
+        await supabase.from("briefing_requests").update({ project_id: projectId }).eq("id", project.id);
+      }
+
+      // Insert briefing
+      await supabase.from("briefings").insert({
+        user_id: user.id, project_id: projectId,
+        goal: fnData.goal, target_audience: fnData.target_audience, content_style: fnData.content_style,
+      });
+
+      // Insert scripts
+      if (fnData.scripts?.length) {
+        await supabase.from("scripts").insert(
+          fnData.scripts.map((s: any) => ({ user_id: user.id, project_id: projectId, title: s.title, script: s.script }))
+        );
+      }
+
+      setManualCreateProjectId(null);
+      setManualForm({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" });
+      await fetchClients();
+      // Refresh project with possibly new project_id
+      const updatedProject = { ...project, project_id: projectId };
+      await fetchProjectDetails(updatedProject);
+      toast({ title: "Briefing e roteiros gerados com sucesso!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao gerar", description: err.message, variant: "destructive" });
+    } finally {
+      setManualGenerating(false);
     }
   };
 
@@ -394,6 +460,9 @@ const CRM = () => {
                             {isGen ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Bot className="h-3.5 w-3.5 mr-1.5" />}
                             {isGen ? "Gerando..." : "Gerar com Agente"}
                           </Button>
+                          <Button size="sm" variant="outline" onClick={() => setManualCreateProjectId(project.id)} disabled={manualGenerating}>
+                            <Sparkles className="h-3.5 w-3.5 mr-1.5" />Criar Manual + IA
+                          </Button>
                         </div>
 
                         {/* Strategic Info */}
@@ -468,6 +537,59 @@ const CRM = () => {
             })}
           </div>
         </div>
+
+        {/* Manual Create Dialog */}
+        <Dialog open={!!manualCreateProjectId} onOpenChange={(v) => { if (!v) { setManualCreateProjectId(null); setManualForm({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" }); } }}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Criar Manual + IA</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Objetivo do Cliente *</Label>
+                <Textarea placeholder="Descreva o objetivo principal do conteúdo..." value={manualForm.objective} onChange={(e) => setManualForm({ ...manualForm, objective: e.target.value })} />
+              </div>
+              <div>
+                <Label>Público-alvo *</Label>
+                <Input placeholder="Ex: Mulheres 25-40, interessadas em fitness" value={manualForm.target_audience} onChange={(e) => setManualForm({ ...manualForm, target_audience: e.target.value })} />
+              </div>
+              <div>
+                <Label>Plataforma *</Label>
+                <Select value={manualForm.platform} onValueChange={(v) => setManualForm({ ...manualForm, platform: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a plataforma" /></SelectTrigger>
+                  <SelectContent>
+                    {["Instagram Reels", "TikTok", "YouTube Shorts", "YouTube", "Facebook", "LinkedIn"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Mensagem Principal / Gancho</Label>
+                <Textarea placeholder="Qual a mensagem ou gancho principal do vídeo?" value={manualForm.hook} onChange={(e) => setManualForm({ ...manualForm, hook: e.target.value })} />
+              </div>
+              <div>
+                <Label>Duração</Label>
+                <Select value={manualForm.duration} onValueChange={(v) => setManualForm({ ...manualForm, duration: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["15s", "30s", "60s", "3min", "5min+"].map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Notas Estratégicas (opcional)</Label>
+                <Textarea placeholder="Informações adicionais, referências, restrições..." value={manualForm.notes} onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })} />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  const project = selectedGroup?.projects.find(p => p.id === manualCreateProjectId);
+                  if (project) handleManualGenerate(project);
+                }}
+                disabled={manualGenerating || !manualForm.objective || !manualForm.target_audience || !manualForm.platform}
+              >
+                {manualGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : <><Sparkles className="h-4 w-4 mr-2" />Gerar Briefing + Roteiros</>}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Briefing Dialog */}
         <Dialog open={!!editingBriefing} onOpenChange={(v) => { if (!v) setEditingBriefing(null); }}>
