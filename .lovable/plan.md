@@ -1,90 +1,47 @@
 
 
-# UI/UX Flow Redesign — CRM Page
+# AI Logic System — Enhanced Script Generation Pipeline
 
-## Overview
+## What Changes
 
-Redesign the CRM page with a modern SaaS aesthetic: break the monolithic 1400-line CRM.tsx into focused components, improve card design with rounded-xl corners and soft shadows, add step-based visual flow indicators, enhance client/project/idea cards with quick actions, and add a basic content calendar view.
+The `generate-script` edge function needs significant prompt engineering improvements and the addition of project context (Layer 2) which is currently missing. Content diversity is partially implemented in `generate-ideas` but absent from script generation. No new tables are needed — we query existing `scripts` table for memory.
 
-All existing logic and handlers stay intact — this is a visual and structural reorganization.
+## Changes
 
-## Architecture: Component Extraction
+### 1. `supabase/functions/generate-script/index.ts` — Major Rewrite of Enhanced Mode
 
-The current CRM.tsx contains everything in one file. We'll extract into dedicated components:
+**Add Project Context (Layer 2):** Currently the enhanced mode only loads strategic context + idea. It must also load the project via `idea.project_id` or a passed `project_id` to inject campaign_objective, funnel_stage, content_style, publishing_frequency.
 
-| New Component | Purpose |
-|---|---|
-| `src/components/crm/ClientListView.tsx` | Client grid with search/filters, enhanced cards showing niche, project count, last script date, quick action buttons |
-| `src/components/crm/ClientDetailView.tsx` | Header + tabbed layout container for selected client |
-| `src/components/crm/StrategicContextTab.tsx` | Strategic context display/edit form |
-| `src/components/crm/ProjectsTab.tsx` | Project cards with enhanced fields, collapsible briefings/scripts |
-| `src/components/crm/ContentIdeasTab.tsx` | Ideas grid with generate/select/edit/delete, responsive card layout |
-| `src/components/crm/ContentCalendarTab.tsx` | **New** — Weekly calendar view organizing ideas into weeks |
-| `src/components/crm/StepIndicator.tsx` | **New** — Visual step flow bar (Clients → Context → Projects → Ideas → Scripts → Export) |
+**Content Diversity/Memory:** Before generating, query `scripts` table for this client's context to get previously generated titles. Inject them into the prompt as "topics to avoid repeating."
 
-`CRM.tsx` becomes the orchestrator: holds state, passes handlers as props.
+**Tone Adaptation:** Expand the system prompt with explicit tone rules per communication_style value (educational, authority, casual, influencer, storytelling, direct_sales). Each style gets specific writing instructions.
 
-## Design Changes
+**Multi-Step Pipeline in Prompt:** Restructure the system prompt to enforce the 5-step generation pipeline:
+1. Strategic angle derivation
+2. Hook options (generate 2-3, pick best)
+3. Strategic briefing section
+4. Full speaking script
+5. CTA aligned with funnel stage
+6. Recording style suggestion
 
-### 1. Step Flow Indicator (new component)
-A horizontal step bar at the top of the client detail view showing the 6 steps. The active step highlights based on which tab is selected. Uses numbered circles connected by lines.
+**Structured Output:** Use tool calling (like `generate-ideas` does) to get a structured JSON response with separated sections (hook, briefing, structure, script, cta, recording_style) instead of free-form text.
 
-```text
-①─────②─────③─────④─────⑤─────⑥
-Client  Context  Projects  Ideas  Scripts  Export
-```
+### 2. `src/pages/CRM.tsx` — Pass project_id to script generation
 
-### 2. Client Cards (list view)
-- `rounded-2xl` with `shadow-sm hover:shadow-md`
-- Show: business niche badge, active project count, last script date
-- Quick action buttons on hover: "Ver Contexto", "Projetos", "Gerar Ideias"
-- More whitespace, larger avatar
+Update `handleGenerateScriptsFromIdeas` to pass `project_id` alongside `context_id` and `idea_id`, so the edge function can load project context.
 
-### 3. Project Cards (projects tab)
-- Grid layout instead of collapsible list
-- Each card shows: name, platform badge, video count, funnel stage badge, status
-- Quick buttons: "Gerar Ideias", "Criar Roteiros", "Ver Calendário"
+### 3. `src/components/crm/ContentIdeasTab.tsx` — No changes needed
 
-### 4. Content Idea Cards (ideas tab)
-- Switch from list to responsive grid (2-3 columns)
-- Each card: title, description, platform badge, funnel stage, hook preview
-- Actions: Generate Script, Edit, Delete
-- Selected state with primary border glow
-
-### 5. Script Viewer Enhancement
-- Keep existing ScriptViewer dialog
-- Add section headers with icons for Hook, Briefing, Structure, Script, CTA
-- Add action buttons: "Regenerar Hook", "Melhorar Roteiro", "Mudar Tom", "Exportar"
-
-### 6. Content Calendar Tab (new)
-- New 4th tab: "Calendário"
-- Groups ideas by week (Week 1, Week 2, etc.)
-- Simple card-based weekly layout (not full calendar widget)
-- Auto-distributes selected ideas across weeks based on publishing frequency
-
-### 7. Global Design Tokens
-- Cards: `rounded-2xl shadow-sm border-border/50`
-- Transitions: `transition-all duration-200`
-- More `p-6` padding, `gap-4` spacing
-- Muted icon accents using `text-primary/60`
+Already functional for selection and generation triggers.
 
 ## Files Modified
 
 | File | Change |
 |---|---|
-| `src/components/crm/StepIndicator.tsx` | New — visual step flow component |
-| `src/components/crm/ClientListView.tsx` | New — extracted & redesigned client grid |
-| `src/components/crm/ClientDetailView.tsx` | New — extracted detail container with tabs |
-| `src/components/crm/StrategicContextTab.tsx` | New — extracted context tab |
-| `src/components/crm/ProjectsTab.tsx` | New — extracted & redesigned projects tab |
-| `src/components/crm/ContentIdeasTab.tsx` | New — extracted & redesigned ideas tab with grid cards |
-| `src/components/crm/ContentCalendarTab.tsx` | New — weekly calendar view |
-| `src/pages/CRM.tsx` | Refactored to orchestrator, imports sub-components |
+| `supabase/functions/generate-script/index.ts` | Add project context loading, content memory query, tone adaptation rules, structured tool output, multi-step pipeline prompt |
+| `src/pages/CRM.tsx` | Pass project_id in handleGenerateScriptsFromIdeas |
 
-## Compatibility
-- All existing handlers, state, and Supabase calls remain identical
-- No database changes
-- No route changes
-- PDF printing still works
-- All dialogs (edit, manual create, script viewer) preserved
+## Backward Compatibility
+
+Legacy mode (direct briefing/target_audience/platform/video_duration) remains untouched. Enhanced mode is extended, not replaced.
 
