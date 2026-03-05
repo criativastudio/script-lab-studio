@@ -1,103 +1,41 @@
 
 
-# Adapt SaaS to Strategic Intelligence Platform for Audiovisual Production
+# Supabase Integration: Projects, Briefings, Scripts, Ideas
 
-## Summary
+## Current State
 
-Transform the existing law-firm SaaS into an audiovisual production intelligence platform by rewriting all 5 existing pages and adding RLS to the `projects`, `briefings`, `scripts`, and `ideas` tables. No new pages created -- only content and branding changes.
+The database tables and RLS policies are already in place. The pages have basic Supabase queries for listing/counting. What's **missing** is the full CRUD workflow:
 
-## Database Changes (Migration)
+- **CRM page**: Lists projects but has no way to view/manage briefings or scripts within a project
+- **No briefing creation** UI linked to a project
+- **No script creation** UI linked to a briefing/project
+- **No ideas creation** UI anywhere
+- Foreign keys `briefings.project_id -> projects.id` and `scripts.project_id -> projects.id` need to be added to the actual DB (they exist in types but not in the schema)
 
-The existing tables need schema updates and RLS policies:
+## Plan
 
-### 1. `projects` table -- add columns
-- `client_name text`
-- `objective text`
-- `platform text`
-- `status text default 'active'`
+### 1. Database Migration: Add foreign keys
 
-### 2. `scripts` table -- add `user_id`
-- `user_id uuid` (to link to auth user)
-- `title text`
+Add foreign key constraints so briefings and scripts are properly linked to projects:
+- `briefings.project_id` references `projects.id` (ON DELETE CASCADE)
+- `scripts.project_id` references `projects.id` (ON DELETE CASCADE)
 
-### 3. `ideas` table -- add `user_id`
-- `user_id uuid`
-- `status text default 'new'`
+### 2. Expand CRM page with project detail panel
 
-### 4. `briefings` table -- add `user_id`
-- `user_id uuid`
+When a user clicks a project row, show an expandable section or detail panel containing:
+- **Briefings tab**: List briefings for that project + "Add Briefing" form (goal, target_audience, content_style)
+- **Scripts tab**: List scripts for that project + "Add Script" form (title, script text)
+- **Ideas tab**: List ideas for that project + "Add Idea" form (idea text)
 
-### 5. RLS policies for all 4 tables
-Each table gets:
-- Users can CRUD their own rows (`auth.uid() = user_id`)
-- Admins can see all (`has_role(auth.uid(), 'admin')`)
+Each insert sets `user_id = auth.uid()` and `project_id` to the selected project.
 
-For `briefings`, `scripts` -- access via `project_id` join to projects where `user_id = auth.uid()`, OR direct `user_id` column.
+### 3. Update Dashboard with quick-add actions
 
-## Page Rewrites
+Add a small "Nova Ideia" quick-add input on the Dashboard so users can capture ideas without navigating away.
 
-### Auth (`src/pages/Auth.tsx`)
-- Rebrand: "ScriptLab Studio" with Film/Clapperboard icon
-- Tagline: "Plataforma de Inteligencia Estrategica para Producao Audiovisual"
-- Keep login-only (remove signup toggle since admin-provisioned)
+### 4. Files Modified
 
-### Dashboard (`src/pages/Dashboard.tsx`)
-- Title: "Content Intelligence Dashboard"
-- Cards: Total Projects, Scripts Generated, Ideas, Active Briefings
-- Recent projects list (last 5 from `projects`)
-- Recent scripts list (last 5 from `scripts`)
-- Recent ideas (last 5 from `ideas`)
-
-### CRM -> Projects Manager (`src/pages/CRM.tsx`)
-- Title: "Gerenciador de Projetos"
-- Table listing projects with columns: client_name, objective, platform, status, created_at
-- Dialog to create new project (client_name, objective, platform)
-- Click project to expand/view linked briefings and scripts
-- Filter by status
-
-### Metrics -> Content Performance Analytics (`src/pages/Metrics.tsx`)
-- Title: "Analise de Desempenho de Conteudo"
-- Cards: Scripts generated (count), Ideas created, Projects active, Briefings completed
-- Breakdown by platform (from projects.platform)
-- Activity timeline (recent items by date)
-
-### WhatsApp -> Content Distribution Hub (`src/pages/WhatsApp.tsx`)
-- Title: "Distribuicao de Conteudo"
-- Keep WhatsApp connection functionality
-- Add a section listing recent scripts/ideas that can be "sent" (copy to clipboard or share link)
-- Maintain existing WhatsApp connection card
-
-### Admin (`src/pages/Admin.tsx`)
-- Keep user management (CreateUserDialog)
-- Replace client/flow management with:
-  - Platform analytics: total users, projects, scripts counts
-  - Subscription management: list from `subscriptions` table
-  - Keep user creation dialog
-
-### DashboardLayout (`src/components/DashboardLayout.tsx`)
-- Rebrand sidebar: "ScriptLab Studio" / "Producao Audiovisual"
-- Update nav icons and labels:
-  - Dashboard (LayoutDashboard)
-  - Projetos (FolderOpen)
-  - Analises (BarChart3)
-  - Distribuicao (Send)
-  - Admin (Shield)
-
-## Files Modified
-
-1. **Migration SQL** -- add columns + RLS to projects/briefings/scripts/ideas
-2. `src/pages/Auth.tsx` -- rebrand
-3. `src/pages/Dashboard.tsx` -- full rewrite to content intelligence
-4. `src/pages/CRM.tsx` -- rewrite to projects manager
-5. `src/pages/Metrics.tsx` -- rewrite to content analytics
-6. `src/pages/WhatsApp.tsx` -- rewrite to distribution hub
-7. `src/pages/Admin.tsx` -- adapt admin controls
-8. `src/components/DashboardLayout.tsx` -- rebrand + new nav labels
-
-## Technical Notes
-
-- All queries use `supabase.from("table").select(...).eq("user_id", user.id)` for user-scoped data
-- Admin views use unfiltered queries (RLS allows via `has_role`)
-- The `useAuth` hook remains unchanged -- `user.id` is used directly instead of `clientId` for these new tables
-- Existing multi-tenant tables (clients, leads, conversations, etc.) are untouched but hidden from nav
+- `src/pages/CRM.tsx` -- Add expandable project detail with briefings/scripts/ideas CRUD
+- `supabase/migrations/` -- Add foreign key constraints
+- `src/pages/Dashboard.tsx` -- Minor: add quick-add idea input
 
