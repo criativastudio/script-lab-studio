@@ -1,36 +1,32 @@
 
 
-# Replace Hero with ContainerScroll Animation
+# Replace Problem Section with GlowingEffect Grid Cards
 
 ## Summary
 
-Replace the current split hero layout with the `ContainerScroll` component from Aceternity UI. The hero will show the title/subtitle at top, and the HeroAnimation dashboard mockup will be inside a scroll-driven 3D perspective card that rotates and scales as the user scrolls.
+Replace the current "Problema" section's simple glass-card grid with the Aceternity UI `GlowingEffect` component — interactive glowing border cards that follow the mouse cursor, matching the reference screenshot's modern dark aesthetic.
 
 ## Changes
 
-### 1. Install `framer-motion` dependency
+### 1. Install `motion` dependency
+Required by the `GlowingEffect` component for the `animate` function.
 
-### 2. New file: `src/components/ui/container-scroll-animation.tsx`
-- Adapted from the provided component code (remove `"use client"` directive, replace Next.js patterns with standard React)
-- Uses `useScroll`, `useTransform`, `motion` from framer-motion
-- Responsive: detects mobile for different scale dimensions
+### 2. New file: `src/components/ui/glowing-effect.tsx`
+Adapted from the provided code (remove `"use client"` directive). Uses `motion/react`'s `animate` for smooth angle transitions on mouse proximity.
 
-### 3. Update `src/pages/LandingPage.tsx` — Hero section
-- Replace the current split two-column hero with `ContainerScroll`
-- `titleComponent` receives the Badge + headline + subheadline + CTA buttons
-- `children` receives the `HeroAnimation` component (the dashboard mockup)
-- Keep glow orbs and gradient background around it
-- Remove the `min-h-screen flex items-center` layout since ContainerScroll manages its own height
+### 3. Update `src/pages/LandingPage.tsx` — Problem section (lines 217-245)
+Replace the current `grid gap-6 sm:grid-cols-2 lg:grid-cols-4` of simple glass-cards with a styled grid using `GlowingEffect` wrapper per card:
+- Each card gets a relative container with `<GlowingEffect>` as an overlay child
+- Card content (icon, title, description) stays the same but with updated styling to match the reference: centered icon on top, bold title, muted description
+- Grid layout: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` with proper gap and dark card backgrounds (`bg-neutral-950 border-neutral-800`)
 
-### 4. `src/components/landing/HeroAnimation.tsx` — Minor adjustment
-- Remove the perspective wrapper and 3D rotation (ContainerScroll handles the 3D transform now)
-- Keep the dashboard mockup content (window dots, stats, typing effect, panels) but flatten it into a static card visual that ContainerScroll will animate
+### 4. No other sections affected
+Only the "Problema" section is being replaced.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/ui/container-scroll-animation.tsx` | New — ContainerScroll component |
-| `src/pages/LandingPage.tsx` | Hero section uses ContainerScroll |
-| `src/components/landing/HeroAnimation.tsx` | Remove self-managed 3D rotation, become flat card content |
+| `src/components/ui/glowing-effect.tsx` | New — GlowingEffect component |
+| `src/pages/LandingPage.tsx` | Problem section cards use GlowingEffect |
 
