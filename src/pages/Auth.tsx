@@ -11,7 +11,9 @@ import { Clapperboard } from "lucide-react";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -19,9 +21,25 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      navigate("/dashboard");
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: window.location.origin,
+          },
+        });
+        if (error) throw error;
+        toast({
+          title: "Conta criada!",
+          description: "Verifique seu email para confirmar sua conta antes de fazer login.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -46,11 +64,19 @@ const Auth = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Entrar</CardTitle>
-            <CardDescription>Acesse sua plataforma de produção</CardDescription>
+            <CardTitle>{isSignUp ? "Criar conta" : "Entrar"}</CardTitle>
+            <CardDescription>
+              {isSignUp ? "Preencha os dados para criar sua conta" : "Acesse sua plataforma de produção"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Nome completo</Label>
+                  <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" required />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
@@ -60,9 +86,26 @@ const Auth = () => {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Carregando..." : "Entrar"}
+                {loading ? "Carregando..." : isSignUp ? "Criar conta" : "Entrar"}
               </Button>
             </form>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {isSignUp ? (
+                <>
+                  Já tem uma conta?{" "}
+                  <button type="button" onClick={() => setIsSignUp(false)} className="text-primary hover:underline font-medium">
+                    Entrar
+                  </button>
+                </>
+              ) : (
+                <>
+                  Não tem uma conta?{" "}
+                  <button type="button" onClick={() => setIsSignUp(true)} className="text-primary hover:underline font-medium">
+                    Criar conta
+                  </button>
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
