@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { FolderOpen, FileText, Lightbulb, BookOpen } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { FolderOpen, FileText, Lightbulb, BookOpen, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Project { id: string; name: string | null; client_name: string | null; platform: string | null; status: string | null; created_at: string | null; }
@@ -12,7 +15,9 @@ interface Idea { id: string; idea: string | null; created_at: string | null; }
 
 const Dashboard = () => {
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState({ projects: 0, scripts: 0, ideas: 0, briefings: 0 });
+  const [quickIdea, setQuickIdea] = useState("");
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [recentScripts, setRecentScripts] = useState<Script[]>([]);
   const [recentIdeas, setRecentIdeas] = useState<Idea[]>([]);
@@ -60,6 +65,26 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold text-foreground">Content Intelligence Dashboard</h1>
           <p className="text-muted-foreground">Visão geral da sua produção audiovisual</p>
         </div>
+
+        <Card>
+          <CardContent className="p-4">
+            <form
+              className="flex gap-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!user || !quickIdea.trim()) return;
+                const { error } = await supabase.from("ideas").insert({ idea: quickIdea.trim(), user_id: user.id });
+                if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+                setQuickIdea("");
+                toast({ title: "Ideia salva!" });
+              }}
+            >
+              <Lightbulb className="h-5 w-5 text-muted-foreground mt-2.5" />
+              <Input placeholder="Capture uma ideia rápida..." value={quickIdea} onChange={(e) => setQuickIdea(e.target.value)} className="flex-1" />
+              <Button type="submit" size="sm"><Plus className="h-4 w-4 mr-1" />Salvar</Button>
+            </form>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card) => (
