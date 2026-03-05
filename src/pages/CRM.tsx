@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2, Link as LinkIcon, Copy, Users } from "lucide-react";
+import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2, Link as LinkIcon, Copy, Users, Download } from "lucide-react";
+import { useRef } from "react";
 
 interface Project {
   id: string; name: string | null; client_name: string | null; objective: string | null;
@@ -62,6 +63,50 @@ const CRM = () => {
   const [scriptForm, setScriptForm] = useState({ title: "", script: "" });
   const [ideaForm, setIdeaForm] = useState({ idea: "" });
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // PDF Export state
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfProjectId, setPdfProjectId] = useState<string | null>(null);
+  const [pdfConfig, setPdfConfig] = useState({
+    agency_name: "", agency_logo: "", client_name: "", business_name: "",
+    project_name: "", project_date: new Date().toISOString().split("T")[0], project_status: "Em análise",
+  });
+  const [pdfBriefingData, setPdfBriefingData] = useState<{ persona: string | null; positioning: string | null; tone_of_voice: string | null; content_strategy: string | null; briefing: Briefing | null } | null>(null);
+  const [pdfScripts, setPdfScripts] = useState<Script[]>([]);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const openPdfDialog = async (project: Project) => {
+    setPdfProjectId(project.id);
+    setPdfConfig(prev => ({
+      ...prev,
+      client_name: project.client_name || "",
+      project_name: project.name || "",
+      project_date: project.created_at ? new Date(project.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    }));
+    // Fetch briefing_request for this project
+    const { data: brData } = await supabase.from("briefing_requests").select("persona, positioning, tone_of_voice, content_strategy, business_name").eq("project_id", project.id).maybeSingle();
+    // Fetch briefings
+    const { data: bData } = await supabase.from("briefings").select("*").eq("project_id", project.id).limit(1);
+    // Fetch scripts
+    const { data: sData } = await supabase.from("scripts").select("*").eq("project_id", project.id).order("created_at", { ascending: true });
+    
+    if (brData) {
+      setPdfConfig(prev => ({ ...prev, business_name: brData.business_name || prev.business_name }));
+    }
+    setPdfBriefingData({
+      persona: brData?.persona || null,
+      positioning: brData?.positioning || null,
+      tone_of_voice: brData?.tone_of_voice || null,
+      content_strategy: brData?.content_strategy || null,
+      briefing: (bData && bData.length > 0) ? bData[0] as Briefing : null,
+    });
+    setPdfScripts((sData as Script[]) || []);
+    setPdfDialogOpen(true);
+  };
+
+  const handlePrintPdf = () => {
+    setTimeout(() => window.print(), 300);
+  };
 
   const fetchProjects = async () => {
     if (!user) return;
@@ -328,8 +373,13 @@ const CRM = () => {
                           {expandedId === p.id && (
                             <TableRow key={`${p.id}-detail`}>
                               <TableCell colSpan={6} className="p-0">
-                                <div className="p-4 bg-muted/30 border-t border-border">
-                                  <Tabs defaultValue="briefings">
+                                 <div className="p-4 bg-muted/30 border-t border-border">
+                                   <div className="flex justify-end mb-3">
+                                     <Button variant="outline" size="sm" onClick={() => openPdfDialog(p)}>
+                                       <Download className="h-4 w-4 mr-1" />Download Project PDF
+                                     </Button>
+                                   </div>
+                                   <Tabs defaultValue="briefings">
                                     <TabsList>
                                       <TabsTrigger value="briefings"><BookOpen className="h-4 w-4 mr-1" />Briefings ({briefings.length})</TabsTrigger>
                                       <TabsTrigger value="scripts"><FileText className="h-4 w-4 mr-1" />Roteiros ({scripts.length})</TabsTrigger>
@@ -504,6 +554,102 @@ const CRM = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* PDF Config Dialog */}
+        <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Configurar PDF do Projeto</DialogTitle></DialogHeader>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              <div><Label>Nome da Agência</Label><Input value={pdfConfig.agency_name} onChange={(e) => setPdfConfig({ ...pdfConfig, agency_name: e.target.value })} /></div>
+              <div><Label>Logo da Agência (URL)</Label><Input value={pdfConfig.agency_logo} onChange={(e) => setPdfConfig({ ...pdfConfig, agency_logo: e.target.value })} placeholder="https://..." /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Nome do Cliente</Label><Input value={pdfConfig.client_name} onChange={(e) => setPdfConfig({ ...pdfConfig, client_name: e.target.value })} /></div>
+                <div><Label>Nome da Empresa</Label><Input value={pdfConfig.business_name} onChange={(e) => setPdfConfig({ ...pdfConfig, business_name: e.target.value })} /></div>
+              </div>
+              <div><Label>Nome do Projeto</Label><Input value={pdfConfig.project_name} onChange={(e) => setPdfConfig({ ...pdfConfig, project_name: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Data do Projeto</Label><Input type="date" value={pdfConfig.project_date} onChange={(e) => setPdfConfig({ ...pdfConfig, project_date: e.target.value })} /></div>
+                <div>
+                  <Label>Status do Projeto</Label>
+                  <Select value={pdfConfig.project_status} onValueChange={(v) => setPdfConfig({ ...pdfConfig, project_status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Em análise">Em análise</SelectItem>
+                      <SelectItem value="Em edição">Em edição</SelectItem>
+                      <SelectItem value="Aprovado">Aprovado</SelectItem>
+                      <SelectItem value="Rejeitado">Rejeitado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <Button className="w-full" onClick={handlePrintPdf}><Download className="h-4 w-4 mr-2" />Gerar PDF</Button>
+          </DialogContent>
+        </Dialog>
+
+        {/* Hidden print container */}
+        <div id="pdf-print-container" ref={printRef} className="hidden print:block">
+          <div className="pdf-header">
+            {pdfConfig.agency_logo && <img src={pdfConfig.agency_logo} alt="Logo" />}
+            {pdfConfig.agency_name && <h1>{pdfConfig.agency_name}</h1>}
+            <p><strong>Cliente:</strong> {pdfConfig.client_name}</p>
+            <p><strong>Empresa:</strong> {pdfConfig.business_name}</p>
+            <p><strong>Projeto:</strong> {pdfConfig.project_name}</p>
+            <p><strong>Data:</strong> {pdfConfig.project_date}</p>
+            <span className="pdf-status-badge">{pdfConfig.project_status}</span>
+          </div>
+
+          {pdfBriefingData?.briefing && (
+            <div className="pdf-section">
+              <div className="pdf-section-title">Briefing Estratégico</div>
+              <dl className="pdf-meta-grid">
+                <dt>Objetivo</dt><dd>{pdfBriefingData.briefing.goal || "—"}</dd>
+                <dt>Público-alvo</dt><dd>{pdfBriefingData.briefing.target_audience || "—"}</dd>
+                <dt>Estilo de Conteúdo</dt><dd>{pdfBriefingData.briefing.content_style || "—"}</dd>
+              </dl>
+            </div>
+          )}
+
+          {pdfBriefingData?.persona && (
+            <div className="pdf-section">
+              <div className="pdf-section-title">Persona do Cliente</div>
+              <div className="pdf-content">{pdfBriefingData.persona}</div>
+            </div>
+          )}
+
+          {pdfBriefingData?.positioning && (
+            <div className="pdf-section">
+              <div className="pdf-section-title">Posicionamento de Marca</div>
+              <div className="pdf-content">{pdfBriefingData.positioning}</div>
+            </div>
+          )}
+
+          {pdfBriefingData?.tone_of_voice && (
+            <div className="pdf-section">
+              <div className="pdf-section-title">Tom de Voz</div>
+              <div className="pdf-content">{pdfBriefingData.tone_of_voice}</div>
+            </div>
+          )}
+
+          {pdfBriefingData?.content_strategy && (
+            <div className="pdf-section">
+              <div className="pdf-section-title">Estratégia de Conteúdo</div>
+              <div className="pdf-content">{pdfBriefingData.content_strategy}</div>
+            </div>
+          )}
+
+          {pdfScripts.length > 0 && (
+            <div className="pdf-section pdf-page-break">
+              <div className="pdf-section-title">Roteiros de Vídeo ({pdfScripts.length})</div>
+              {pdfScripts.map((s, idx) => (
+                <div key={s.id} className="pdf-script-card">
+                  <h3>Roteiro {idx + 1}: {s.title || "Sem título"}</h3>
+                  <div className="pdf-content">{s.script || "—"}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
