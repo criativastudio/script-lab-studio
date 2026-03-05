@@ -1,48 +1,72 @@
 
 
-# Manual Briefing & Script Creation with AI Completion
+# Full Responsive Design Update
 
 ## Summary
 
-Add a "Criar Manual + IA" button inside each project's collapsible block. Opens a dialog with manual input fields (objective, audience, platform, hook, duration, notes). On submit, sends data to a new edge function that uses AI to generate a full briefing + script, then saves both to the database under that project.
+The platform currently has a fixed 264px sidebar with no mobile adaptation. All pages use desktop-only layouts. This plan adds a mobile-friendly off-canvas sidebar with hamburger menu, and adjusts all page layouts for small screens.
 
 ## Changes
 
-### 1. New Edge Function: `supabase/functions/manual-generate/index.ts`
+### 1. `src/components/DashboardLayout.tsx` — Mobile sidebar
 
-Accepts manual input fields, builds a prompt incorporating them, calls Lovable AI with tool calling to return structured output (briefing fields + script), returns the result.
+- Add `useState` for `mobileMenuOpen`
+- Use `useIsMobile()` hook (already exists in `src/hooks/use-mobile.tsx`)
+- **Desktop**: Keep current fixed sidebar as-is
+- **Mobile**: Hide sidebar, show top bar with hamburger (`Menu` icon) + app title. Sidebar renders inside a `Sheet` (side="left") that opens on hamburger click
+- Main content: remove fixed padding, use `p-4 md:p-6`
+- Sidebar links close the sheet on click (mobile)
 
-Input: `{ objective, target_audience, platform, hook, duration, notes, video_quantity, project_id }`
+### 2. `src/pages/Dashboard.tsx` — Responsive grids
 
-Uses tool calling to extract: `{ goal, target_audience, content_style, scripts: [{ title, script }] }`
+- Stat cards: already `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` — verify and keep
+- Recent items sections: stack on mobile, side-by-side on desktop
+- Reduce heading sizes on mobile
 
-### 2. `supabase/config.toml`
+### 3. `src/pages/CRM.tsx` — Responsive client grid + detail view
 
-Add `[functions.manual-generate]` with `verify_jwt = false`.
+- Client grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+- Detail view: stack header info vertically on mobile
+- Dialog content: full-width on mobile (`max-w-full sm:max-w-lg`)
+- Action buttons: wrap and stack on small screens
+- Collapsible project blocks: full-width, smaller padding on mobile
 
-### 3. `src/pages/CRM.tsx`
+### 4. `src/pages/Metrics.tsx` — Responsive grids
 
-**New state**: `manualCreateOpen` (project id or null), manual form fields state.
+- Already uses responsive grids — verify spacing/padding
 
-**New dialog**: "Criar Manual + IA" with fields:
-- Objetivo do Cliente (textarea)
-- Público-alvo (input)
-- Plataforma (select: Instagram Reels, TikTok, YouTube Shorts, YouTube, Facebook, LinkedIn)
-- Mensagem Principal / Gancho (textarea)
-- Duração (select: 15s, 30s, 60s, 3min, 5min+)
-- Notas estratégicas (textarea, optional)
+### 5. `src/pages/ScriptGenerator.tsx` — Stack layout on mobile
 
-**Submit handler**: Calls `manual-generate` edge function, creates briefing + scripts in Supabase, refreshes project details.
+- Two-card layout: stack vertically on mobile (`grid-cols-1 lg:grid-cols-2`)
 
-**UI placement**: New button "Criar Manual + IA" next to "Gerar com Agente" in each project's action bar, with a `Sparkles` icon.
+### 6. `src/pages/StrategicAnalysis.tsx` — Responsive form + results
 
-### 4. Files
+- Stack cards vertically on mobile
+- Full-width buttons
+
+### 7. `src/pages/WhatsApp.tsx` — Responsive cards
+
+- Stack cards vertically, full-width inputs
+
+### 8. `src/pages/Admin.tsx` — Responsive table + stats
+
+- Stat cards: responsive grid
+- Table: horizontal scroll wrapper on mobile
+
+### 9. `src/pages/Auth.tsx` — Already responsive (max-w-md + px-4)
+
+No changes needed.
+
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `supabase/functions/manual-generate/index.ts` | New edge function |
-| `supabase/config.toml` | Add function entry |
-| `src/pages/CRM.tsx` | Add manual create dialog + handler |
-
-No database changes needed — uses existing `briefings` and `scripts` tables.
+| `src/components/DashboardLayout.tsx` | Mobile hamburger + Sheet sidebar, responsive main padding |
+| `src/pages/Dashboard.tsx` | Responsive text sizes, verify grid classes |
+| `src/pages/CRM.tsx` | Responsive grids, stacked mobile layout, dialog sizing |
+| `src/pages/Metrics.tsx` | Minor spacing tweaks |
+| `src/pages/ScriptGenerator.tsx` | Stack cards on mobile |
+| `src/pages/StrategicAnalysis.tsx` | Stack layout on mobile |
+| `src/pages/WhatsApp.tsx` | Stack cards on mobile |
+| `src/pages/Admin.tsx` | Responsive table scroll, grid |
 
