@@ -17,6 +17,7 @@ export type Database = {
       briefing_requests: {
         Row: {
           business_name: string
+          city: string | null
           contact_email: string | null
           contact_name: string | null
           contact_whatsapp: string | null
@@ -24,6 +25,7 @@ export type Database = {
           created_at: string | null
           form_answers: Json | null
           id: string
+          niche: string | null
           persona: string | null
           positioning: string | null
           project_id: string | null
@@ -36,6 +38,7 @@ export type Database = {
         }
         Insert: {
           business_name: string
+          city?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_whatsapp?: string | null
@@ -43,6 +46,7 @@ export type Database = {
           created_at?: string | null
           form_answers?: Json | null
           id?: string
+          niche?: string | null
           persona?: string | null
           positioning?: string | null
           project_id?: string | null
@@ -55,6 +59,7 @@ export type Database = {
         }
         Update: {
           business_name?: string
+          city?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_whatsapp?: string | null
@@ -62,6 +67,7 @@ export type Database = {
           created_at?: string | null
           form_answers?: Json | null
           id?: string
+          niche?: string | null
           persona?: string | null
           positioning?: string | null
           project_id?: string | null

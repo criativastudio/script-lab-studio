@@ -18,7 +18,7 @@ import {
   Link as LinkIcon, Copy, Users, Download, Eye, Edit2,
   Mail, Phone, Video, Calendar, Bot, ChevronDown, FolderPlus,
   Target, Megaphone, MessageSquare, Lightbulb, Hash,
-  Sparkles,
+  Sparkles, Search, X,
 } from "lucide-react";
 import { ScriptViewer } from "@/components/ScriptViewer";
 
@@ -27,7 +27,7 @@ interface BriefingRequest {
   contact_whatsapp: string | null; project_name: string; video_quantity: number;
   status: string; token: string; created_at: string; persona: string | null;
   positioning: string | null; tone_of_voice: string | null; content_strategy: string | null;
-  project_id: string | null; form_answers: any;
+  project_id: string | null; form_answers: any; city: string | null; niche: string | null;
 }
 interface Briefing { id: string; goal: string | null; target_audience: string | null; content_style: string | null; created_at: string | null; project_id: string | null; }
 interface Script { id: string; title: string | null; script: string | null; created_at: string | null; project_id: string | null; }
@@ -60,9 +60,14 @@ const CRM = () => {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [briefingForm, setBriefingFormState] = useState({
     business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "",
-    project_name: "", video_quantity: "3",
+    project_name: "", video_quantity: "3", city: "", niche: "",
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+
+  // Search & filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCity, setFilterCity] = useState("");
+  const [filterNiche, setFilterNiche] = useState("");
 
   // New project dialog (for existing client)
   const [newProjectOpen, setNewProjectOpen] = useState(false);
@@ -112,6 +117,34 @@ const CRM = () => {
     });
   }, [clients]);
 
+  // Unique cities and niches for filter dropdowns
+  const uniqueCities = useMemo(() => {
+    const set = new Set<string>();
+    clients.forEach(c => { if (c.city) set.add(c.city); });
+    return Array.from(set).sort();
+  }, [clients]);
+
+  const uniqueNiches = useMemo(() => {
+    const set = new Set<string>();
+    clients.forEach(c => { if (c.niche) set.add(c.niche); });
+    return Array.from(set).sort();
+  }, [clients]);
+
+  // Filtered client groups
+  const filteredGroups = useMemo(() => {
+    return clientGroups.filter((group) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch = !term ||
+        group.business_name.toLowerCase().includes(term) ||
+        (group.contact_name && group.contact_name.toLowerCase().includes(term));
+      const matchesCity = !filterCity || group.projects.some(p => p.city === filterCity);
+      const matchesNiche = !filterNiche || group.projects.some(p => p.niche === filterNiche);
+      return matchesSearch && matchesCity && matchesNiche;
+    });
+  }, [clientGroups, searchTerm, filterCity, filterNiche]);
+
+  const hasActiveFilters = searchTerm || filterCity || filterNiche;
+
   const selectedGroup = useMemo(() => {
     if (!selectedBusinessName) return null;
     return clientGroups.find((g) => g.business_name.trim().toLowerCase() === selectedBusinessName) || null;
@@ -160,7 +193,8 @@ const CRM = () => {
       contact_name: briefingForm.contact_name || null, contact_email: briefingForm.contact_email || null,
       contact_whatsapp: briefingForm.contact_whatsapp || null, project_name: briefingForm.project_name,
       video_quantity: parseInt(briefingForm.video_quantity),
-    }).select("token").single();
+      city: briefingForm.city || null, niche: briefingForm.niche || null,
+    } as any).select("token").single();
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     const link = `${window.location.origin}/briefing/${data.token}`;
     setGeneratedLink(link);
@@ -719,7 +753,7 @@ const CRM = () => {
                     <Input value={generatedLink} readOnly className="flex-1 text-xs" />
                     <Button size="sm" onClick={() => { navigator.clipboard.writeText(generatedLink); toast({ title: "Link copiado!" }); }}><Copy className="h-4 w-4" /></Button>
                   </div>
-                  <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3" }); }}>Fechar</Button>
+                  <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3", city: "", niche: "" }); }}>Fechar</Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -739,6 +773,10 @@ const CRM = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label>Cidade</Label><Input value={briefingForm.city} onChange={(e) => setBriefingFormState({ ...briefingForm, city: e.target.value })} placeholder="Ex: São Paulo" /></div>
+                    <div><Label>Nicho/Segmento</Label><Input value={briefingForm.niche} onChange={(e) => setBriefingFormState({ ...briefingForm, niche: e.target.value })} placeholder="Ex: Advocacia" /></div>
+                  </div>
                   <Button className="w-full" onClick={handleCreateClient} disabled={!briefingForm.business_name || !briefingForm.project_name}>
                     <LinkIcon className="h-4 w-4 mr-2" />Registrar e Gerar Link
                   </Button>
@@ -748,18 +786,61 @@ const CRM = () => {
           </Dialog>
         </div>
 
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome da empresa ou contato..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {uniqueCities.length > 0 && (
+            <Select value={filterCity} onValueChange={setFilterCity}>
+              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Cidade" /></SelectTrigger>
+              <SelectContent>
+                {uniqueCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          {uniqueNiches.length > 0 && (
+            <Select value={filterNiche} onValueChange={setFilterNiche}>
+              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Nicho" /></SelectTrigger>
+              <SelectContent>
+                {uniqueNiches.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          {hasActiveFilters && (
+            <Button variant="ghost" size="icon" onClick={() => { setSearchTerm(""); setFilterCity(""); setFilterNiche(""); }} title="Limpar filtros">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
         {/* Client Cards Grid */}
-        {clientGroups.length === 0 ? (
+        {filteredGroups.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center text-muted-foreground">
               <Users className="h-16 w-16 mx-auto mb-4 opacity-40" />
-              <p className="text-lg font-medium">Nenhum cliente registrado</p>
-              <p className="text-sm mt-1">Clique em "Adicionar Novo Cliente" para começar.</p>
+              {clientGroups.length === 0 ? (
+                <>
+                  <p className="text-lg font-medium">Nenhum cliente registrado</p>
+                  <p className="text-sm mt-1">Clique em "Adicionar Novo Cliente" para começar.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-medium">Nenhum resultado encontrado</p>
+                  <p className="text-sm mt-1">Tente ajustar os filtros de busca.</p>
+                </>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clientGroups.map((group) => {
+            {filteredGroups.map((group) => {
               const latestStatus = group.projects[0].status;
               const totalVideos = group.projects.reduce((sum, p) => sum + p.video_quantity, 0);
               return (
