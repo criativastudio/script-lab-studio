@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2, Link as LinkIcon, Copy, Users, Download } from "lucide-react";
+import { Plus, FolderOpen, ChevronDown, ChevronRight, FileText, Lightbulb, BookOpen, Trash2, Sparkles, Loader2, Link as LinkIcon, Copy, Users, Download, Eye } from "lucide-react";
+import { ScriptViewer } from "@/components/ScriptViewer";
 import { useRef } from "react";
 
 interface Project {
@@ -63,6 +64,7 @@ const CRM = () => {
   const [scriptForm, setScriptForm] = useState({ title: "", script: "" });
   const [ideaForm, setIdeaForm] = useState({ idea: "" });
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [viewingScript, setViewingScript] = useState<Script | null>(null);
 
   // PDF Export state
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
@@ -445,13 +447,16 @@ const CRM = () => {
                                         <p className="text-xs text-muted-foreground">Adicione um briefing primeiro para gerar com IA.</p>
                                       )}
                                       {scripts.map((s) => (
-                                        <Card key={s.id}>
+                                        <Card key={s.id} className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setViewingScript(s)}>
                                           <CardContent className="p-3 flex justify-between items-start">
                                             <div className="space-y-1 flex-1">
                                               <p className="font-medium text-sm">{s.title || "Sem título"}</p>
                                               <p className="text-xs text-muted-foreground line-clamp-2">{s.script || "—"}</p>
                                             </div>
-                                            <Button variant="ghost" size="icon" onClick={() => deleteItem("scripts", s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            <div className="flex gap-1">
+                                              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setViewingScript(s); }}><Eye className="h-4 w-4 text-primary" /></Button>
+                                              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteItem("scripts", s.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            </div>
                                           </CardContent>
                                         </Card>
                                       ))}
@@ -651,6 +656,13 @@ const CRM = () => {
           )}
         </div>
       </div>
+
+      <ScriptViewer
+        script={viewingScript}
+        project={expandedId ? projects.find(p => p.id === expandedId) || null : null}
+        open={!!viewingScript}
+        onOpenChange={(open) => { if (!open) setViewingScript(null); }}
+      />
     </DashboardLayout>
   );
 };
