@@ -1,78 +1,66 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageSquare, Users, TrendingUp, CheckCircle, Smartphone, Zap } from "lucide-react";
+import { FolderOpen, FileText, Lightbulb, BookOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Project { id: string; name: string | null; client_name: string | null; platform: string | null; status: string | null; created_at: string | null; }
+interface Script { id: string; title: string | null; script: string | null; created_at: string | null; }
+interface Idea { id: string; idea: string | null; created_at: string | null; }
 
 const Dashboard = () => {
-  const { clientId, isAdmin } = useAuth();
-  const [stats, setStats] = useState({ conversations: 0, leads: 0, conversions: 0, responseRate: 0 });
-  const [whatsappStatus, setWhatsappStatus] = useState("disconnected");
-  const [flowActive, setFlowActive] = useState(false);
+  const { user, isAdmin } = useAuth();
+  const [stats, setStats] = useState({ projects: 0, scripts: 0, ideas: 0, briefings: 0 });
+  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
+  const [recentScripts, setRecentScripts] = useState<Script[]>([]);
+  const [recentIdeas, setRecentIdeas] = useState<Idea[]>([]);
 
   useEffect(() => {
-    if (!clientId && !isAdmin) return;
+    if (!user) return;
+    const uid = user.id;
 
-    const fetchData = async () => {
-      const cid = clientId;
-      if (!cid) return;
-
-      const [convRes, leadsRes, closedRes, waRes, flowRes] = await Promise.all([
-        supabase.from("conversations").select("id", { count: "exact" }).eq("client_id", cid),
-        supabase.from("leads").select("id", { count: "exact" }).eq("client_id", cid),
-        supabase.from("leads").select("id", { count: "exact" }).eq("client_id", cid).eq("status", "fechado"),
-        supabase.from("whatsapp_connections").select("status").eq("client_id", cid).single(),
-        supabase.from("n8n_flows").select("is_active").eq("client_id", cid).single(),
+    const fetch = async () => {
+      const [projCount, scriptCount, ideaCount, briefCount, projRecent, scriptRecent, ideaRecent] = await Promise.all([
+        supabase.from("projects").select("id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("scripts").select("id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("ideas").select("id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("briefings").select("id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("projects").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
+        supabase.from("scripts").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
+        supabase.from("ideas").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
       ]);
 
-      const totalConv = convRes.count || 0;
-      const totalLeads = leadsRes.count || 0;
-      const totalClosed = closedRes.count || 0;
-
       setStats({
-        conversations: totalConv,
-        leads: totalLeads,
-        conversions: totalClosed,
-        responseRate: totalConv > 0 ? Math.round((totalLeads / totalConv) * 100) : 0,
+        projects: projCount.count || 0,
+        scripts: scriptCount.count || 0,
+        ideas: ideaCount.count || 0,
+        briefings: briefCount.count || 0,
       });
-
-      if (waRes.data) setWhatsappStatus(waRes.data.status);
-      if (flowRes.data) setFlowActive(flowRes.data.is_active);
+      setRecentProjects((projRecent.data as Project[]) || []);
+      setRecentScripts((scriptRecent.data as Script[]) || []);
+      setRecentIdeas((ideaRecent.data as Idea[]) || []);
     };
 
-    fetchData();
-  }, [clientId, isAdmin]);
+    fetch();
+  }, [user, isAdmin]);
 
   const statCards = [
-    { title: "Conversas", value: stats.conversations, icon: MessageSquare, color: "text-primary" },
-    { title: "Leads Gerados", value: stats.leads, icon: Users, color: "text-accent" },
-    { title: "Taxa de Resposta", value: `${stats.responseRate}%`, icon: TrendingUp, color: "text-warning" },
-    { title: "Conversões", value: stats.conversions, icon: CheckCircle, color: "text-success" },
+    { title: "Projetos", value: stats.projects, icon: FolderOpen, color: "text-primary" },
+    { title: "Roteiros", value: stats.scripts, icon: FileText, color: "text-accent" },
+    { title: "Ideias", value: stats.ideas, icon: Lightbulb, color: "text-warning" },
+    { title: "Briefings", value: stats.briefings, icon: BookOpen, color: "text-success" },
   ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral do seu agente de IA</p>
+          <h1 className="text-2xl font-bold text-foreground">Content Intelligence Dashboard</h1>
+          <p className="text-muted-foreground">Visão geral da sua produção audiovisual</p>
         </div>
 
-        {/* Status cards */}
-        <div className="flex gap-3">
-          <Badge variant={whatsappStatus === "connected" ? "default" : "secondary"} className="gap-1">
-            <Smartphone className="h-3 w-3" />
-            WhatsApp: {whatsappStatus === "connected" ? "Conectado" : "Desconectado"}
-          </Badge>
-          <Badge variant={flowActive ? "default" : "secondary"} className="gap-1">
-            <Zap className="h-3 w-3" />
-            Agente IA: {flowActive ? "Ativo" : "Inativo"}
-          </Badge>
-        </div>
-
-        {/* Metrics grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card) => (
             <Card key={card.title}>
@@ -86,11 +74,49 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Projetos Recentes</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {recentProjects.length === 0 && <p className="text-sm text-muted-foreground">Nenhum projeto ainda.</p>}
+              {recentProjects.map((p) => (
+                <div key={p.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
+                  <span className="font-medium truncate">{p.name || p.client_name || "Sem nome"}</span>
+                  <span className="text-xs text-muted-foreground">{p.platform}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Roteiros Recentes</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {recentScripts.length === 0 && <p className="text-sm text-muted-foreground">Nenhum roteiro ainda.</p>}
+              {recentScripts.map((s) => (
+                <div key={s.id} className="text-sm border-b border-border pb-2 last:border-0">
+                  <span className="font-medium">{s.title || "Sem título"}</span>
+                  <p className="text-xs text-muted-foreground truncate">{s.script?.substring(0, 80)}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Ideias Recentes</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {recentIdeas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma ideia ainda.</p>}
+              {recentIdeas.map((i) => (
+                <div key={i.id} className="text-sm border-b border-border pb-2 last:border-0">
+                  <p className="truncate">{i.idea || "Sem descrição"}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
 };
-
-const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 
 export default Dashboard;

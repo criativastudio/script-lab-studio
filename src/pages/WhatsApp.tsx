@@ -1,66 +1,64 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Smartphone, Wifi, WifiOff, Zap } from "lucide-react";
+import { Smartphone, Copy, CheckCircle } from "lucide-react";
+
+interface Script { id: string; title: string | null; script: string | null; }
+interface Idea { id: string; idea: string | null; }
 
 const WhatsApp = () => {
-  const { clientId } = useAuth();
+  const { user, clientId } = useAuth();
   const { toast } = useToast();
   const [connection, setConnection] = useState<any>(null);
-  const [flow, setFlow] = useState<any>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [scripts, setScripts] = useState<Script[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!user) return;
+
     const fetchData = async () => {
-      const [waRes, flowRes] = await Promise.all([
-        supabase.from("whatsapp_connections").select("*").eq("client_id", clientId).single(),
-        supabase.from("n8n_flows").select("*").eq("client_id", clientId).single(),
-      ]);
-      if (waRes.data) {
-        setConnection(waRes.data);
-        setPhoneNumber(waRes.data.phone_number || "");
+      if (clientId) {
+        const { data } = await supabase.from("whatsapp_connections").select("*").eq("client_id", clientId).single();
+        if (data) { setConnection(data); setPhoneNumber(data.phone_number || ""); }
       }
-      if (flowRes.data) setFlow(flowRes.data);
+
+      const [sr, ir] = await Promise.all([
+        supabase.from("scripts").select("id, title, script").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("ideas").select("id, idea").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      ]);
+      setScripts((sr.data as Script[]) || []);
+      setIdeas((ir.data as Idea[]) || []);
     };
+
     fetchData();
-  }, [clientId]);
+  }, [user, clientId]);
 
   const handleConnect = async () => {
     if (!clientId || !phoneNumber) return;
     setLoading(true);
-    try {
-      if (connection) {
-        await supabase.from("whatsapp_connections").update({
-          phone_number: phoneNumber,
-          status: "connected",
-          connected_at: new Date().toISOString(),
-        }).eq("id", connection.id);
-      } else {
-        await supabase.from("whatsapp_connections").insert({
-          client_id: clientId,
-          phone_number: phoneNumber,
-          status: "connected",
-          connected_at: new Date().toISOString(),
-        });
-      }
-      toast({ title: "WhatsApp conectado!", description: "Seu número foi vinculado com sucesso." });
-      // Refresh
-      const { data } = await supabase.from("whatsapp_connections").select("*").eq("client_id", clientId).single();
-      if (data) setConnection(data);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    const payload = { client_id: clientId, phone_number: phoneNumber, status: "connected", connected_at: new Date().toISOString() };
+    const { error } = connection
+      ? await supabase.from("whatsapp_connections").update(payload).eq("id", connection.id)
+      : await supabase.from("whatsapp_connections").insert(payload);
+    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
+    else { toast({ title: "WhatsApp conectado!" }); setConnection({ ...connection, ...payload }); }
+    setLoading(false);
+  };
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast({ title: "Copiado!" });
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const isConnected = connection?.status === "connected";
@@ -69,83 +67,59 @@ const WhatsApp = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">WhatsApp</h1>
-          <p className="text-muted-foreground">Conecte seu WhatsApp ao agente de IA</p>
+          <h1 className="text-2xl font-bold text-foreground">Distribuição de Conteúdo</h1>
+          <p className="text-muted-foreground">Envie roteiros e ideias via WhatsApp</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Connection card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="h-5 w-5" />
-                  Conexão WhatsApp
-                </CardTitle>
-                <Badge variant={isConnected ? "default" : "secondary"} className="gap-1">
-                  {isConnected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-                  {isConnected ? "Conectado" : "Desconectado"}
-                </Badge>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" /> Conexão WhatsApp
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <Input placeholder="Número WhatsApp" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
               </div>
-              <CardDescription>
-                Insira o número do WhatsApp da sua empresa para ativar o agente de IA
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Número do WhatsApp</Label>
-                <Input
-                  id="phone"
-                  placeholder="+55 11 99999-9999"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleConnect} disabled={loading || !phoneNumber} className="w-full">
-                {loading ? "Conectando..." : isConnected ? "Atualizar conexão" : "Conectar WhatsApp"}
+              <Button onClick={handleConnect} disabled={loading}>
+                {isConnected ? "Atualizar" : "Conectar"}
               </Button>
-              {isConnected && connection?.connected_at && (
-                <p className="text-xs text-muted-foreground">
-                  Conectado em: {new Date(connection.connected_at).toLocaleString("pt-BR")}
-                </p>
-              )}
+            </div>
+            <Badge variant={isConnected ? "default" : "secondary"}>
+              {isConnected ? "Conectado" : "Desconectado"}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Roteiros para Distribuir</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {scripts.length === 0 && <p className="text-sm text-muted-foreground">Nenhum roteiro disponível.</p>}
+              {scripts.map((s) => (
+                <div key={s.id} className="flex justify-between items-center border-b border-border pb-2 last:border-0">
+                  <span className="text-sm truncate flex-1">{s.title || "Sem título"}</span>
+                  <Button size="sm" variant="ghost" onClick={() => copyToClipboard(s.script || "", s.id)}>
+                    {copiedId === s.id ? <CheckCircle className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
-          {/* Flow status card */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Agente de IA
-              </CardTitle>
-              <CardDescription>
-                Status do fluxo de automação vinculado à sua conta
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {flow ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">
-                    <div>
-                      <p className="font-medium text-sm">{flow.flow_name}</p>
-                      <p className="text-xs text-muted-foreground">Fluxo n8n</p>
-                    </div>
-                    <Badge variant={flow.is_active ? "default" : "secondary"}>
-                      {flow.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    O fluxo é gerenciado pelo administrador. Entre em contato para ativar/desativar.
-                  </p>
+            <CardHeader><CardTitle className="text-sm">Ideias para Compartilhar</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {ideas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma ideia disponível.</p>}
+              {ideas.map((i) => (
+                <div key={i.id} className="flex justify-between items-center border-b border-border pb-2 last:border-0">
+                  <span className="text-sm truncate flex-1">{i.idea || "Sem descrição"}</span>
+                  <Button size="sm" variant="ghost" onClick={() => copyToClipboard(i.idea || "", i.id)}>
+                    {copiedId === i.id ? <CheckCircle className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                  </Button>
                 </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <Zap className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="font-medium">Nenhum fluxo vinculado</p>
-                  <p className="text-sm">O administrador precisa vincular um fluxo à sua conta</p>
-                </div>
-              )}
+              ))}
             </CardContent>
           </Card>
         </div>

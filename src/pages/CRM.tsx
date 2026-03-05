@@ -1,65 +1,56 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 
-type Lead = {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  status: string;
-  source: string | null;
-  created_at: string;
-};
+interface Project {
+  id: string; name: string | null; client_name: string | null; objective: string | null;
+  platform: string | null; status: string | null; created_at: string | null;
+}
 
-const statusLabels: Record<string, string> = {
-  novo: "Novo",
-  em_atendimento: "Em Atendimento",
-  fechado: "Fechado",
-  perdido: "Perdido",
-};
-
-type LeadStatus = "novo" | "em_atendimento" | "fechado" | "perdido";
-
-const statusColors: Record<string, string> = {
-  novo: "bg-primary/10 text-primary",
-  em_atendimento: "bg-warning/10 text-warning",
-  fechado: "bg-success/10 text-success",
-  perdido: "bg-destructive/10 text-destructive",
-};
+const statusLabels: Record<string, string> = { active: "Ativo", completed: "Concluído", paused: "Pausado" };
+const statusColors: Record<string, string> = { active: "bg-accent text-accent-foreground", completed: "bg-primary text-primary-foreground", paused: "bg-muted text-muted-foreground" };
 
 const CRM = () => {
-  const { clientId } = useAuth();
-  type FilterValue = LeadStatus | "all";
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [filter, setFilter] = useState<FilterValue>("all");
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filter, setFilter] = useState<string>("all");
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", client_name: "", objective: "", platform: "" });
 
-  const fetchLeads = async () => {
-    if (!clientId) return;
-    let query = supabase.from("leads").select("*").eq("client_id", clientId).order("created_at", { ascending: false }) as any;
-    if (filter !== "all") query = query.eq("status", filter);
-    const { data } = await query;
-    if (data) setLeads(data as Lead[]);
+  const fetchProjects = async () => {
+    if (!user) return;
+    let q = supabase.from("projects").select("*").eq("user_id", user.id).order("created_at", { ascending: false }) as any;
+    if (filter !== "all") q = q.eq("status", filter);
+    const { data } = await q;
+    setProjects((data as Project[]) || []);
   };
 
-  useEffect(() => { fetchLeads(); }, [clientId, filter]);
+  useEffect(() => { fetchProjects(); }, [user, filter]);
 
-  const updateStatus = async (leadId: string, status: LeadStatus) => {
-    const { error } = await supabase.from("leads").update({ status }).eq("id", leadId);
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      fetchLeads();
-    }
+  const handleCreate = async () => {
+    if (!user || !form.name) return;
+    const { error } = await supabase.from("projects").insert({
+      name: form.name, client_name: form.client_name || null, objective: form.objective || null,
+      platform: form.platform || null, user_id: user.id,
+    });
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    setForm({ name: "", client_name: "", objective: "", platform: "" });
+    setOpen(false);
+    fetchProjects();
+    toast({ title: "Projeto criado!" });
   };
 
   return (
@@ -67,69 +58,78 @@ const CRM = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">CRM</h1>
-            <p className="text-muted-foreground">Gerencie seus leads e atendimentos</p>
+            <h1 className="text-2xl font-bold text-foreground">Gerenciador de Projetos</h1>
+            <p className="text-muted-foreground">Gerencie suas produções audiovisuais</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Select value={filter} onValueChange={(v) => setFilter(v as FilterValue)}>
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
+          <div className="flex gap-2">
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="novo">Novo</SelectItem>
-                <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
-                <SelectItem value="fechado">Fechado</SelectItem>
-                <SelectItem value="perdido">Perdido</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="completed">Concluídos</SelectItem>
+                <SelectItem value="paused">Pausados</SelectItem>
               </SelectContent>
             </Select>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" />Novo Projeto</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Novo Projeto</DialogTitle></DialogHeader>
+                <div className="space-y-3">
+                  <div><Label>Nome do Projeto</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                  <div><Label>Cliente</Label><Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></div>
+                  <div><Label>Objetivo</Label><Textarea value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })} /></div>
+                  <div><Label>Plataforma</Label>
+                    <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="YouTube">YouTube</SelectItem>
+                        <SelectItem value="Instagram">Instagram</SelectItem>
+                        <SelectItem value="TikTok">TikTok</SelectItem>
+                        <SelectItem value="TV">TV</SelectItem>
+                        <SelectItem value="Cinema">Cinema</SelectItem>
+                        <SelectItem value="Outro">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button className="w-full" onClick={handleCreate}>Criar Projeto</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
         <Card>
           <CardContent className="p-0">
-            {leads.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <Users className="h-12 w-12 mb-3 opacity-50" />
-                <p className="font-medium">Nenhum lead encontrado</p>
-                <p className="text-sm">Os leads aparecerão aqui quando seu agente de IA iniciar conversas</p>
+            {projects.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhum projeto encontrado.</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Telefone</TableHead>
+                    <TableHead>Projeto</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Plataforma</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Origem</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead>Criado em</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell className="font-medium">{lead.name}</TableCell>
-                      <TableCell>{lead.phone || "—"}</TableCell>
+                  {projects.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                      <TableCell>{p.client_name || "—"}</TableCell>
+                      <TableCell>{p.platform || "—"}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[lead.status] || ""}`}>
-                          {statusLabels[lead.status] || lead.status}
-                        </span>
+                        <Badge className={statusColors[p.status || "active"]}>{statusLabels[p.status || "active"] || p.status}</Badge>
                       </TableCell>
-                      <TableCell>{lead.source || "—"}</TableCell>
-                      <TableCell>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>
-                        <Select value={lead.status} onValueChange={(val) => updateStatus(lead.id, val as LeadStatus)}>
-                          <SelectTrigger className="w-36 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="novo">Novo</SelectItem>
-                            <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
-                            <SelectItem value="fechado">Fechado</SelectItem>
-                            <SelectItem value="perdido">Perdido</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
                       </TableCell>
                     </TableRow>
                   ))}
