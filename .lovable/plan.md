@@ -1,22 +1,31 @@
 
 
-# Aplicar RainbowButton nos botões da página Auth
+# Corrigir cores do RainbowButton no modo claro
 
-## Contexto
+## Problema
 
-O componente `RainbowButton` já existe em `src/components/ui/rainbow-button.tsx` e as configurações de Tailwind (cores, keyframes, animação rainbow) e CSS (variáveis `--color-1` a `--color-5`) já estão presentes. Não é necessário instalar nada nem modificar configuração.
+O `RainbowButton` usa fundo escuro (`#121213`) no modo claro e fundo branco (`#fff`) no modo escuro — o contrário do esperado. O texto interno fica ilegível no modo claro.
 
-## Mudanças
+## Solução
 
-### `src/pages/Auth.tsx`
+Inverter os gradientes de fundo e ajustar a cor do texto:
 
-1. Importar `RainbowButton` de `@/components/ui/rainbow-button`
-2. Substituir o `<Button type="submit" className="w-full">` (linha 88) por `<RainbowButton type="submit" className="w-full">` com o mesmo conteúdo
-3. Remover import de `Button` se não for mais usado
+### `src/components/ui/rainbow-button.tsx`
 
-O botão de submit que mostra "Entrar" ou "Criar conta" passará a usar o efeito rainbow animado. Os links de alternância ("Já tem uma conta?" / "Não tem uma conta?") permanecem como estão.
+| Propriedade | Antes (light) | Depois (light) |
+|-------------|---------------|-----------------|
+| Background | `#121213` (preto) | `#fff` (branco) |
+| Background overlay | `rgba(18,18,19,...)` | `rgba(255,255,255,...)` |
+| Text color | `text-primary-foreground` | `text-foreground dark:text-background` |
+
+| Propriedade | Antes (dark) | Depois (dark) |
+|-------------|--------------|----------------|
+| Background | `#fff` (branco) | `#121213` (preto) |
+| Background overlay | `rgba(255,255,255,...)` | `rgba(18,18,19,...)` |
+
+Ou seja, trocar as linhas de light e dark mode entre si, e ajustar o texto para ter contraste adequado em ambos os modos.
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/pages/Auth.tsx` | Trocar Button por RainbowButton no submit |
+| `src/components/ui/rainbow-button.tsx` | Inverter gradientes light/dark e ajustar cor do texto |
 
