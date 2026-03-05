@@ -1,34 +1,22 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Switch } from "@/components/ui/switch";
-import {
-  Plus, ArrowLeft, FileText, BookOpen, Trash2, Loader2,
-  Link as LinkIcon, Copy, Users, Download, Eye, Edit2,
-  Mail, Phone, Video, Calendar, Bot, ChevronDown, FolderPlus,
-  Target, Megaphone, MessageSquare, Lightbulb, Hash,
-  Sparkles, Search, X, Power, Filter, Brain, CheckCircle,
-  PenLine, Send,
-} from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { ScriptViewer } from "@/components/ScriptViewer";
+import { ClientListView } from "@/components/crm/ClientListView";
+import { ClientDetailView } from "@/components/crm/ClientDetailView";
+import { StrategicContextTab } from "@/components/crm/StrategicContextTab";
+import { ProjectsTab } from "@/components/crm/ProjectsTab";
+import { ContentIdeasTab } from "@/components/crm/ContentIdeasTab";
+import { ContentCalendarTab } from "@/components/crm/ContentCalendarTab";
 
 // ── Types ──────────────────────────────────────────────────────
 interface BriefingRequest {
@@ -62,12 +50,6 @@ interface ClientGroup {
 }
 
 const briefingStatusLabels: Record<string, string> = { pending: "Pendente", submitted: "Enviado", processing: "Processando", completed: "Concluído" };
-const briefingStatusColors: Record<string, string> = {
-  pending: "bg-muted text-muted-foreground",
-  submitted: "bg-accent text-accent-foreground",
-  processing: "bg-primary text-primary-foreground",
-  completed: "bg-primary text-primary-foreground",
-};
 
 const CRM = () => {
   const { user } = useAuth();
@@ -91,7 +73,7 @@ const CRM = () => {
   const [filterNiche, setFilterNiche] = useState("");
   const [showInactive, setShowInactive] = useState(false);
 
-  // New project dialog (for existing client)
+  // New project dialog
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newProjectForm, setNewProjectForm] = useState({
     project_name: "", video_quantity: "3",
@@ -142,7 +124,7 @@ const CRM = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState("context");
 
-  // Group clients by business_name
+  // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
     const map = new Map<string, BriefingRequest[]>();
     clients.forEach((c) => {
@@ -226,23 +208,19 @@ const CRM = () => {
       .eq("business_name", businessName)
       .single();
     setStrategicContext(data as StrategicContext | null);
-    if (data) {
-      setContextForm(data as StrategicContext);
-    }
+    if (data) setContextForm(data as StrategicContext);
     setContextLoading(false);
   }, [user]);
 
   const fetchContentIdeas = useCallback(async (businessName: string) => {
     if (!user) return;
     setIdeasLoading(true);
-    // Get context id for this business
     const { data: ctx } = await supabase
       .from("client_strategic_contexts")
       .select("id")
       .eq("user_id", user.id)
       .eq("business_name", businessName)
       .single();
-
     if (ctx) {
       const { data } = await supabase
         .from("content_ideas")
@@ -324,9 +302,7 @@ const CRM = () => {
       if (error) throw error;
       await fetchClients();
       await fetchProjectDetails(project);
-      if (selectedGroup) {
-        fetchStrategicContext(selectedGroup.business_name);
-      }
+      if (selectedGroup) fetchStrategicContext(selectedGroup.business_name);
       toast({ title: "Conteúdo gerado com sucesso!" });
     } catch (err: any) {
       toast({ title: "Erro ao gerar", description: err.message, variant: "destructive" });
@@ -447,7 +423,6 @@ const CRM = () => {
       }
       const ids = group.projects.map(p => p.id);
       await supabase.from("briefing_requests").delete().in("id", ids);
-      // Also delete strategic context
       if (user) {
         await supabase.from("client_strategic_contexts").delete()
           .eq("user_id", user.id).eq("business_name", group.business_name);
@@ -461,7 +436,7 @@ const CRM = () => {
     }
   };
 
-  // ── Strategic Context handlers ──────────────────────────────
+  // Strategic Context handlers
   const saveStrategicContext = async () => {
     if (!user || !selectedGroup) return;
     const payload = {
@@ -492,7 +467,7 @@ const CRM = () => {
     toast({ title: "Contexto estratégico salvo!" });
   };
 
-  // ── Content Ideas handlers ──────────────────────────────────
+  // Content Ideas handlers
   const handleGenerateIdeas = async (count: number = 10) => {
     if (!user || !strategicContext?.id) {
       toast({ title: "Preencha o contexto estratégico primeiro", variant: "destructive" });
@@ -571,7 +546,6 @@ const CRM = () => {
           console.error("Script gen error for idea:", idea.title, error || data?.error);
           continue;
         }
-        // Save the script
         const projectId = idea.project_id || selectedGroup?.projects.find(p => p.project_id)?.project_id;
         if (projectId) {
           await supabase.from("scripts").insert({
@@ -586,7 +560,6 @@ const CRM = () => {
       setSelectedIdeas(new Set());
       if (selectedGroup) {
         fetchContentIdeas(selectedGroup.business_name);
-        // Refresh all open project details
         for (const p of selectedGroup.projects) {
           if (openProjects.has(p.id)) fetchProjectDetails(p);
         }
@@ -599,7 +572,7 @@ const CRM = () => {
     }
   };
 
-  // PDF
+  // PDF handlers
   const downloadPdf = (type: "briefing" | "script", item: Briefing | Script, project: BriefingRequest) => {
     const allScripts = type === "script" ? [item as Script] : [];
     const briefing = type === "briefing" ? item as Briefing : undefined;
@@ -622,508 +595,102 @@ const CRM = () => {
     setTimeout(() => window.print(), 400);
   };
 
-  const StrategicCard = ({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) => (
-    <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Icon className="h-4 w-4 text-primary" />
-        {title}
-      </div>
-      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{content}</p>
-    </div>
-  );
+  // Quick action from list view
+  const handleQuickAction = (group: ClientGroup, action: "context" | "projects" | "ideas") => {
+    setSelectedBusinessName(group.business_name.trim().toLowerCase());
+    setActiveTab(action);
+  };
 
   // ── Detail View ──────────────────────────────────────────────
   if (selectedGroup) {
-    const first = selectedGroup.projects[0];
-
-    const filteredIdeas = ideasProjectFilter === "all"
-      ? contentIdeas
-      : contentIdeas.filter(i => i.project_id === ideasProjectFilter);
-
     return (
       <DashboardLayout>
-        <div className="space-y-6 max-w-5xl">
-          {/* Header */}
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => { setSelectedBusinessName(null); setOpenProjects(new Set()); setActiveTab("context"); }}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                {first.business_name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">{first.business_name}</h1>
-              <p className="text-sm text-muted-foreground">{selectedGroup.projects.length} projeto{selectedGroup.projects.length !== 1 ? "s" : ""}</p>
-            </div>
-          </div>
-
-          {/* Client info bar */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-6 items-center justify-between">
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  {first.contact_name && <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{first.contact_name}</span>}
-                  {first.contact_email && <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{first.contact_email}</span>}
-                  {first.contact_whatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" />{first.contact_whatsapp}</span>}
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={downloadAllPdf}>
-                    <Download className="h-4 w-4 mr-1.5" />PDF
-                  </Button>
-                  <Button
-                    variant={isGroupInactive(selectedGroup) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleToggleActive(selectedGroup)}
-                  >
-                    <Power className="h-4 w-4 mr-1.5" />
-                    {isGroupInactive(selectedGroup) ? "Reativar" : "Desativar"}
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4 mr-1.5" />Excluir</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Isso removerá permanentemente todos os projetos, briefings e roteiros de <strong>{first.business_name}</strong>.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteClient(selectedGroup)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tabbed Layout */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="context" className="flex items-center gap-1.5">
-                <Brain className="h-4 w-4" />Contexto Estratégico
-                {strategicContext?.is_completed && <Badge variant="secondary" className="ml-1 text-[10px] py-0">✓</Badge>}
-              </TabsTrigger>
-              <TabsTrigger value="projects" className="flex items-center gap-1.5">
-                <Hash className="h-4 w-4" />Projetos
-                <Badge variant="secondary" className="ml-1 text-[10px] py-0">{selectedGroup.projects.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="ideas" className="flex items-center gap-1.5">
-                <Lightbulb className="h-4 w-4" />Ideias
-                <Badge variant="secondary" className="ml-1 text-[10px] py-0">{contentIdeas.length}</Badge>
-              </TabsTrigger>
-            </TabsList>
-
-            {/* ── Tab: Strategic Context ── */}
-            <TabsContent value="context" className="space-y-4">
-              {contextLoading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-              ) : !strategicContext && !editingContext ? (
-                <Card>
-                  <CardContent className="p-8 text-center space-y-4">
-                    <Brain className="h-12 w-12 mx-auto text-muted-foreground opacity-40" />
-                    <div>
-                      <p className="font-medium text-foreground">Contexto estratégico não preenchido</p>
-                      <p className="text-sm text-muted-foreground mt-1">O contexto será preenchido automaticamente quando o cliente responder o formulário de briefing, ou você pode preenchê-lo manualmente.</p>
-                    </div>
-                    <div className="flex gap-2 justify-center">
-                      <Button onClick={() => { setContextForm({ business_name: first.business_name }); setEditingContext(true); }}>
-                        <PenLine className="h-4 w-4 mr-1.5" />Preencher Manualmente
-                      </Button>
-                      <Button variant="outline" onClick={() => {
-                        const link = `${window.location.origin}/briefing/${first.token}`;
-                        navigator.clipboard.writeText(link);
-                        toast({ title: "Link copiado!" });
-                      }}>
-                        <Send className="h-4 w-4 mr-1.5" />Copiar Link do Formulário
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : editingContext ? (
-                <Card>
-                  <CardContent className="p-6 space-y-4">
-                    <h3 className="font-semibold text-foreground">Editar Contexto Estratégico</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div><Label>Nicho do Negócio</Label><Input value={contextForm.business_niche || ""} onChange={e => setContextForm({ ...contextForm, business_niche: e.target.value })} placeholder="Ex: Odontologia estética" /></div>
-                      <div><Label>Produtos/Serviços</Label><Input value={contextForm.products_services || ""} onChange={e => setContextForm({ ...contextForm, products_services: e.target.value })} placeholder="Ex: Lentes de contato, clareamento" /></div>
-                      <div><Label>Público-alvo</Label><Textarea value={contextForm.target_audience || ""} onChange={e => setContextForm({ ...contextForm, target_audience: e.target.value })} rows={2} /></div>
-                      <div><Label>Persona do Cliente</Label><Textarea value={contextForm.customer_persona || ""} onChange={e => setContextForm({ ...contextForm, customer_persona: e.target.value })} rows={2} /></div>
-                      <div><Label>Tom de Voz</Label><Input value={contextForm.tone_of_voice || ""} onChange={e => setContextForm({ ...contextForm, tone_of_voice: e.target.value })} placeholder="Ex: Profissional e acolhedor" /></div>
-                      <div><Label>Posicionamento de Mercado</Label><Input value={contextForm.market_positioning || ""} onChange={e => setContextForm({ ...contextForm, market_positioning: e.target.value })} /></div>
-                      <div><Label>Dores do Cliente</Label><Textarea value={contextForm.pain_points || ""} onChange={e => setContextForm({ ...contextForm, pain_points: e.target.value })} rows={2} /></div>
-                      <div><Label>Diferenciais</Label><Textarea value={contextForm.differentiators || ""} onChange={e => setContextForm({ ...contextForm, differentiators: e.target.value })} rows={2} /></div>
-                      <div><Label>Objetivos de Marketing</Label><Textarea value={contextForm.marketing_objectives || ""} onChange={e => setContextForm({ ...contextForm, marketing_objectives: e.target.value })} rows={2} /></div>
-                      <div>
-                        <Label>Estilo de Comunicação</Label>
-                        <Select value={contextForm.communication_style || ""} onValueChange={v => setContextForm({ ...contextForm, communication_style: v })}>
-                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                          <SelectContent>
-                            {["Educativo", "Autoridade", "Profissional", "Casual", "Influencer", "Storytelling", "Venda direta", "Motivacional"].map(s => (
-                              <SelectItem key={s} value={s}>{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Plataformas Principais</Label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {["Instagram Reels", "Instagram Stories", "TikTok", "YouTube", "YouTube Shorts", "Facebook", "LinkedIn", "WhatsApp Status"].map(p => {
-                          const selected = (contextForm.main_platforms || []).includes(p);
-                          return (
-                            <button key={p} type="button" onClick={() => {
-                              const current = contextForm.main_platforms || [];
-                              setContextForm({
-                                ...contextForm,
-                                main_platforms: selected ? current.filter(x => x !== p) : [...current, p],
-                              });
-                            }} className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-secondary-foreground border-border hover:bg-muted"}`}>
-                              {p}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={saveStrategicContext}>Salvar Contexto</Button>
-                      <Button variant="outline" onClick={() => setEditingContext(false)}>Cancelar</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : strategicContext ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={strategicContext.is_completed ? "default" : "secondary"}>
-                        {strategicContext.is_completed ? "Preenchido" : "Pendente"}
-                      </Badge>
-                      {strategicContext.updated_at && (
-                        <span className="text-xs text-muted-foreground">Atualizado: {new Date(strategicContext.updated_at).toLocaleDateString("pt-BR")}</span>
-                      )}
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => { setContextForm(strategicContext); setEditingContext(true); }}>
-                      <Edit2 className="h-3.5 w-3.5 mr-1.5" />Editar
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {strategicContext.business_niche && <StrategicCard icon={Target} title="Nicho" content={strategicContext.business_niche} />}
-                    {strategicContext.products_services && <StrategicCard icon={Megaphone} title="Produtos/Serviços" content={strategicContext.products_services} />}
-                    {strategicContext.target_audience && <StrategicCard icon={Users} title="Público-alvo" content={strategicContext.target_audience} />}
-                    {strategicContext.customer_persona && <StrategicCard icon={Target} title="Persona" content={strategicContext.customer_persona} />}
-                    {strategicContext.tone_of_voice && <StrategicCard icon={MessageSquare} title="Tom de Voz" content={strategicContext.tone_of_voice} />}
-                    {strategicContext.market_positioning && <StrategicCard icon={Megaphone} title="Posicionamento" content={strategicContext.market_positioning} />}
-                    {strategicContext.pain_points && <StrategicCard icon={Target} title="Dores do Cliente" content={strategicContext.pain_points} />}
-                    {strategicContext.differentiators && <StrategicCard icon={Sparkles} title="Diferenciais" content={strategicContext.differentiators} />}
-                    {strategicContext.marketing_objectives && <StrategicCard icon={Lightbulb} title="Objetivos de Marketing" content={strategicContext.marketing_objectives} />}
-                    {strategicContext.communication_style && <StrategicCard icon={MessageSquare} title="Estilo de Comunicação" content={strategicContext.communication_style} />}
-                    {(strategicContext.main_platforms || []).length > 0 && (
-                      <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                          <Video className="h-4 w-4 text-primary" />Plataformas
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(strategicContext.main_platforms || []).map(p => (
-                            <Badge key={p} variant="secondary" className="text-xs">{p}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </TabsContent>
-
-            {/* ── Tab: Projects ── */}
-            <TabsContent value="projects" className="space-y-4">
-              <div className="flex justify-end">
-                <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_style: "", publishing_frequency: "" }); } }}>
-                  <DialogTrigger asChild>
-                    <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Novo Projeto para {first.business_name}</DialogTitle></DialogHeader>
-                    {newProjectLink ? (
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">Projeto criado! Link do briefing:</p>
-                        <div className="flex gap-2">
-                          <Input value={newProjectLink} readOnly className="flex-1 text-xs" />
-                          <Button size="sm" onClick={() => { navigator.clipboard.writeText(newProjectLink); toast({ title: "Link copiado!" }); }}><Copy className="h-4 w-4" /></Button>
-                        </div>
-                        <Button className="w-full" variant="outline" onClick={() => { setNewProjectOpen(false); setNewProjectLink(null); }}>Fechar</Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
-                        <div>
-                          <Label>Quantidade de Vídeos</Label>
-                          <Select value={newProjectForm.video_quantity} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, video_quantity: v })}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div><Label>Objetivo da Campanha</Label><Input value={newProjectForm.campaign_objective} onChange={(e) => setNewProjectForm({ ...newProjectForm, campaign_objective: e.target.value })} placeholder="Ex: Lançar novo serviço" /></div>
-                        <div>
-                          <Label>Etapa do Funil</Label>
-                          <Select value={newProjectForm.funnel_stage} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, funnel_stage: v })}>
-                            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="top">Topo (Descoberta)</SelectItem>
-                              <SelectItem value="middle">Meio (Consideração)</SelectItem>
-                              <SelectItem value="bottom">Fundo (Decisão)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div><Label>Estilo de Conteúdo</Label><Input value={newProjectForm.content_style} onChange={(e) => setNewProjectForm({ ...newProjectForm, content_style: e.target.value })} placeholder="Ex: Educativo e leve" /></div>
-                        <div><Label>Frequência de Publicação</Label><Input value={newProjectForm.publishing_frequency} onChange={(e) => setNewProjectForm({ ...newProjectForm, publishing_frequency: e.target.value })} placeholder="Ex: 3x por semana" /></div>
-                        <p className="text-xs text-muted-foreground">O contexto estratégico do cliente será herdado automaticamente.</p>
-                        <Button className="w-full" onClick={handleCreateProject} disabled={!newProjectForm.project_name}>
-                          <FolderPlus className="h-4 w-4 mr-2" />Criar Projeto
-                        </Button>
-                      </div>
-                    )}
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <div className="space-y-3">
-                {selectedGroup.projects.map((project) => {
-                  const isOpen = openProjects.has(project.id);
-                  const briefs = projectBriefings[project.id] || [];
-                  const scrpts = projectScripts[project.id] || [];
-                  const isGen = generatingProject === project.id;
-
-                  return (
-                    <Collapsible key={project.id} open={isOpen} onOpenChange={() => toggleProject(project)}>
-                      <Card className={`transition-all ${isOpen ? "border-primary/40 shadow-md" : "hover:border-primary/20"}`}>
-                        <CollapsibleTrigger asChild>
-                          <button className="w-full text-left p-4 flex items-center gap-3 group">
-                            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary font-bold text-sm shrink-0">
-                              <Hash className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-foreground truncate">{project.project_name}</h3>
-                                <Badge variant="secondary" className={`text-[10px] shrink-0 ${briefingStatusColors[project.status] || ""}`}>
-                                  {briefingStatusLabels[project.status] || project.status}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1"><Video className="h-3 w-3" />{project.video_quantity} vídeos</span>
-                                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(project.created_at).toLocaleDateString("pt-BR")}</span>
-                              </div>
-                            </div>
-                            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                          </button>
-                        </CollapsibleTrigger>
-
-                        <CollapsibleContent>
-                          <div className="border-t border-border px-4 pb-4 pt-3 space-y-5">
-                            <div className="flex gap-2 flex-wrap">
-                              <Button variant="outline" size="sm" onClick={() => downloadProjectPdf(project)}>
-                                <Download className="h-3.5 w-3.5 mr-1.5" />PDF
-                              </Button>
-                              <Button size="sm" onClick={() => handleGenerateWithAgent(project)} disabled={isGen}>
-                                {isGen ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Bot className="h-3.5 w-3.5 mr-1.5" />}
-                                {isGen ? "Gerando..." : "Gerar com Agente"}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => setManualCreateProjectId(project.id)} disabled={manualGenerating}>
-                                <Sparkles className="h-3.5 w-3.5 mr-1.5" />Criar Manual + IA
-                              </Button>
-                            </div>
-
-                            {(project.persona || project.positioning || project.tone_of_voice || project.content_strategy) && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {project.persona && <StrategicCard icon={Target} title="Persona" content={project.persona} />}
-                                {project.positioning && <StrategicCard icon={Megaphone} title="Posicionamento" content={project.positioning} />}
-                                {project.tone_of_voice && <StrategicCard icon={MessageSquare} title="Tom de Voz" content={project.tone_of_voice} />}
-                                {project.content_strategy && <StrategicCard icon={Lightbulb} title="Funil de Conteúdo" content={project.content_strategy} />}
-                              </div>
-                            )}
-
-                            <div>
-                              <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                                <BookOpen className="h-4 w-4 text-primary" />Briefings ({briefs.length})
-                              </h4>
-                              {briefs.length === 0 ? (
-                                <p className="text-xs text-muted-foreground py-2">Nenhum briefing gerado.</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {briefs.map((b) => (
-                                    <div key={b.id} className="rounded-lg border border-border bg-background p-3 flex items-start justify-between gap-3">
-                                      <div className="flex-1 min-w-0 space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">{b.goal || "Sem objetivo"}</p>
-                                        <p className="text-xs text-muted-foreground">Público: {b.target_audience || "—"} · Estilo: {b.content_style || "—"}</p>
-                                      </div>
-                                      <div className="flex gap-0.5 shrink-0">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditBriefing(b)}><Edit2 className="h-3.5 w-3.5" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadPdf("briefing", b, project)}><Download className="h-3.5 w-3.5" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteItem("briefings", b.id, project)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            <div>
-                              <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                                <FileText className="h-4 w-4 text-primary" />Roteiros ({scrpts.length})
-                              </h4>
-                              {scrpts.length === 0 ? (
-                                <p className="text-xs text-muted-foreground py-2">Nenhum roteiro gerado.</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {scrpts.map((s) => (
-                                    <div key={s.id} className="rounded-lg border border-border bg-background p-3 flex items-start justify-between gap-3">
-                                      <div className="flex-1 min-w-0 space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">{s.title || "Sem título"}</p>
-                                        <p className="text-xs text-muted-foreground line-clamp-2">{s.script || "—"}</p>
-                                      </div>
-                                      <div className="flex gap-0.5 shrink-0">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setViewingScript(s); setViewingProject(project); }}><Eye className="h-3.5 w-3.5 text-primary" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditScript(s)}><Edit2 className="h-3.5 w-3.5" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadPdf("script", s, project)}><Download className="h-3.5 w-3.5" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteItem("scripts", s.id, project)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CollapsibleContent>
-                      </Card>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-            </TabsContent>
-
-            {/* ── Tab: Content Ideas ── */}
-            <TabsContent value="ideas" className="space-y-4">
-              {/* Actions bar */}
-              <div className="flex flex-wrap gap-3 items-center justify-between">
-                <div className="flex gap-2 items-center">
-                  <Select value={ideasProjectFilter} onValueChange={setIdeasProjectFilter}>
-                    <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todos os projetos" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os projetos</SelectItem>
-                      {selectedGroup.projects.filter(p => p.project_id).map(p => (
-                        <SelectItem key={p.project_id!} value={p.project_id!}>{p.project_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Select onValueChange={(v) => handleGenerateIdeas(parseInt(v))} disabled={generatingIdeas || !strategicContext?.id}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={generatingIdeas ? "Gerando..." : "Gerar Ideias"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[5, 10, 15, 20].map(n => (
-                        <SelectItem key={n} value={n.toString()}>{n} ideias</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedIdeas.size > 0 && (
-                    <Button onClick={handleGenerateScriptsFromIdeas} disabled={generatingScriptsFromIdeas}>
-                      {generatingScriptsFromIdeas ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <FileText className="h-4 w-4 mr-1.5" />}
-                      Gerar {selectedIdeas.size} Roteiro{selectedIdeas.size !== 1 ? "s" : ""}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Add custom idea */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Adicionar ideia personalizada..."
-                  value={newIdeaTitle}
-                  onChange={e => setNewIdeaTitle(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") handleAddCustomIdea(); }}
-                />
-                <Button variant="outline" onClick={handleAddCustomIdea} disabled={!newIdeaTitle.trim() || !strategicContext?.id}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {!strategicContext?.id && (
-                <Card>
-                  <CardContent className="p-6 text-center text-muted-foreground">
-                    <Brain className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Preencha o Contexto Estratégico primeiro para gerar ideias de conteúdo.</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {ideasLoading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-              ) : filteredIdeas.length === 0 && strategicContext?.id ? (
-                <Card>
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    <Lightbulb className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Nenhuma ideia ainda. Clique em "Gerar Ideias" para começar.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-2">
-                  {filteredIdeas.map((idea) => (
-                    <div key={idea.id} className={`rounded-lg border p-3 flex items-start gap-3 transition-colors ${
-                      selectedIdeas.has(idea.id) ? "border-primary bg-primary/5" : "border-border bg-background"
-                    } ${idea.status === "used" ? "opacity-60" : ""}`}>
-                      <Checkbox
-                        checked={selectedIdeas.has(idea.id)}
-                        onCheckedChange={() => handleToggleIdeaSelection(idea.id)}
-                        disabled={idea.status === "used"}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1 min-w-0">
-                        {editingIdea === idea.id ? (
-                          <div className="flex gap-2">
-                            <Input
-                              value={editIdeaText}
-                              onChange={e => setEditIdeaText(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter") handleUpdateIdea(idea.id, editIdeaText); }}
-                              className="flex-1"
-                              autoFocus
-                            />
-                            <Button size="sm" onClick={() => handleUpdateIdea(idea.id, editIdeaText)}>
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-sm font-medium text-foreground">{idea.title}</p>
-                            {idea.description && <p className="text-xs text-muted-foreground mt-0.5">{idea.description}</p>}
-                          </>
-                        )}
-                      </div>
-                      <div className="flex gap-0.5 shrink-0">
-                        {idea.status === "used" && <Badge variant="secondary" className="text-[10px]">Usado</Badge>}
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingIdea(idea.id); setEditIdeaText(idea.title); }}>
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteIdea(idea.id)}>
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <ClientDetailView
+          selectedGroup={selectedGroup}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onBack={() => { setSelectedBusinessName(null); setOpenProjects(new Set()); setActiveTab("context"); }}
+          isGroupInactive={isGroupInactive}
+          handleToggleActive={handleToggleActive}
+          handleDeleteClient={handleDeleteClient}
+          downloadAllPdf={downloadAllPdf}
+          contentIdeasCount={contentIdeas.length}
+          strategicContextCompleted={!!strategicContext?.is_completed}
+        >
+          {{
+            contextTab: (
+              <StrategicContextTab
+                strategicContext={strategicContext}
+                contextLoading={contextLoading}
+                editingContext={editingContext}
+                setEditingContext={setEditingContext}
+                contextForm={contextForm}
+                setContextForm={setContextForm}
+                saveStrategicContext={saveStrategicContext}
+                businessName={selectedGroup.projects[0].business_name}
+                firstToken={selectedGroup.projects[0].token}
+                toast={toast}
+              />
+            ),
+            projectsTab: (
+              <ProjectsTab
+                projects={selectedGroup.projects}
+                businessName={selectedGroup.projects[0].business_name}
+                openProjects={openProjects}
+                toggleProject={toggleProject}
+                projectBriefings={projectBriefings}
+                projectScripts={projectScripts}
+                generatingProject={generatingProject}
+                handleGenerateWithAgent={handleGenerateWithAgent}
+                setManualCreateProjectId={setManualCreateProjectId}
+                manualGenerating={manualGenerating}
+                downloadProjectPdf={downloadProjectPdf}
+                downloadPdf={downloadPdf}
+                openEditBriefing={openEditBriefing}
+                openEditScript={openEditScript}
+                deleteItem={deleteItem}
+                setViewingScript={setViewingScript}
+                setViewingProject={setViewingProject}
+                newProjectOpen={newProjectOpen}
+                setNewProjectOpen={setNewProjectOpen}
+                newProjectForm={newProjectForm}
+                setNewProjectForm={setNewProjectForm}
+                newProjectLink={newProjectLink}
+                setNewProjectLink={setNewProjectLink}
+                handleCreateProject={handleCreateProject}
+                toast={toast}
+              />
+            ),
+            ideasTab: (
+              <ContentIdeasTab
+                projects={selectedGroup.projects}
+                contentIdeas={contentIdeas}
+                ideasLoading={ideasLoading}
+                ideasProjectFilter={ideasProjectFilter}
+                setIdeasProjectFilter={setIdeasProjectFilter}
+                generatingIdeas={generatingIdeas}
+                handleGenerateIdeas={handleGenerateIdeas}
+                selectedIdeas={selectedIdeas}
+                handleToggleIdeaSelection={handleToggleIdeaSelection}
+                generatingScriptsFromIdeas={generatingScriptsFromIdeas}
+                handleGenerateScriptsFromIdeas={handleGenerateScriptsFromIdeas}
+                newIdeaTitle={newIdeaTitle}
+                setNewIdeaTitle={setNewIdeaTitle}
+                handleAddCustomIdea={handleAddCustomIdea}
+                editingIdea={editingIdea}
+                setEditingIdea={setEditingIdea}
+                editIdeaText={editIdeaText}
+                setEditIdeaText={setEditIdeaText}
+                handleUpdateIdea={handleUpdateIdea}
+                handleDeleteIdea={handleDeleteIdea}
+                strategicContextId={strategicContext?.id}
+              />
+            ),
+            calendarTab: (
+              <ContentCalendarTab contentIdeas={contentIdeas} />
+            ),
+          }}
+        </ClientDetailView>
 
         {/* Manual Create Dialog */}
         <Dialog open={!!manualCreateProjectId} onOpenChange={(v) => { if (!v) { setManualCreateProjectId(null); setManualForm({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" }); } }}>
@@ -1258,145 +825,32 @@ const CRM = () => {
   // ── List View ──────────────────────────────────────────────
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
-            <p className="text-muted-foreground text-sm">Gerencie seus clientes e produções</p>
-          </div>
-          <Dialog open={briefingOpen} onOpenChange={(v) => { setBriefingOpen(v); if (!v) setGeneratedLink(null); }}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />Adicionar Novo Cliente</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
-              {generatedLink ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Cliente registrado! Envie o link para o cliente preencher o briefing:</p>
-                  <div className="flex gap-2">
-                    <Input value={generatedLink} readOnly className="flex-1 text-xs" />
-                    <Button size="sm" onClick={() => { navigator.clipboard.writeText(generatedLink); toast({ title: "Link copiado!" }); }}><Copy className="h-4 w-4" /></Button>
-                  </div>
-                  <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3", city: "", niche: "" }); }}>Fechar</Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div><Label>Nome da Empresa *</Label><Input value={briefingForm.business_name} onChange={(e) => setBriefingFormState({ ...briefingForm, business_name: e.target.value })} /></div>
-                  <div><Label>Nome do Contato</Label><Input value={briefingForm.contact_name} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_name: e.target.value })} /></div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div><Label>Email</Label><Input type="email" value={briefingForm.contact_email} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_email: e.target.value })} /></div>
-                    <div><Label>WhatsApp</Label><Input value={briefingForm.contact_whatsapp} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_whatsapp: e.target.value })} /></div>
-                  </div>
-                  <div><Label>Nome do Projeto *</Label><Input value={briefingForm.project_name} onChange={(e) => setBriefingFormState({ ...briefingForm, project_name: e.target.value })} /></div>
-                  <div>
-                    <Label>Quantidade de Vídeos</Label>
-                    <Select value={briefingForm.video_quantity} onValueChange={(v) => setBriefingFormState({ ...briefingForm, video_quantity: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div><Label>Cidade</Label><Input value={briefingForm.city} onChange={(e) => setBriefingFormState({ ...briefingForm, city: e.target.value })} placeholder="Ex: São Paulo" /></div>
-                    <div><Label>Nicho</Label><Input value={briefingForm.niche} onChange={(e) => setBriefingFormState({ ...briefingForm, niche: e.target.value })} placeholder="Ex: Advocacia" /></div>
-                  </div>
-                  <Button className="w-full" onClick={handleCreateClient} disabled={!briefingForm.business_name || !briefingForm.project_name}>
-                    <LinkIcon className="h-4 w-4 mr-2" />Registrar e Gerar Link
-                  </Button>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
-          </div>
-          {uniqueCities.length > 0 && (
-            <Select value={filterCity} onValueChange={setFilterCity}>
-              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Cidade" /></SelectTrigger>
-              <SelectContent>{uniqueCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
-          )}
-          {uniqueNiches.length > 0 && (
-            <Select value={filterNiche} onValueChange={setFilterNiche}>
-              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Nicho" /></SelectTrigger>
-              <SelectContent>{uniqueNiches.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
-            </Select>
-          )}
-          {hasActiveFilters && (
-            <Button variant="ghost" size="icon" onClick={() => { setSearchTerm(""); setFilterCity(""); setFilterNiche(""); }}><X className="h-4 w-4" /></Button>
-          )}
-          <div className="flex items-center gap-2">
-            <Switch checked={showInactive} onCheckedChange={setShowInactive} id="show-inactive" />
-            <Label htmlFor="show-inactive" className="text-sm text-muted-foreground cursor-pointer whitespace-nowrap">Mostrar inativos</Label>
-          </div>
-        </div>
-
-        {/* Client Cards Grid */}
-        {filteredGroups.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              <Users className="h-16 w-16 mx-auto mb-4 opacity-40" />
-              {clientGroups.length === 0 ? (
-                <><p className="text-lg font-medium">Nenhum cliente registrado</p><p className="text-sm mt-1">Clique em "Adicionar Novo Cliente" para começar.</p></>
-              ) : (
-                <><p className="text-lg font-medium">Nenhum resultado encontrado</p><p className="text-sm mt-1">Tente ajustar os filtros.</p></>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredGroups.map((group) => {
-              const latestStatus = group.projects[0].status;
-              const totalVideos = group.projects.reduce((sum, p) => sum + p.video_quantity, 0);
-              const inactive = isGroupInactive(group);
-              const funnelStrategy = group.projects.find(p => p.content_strategy)?.content_strategy;
-              return (
-                <Card
-                  key={group.business_name}
-                  className={`cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all group ${inactive ? "opacity-60" : ""}`}
-                  onClick={() => setSelectedBusinessName(group.business_name.trim().toLowerCase())}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-11 w-11 mt-0.5">
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-base">
-                          {group.business_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">{group.business_name}</h3>
-                          {inactive && <Badge variant="outline" className="text-[10px] shrink-0">Inativo</Badge>}
-                        </div>
-                        {group.contact_name && <p className="text-xs text-muted-foreground truncate">{group.contact_name}</p>}
-                        <div className="flex items-center gap-2 mt-2.5">
-                          <Badge variant="secondary" className={`text-[10px] ${briefingStatusColors[latestStatus] || ""}`}>
-                            {briefingStatusLabels[latestStatus] || latestStatus}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1"><FileText className="h-3 w-3" />{group.projects.length}</span>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1"><Video className="h-3 w-3" />{totalVideos}</span>
-                        </div>
-                        {funnelStrategy && (
-                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1 truncate">
-                            <Filter className="h-3 w-3 shrink-0 text-primary" />
-                            <span className="truncate">{funnelStrategy}</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <ClientListView
+        filteredGroups={filteredGroups}
+        clientGroups={clientGroups}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterCity={filterCity}
+        setFilterCity={setFilterCity}
+        filterNiche={filterNiche}
+        setFilterNiche={setFilterNiche}
+        showInactive={showInactive}
+        setShowInactive={setShowInactive}
+        uniqueCities={uniqueCities}
+        uniqueNiches={uniqueNiches}
+        hasActiveFilters={!!hasActiveFilters}
+        isGroupInactive={isGroupInactive}
+        setSelectedBusinessName={(v) => setSelectedBusinessName(v)}
+        briefingOpen={briefingOpen}
+        setBriefingOpen={setBriefingOpen}
+        briefingForm={briefingForm}
+        setBriefingFormState={setBriefingFormState}
+        generatedLink={generatedLink}
+        setGeneratedLink={setGeneratedLink}
+        handleCreateClient={handleCreateClient}
+        toast={toast}
+        onQuickAction={handleQuickAction}
+      />
     </DashboardLayout>
   );
 };
