@@ -1,116 +1,46 @@
 
 
-# Progressive Smart Briefing — Implementation Plan
+# Professional PDF Export for Client Projects
 
-## Overview
+## Summary
 
-Add a client registration + shareable briefing form workflow inside the existing CRM and Dashboard. Platform users register clients with video quantity, get a unique link, clients fill a guided form, and the system auto-generates strategic briefings + scripts via AI.
+Add a "Download Project PDF" button inside the expanded project detail view in the CRM. When clicked, it opens a dialog where the user can customize header fields (agency name/logo, status), then generates a clean PDF using browser `window.print()` with a print-optimized hidden div.
 
-## Database Changes
+## Approach
 
-### New table: `briefing_requests`
+Client-side PDF generation using a print-optimized HTML layout rendered in a hidden container, then triggered via `window.print()`. No new pages, no new dependencies — pure browser printing with `@media print` CSS.
 
-Stores the client registration, shareable token, form answers, and generated strategic content.
+## Changes
 
-```sql
-CREATE TABLE public.briefing_requests (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
-  -- Client info (set by platform user)
-  business_name text NOT NULL,
-  contact_name text,
-  contact_email text,
-  contact_whatsapp text,
-  project_name text NOT NULL,
-  video_quantity integer NOT NULL DEFAULT 3,
-  -- Form answers (set by client via public form)
-  form_answers jsonb,
-  -- AI-generated strategic content
-  persona text,
-  positioning text,
-  tone_of_voice text,
-  content_strategy text,
-  -- Status: pending → submitted → processing → completed
-  status text NOT NULL DEFAULT 'pending',
-  project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
-  created_at timestamptz DEFAULT now()
-);
+### 1. `src/pages/CRM.tsx`
 
-ALTER TABLE public.briefing_requests ENABLE ROW LEVEL SECURITY;
+**Add a "Download Project PDF" button** in the expanded project detail area (next to the tabs at line ~332). When clicked:
+- Opens a Dialog with editable fields: Agency Name, Agency Logo URL, Client Name (pre-filled from project), Business Name, Project Name (pre-filled), Project Date, Project Status (select: Em análise, Em edição, Aprovado, Rejeitado)
+- Fetches the `briefing_requests` row linked to this project (if any) to get persona, positioning, tone_of_voice, content_strategy
+- Fetches all scripts for this project
+- On "Gerar PDF", renders a hidden print-optimized div and calls `window.print()`
 
--- Platform user can CRUD own rows
-CREATE POLICY "Users can view own" ON public.briefing_requests FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "Users can insert own" ON public.briefing_requests FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
-CREATE POLICY "Users can update own" ON public.briefing_requests FOR UPDATE TO authenticated
-  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "Users can delete own" ON public.briefing_requests FOR DELETE TO authenticated
-  USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'::app_role));
+**New state**: `pdfDialogOpen`, `pdfConfig` (agency_name, agency_logo, client_name, business_name, project_name, project_date, project_status), `pdfData` (briefing, persona, positioning, scripts)
 
--- Public read by token (for the client form — anon role)
-CREATE POLICY "Anon can read by token" ON public.briefing_requests FOR SELECT TO anon
-  USING (true);
-CREATE POLICY "Anon can update by token" ON public.briefing_requests FOR UPDATE TO anon
-  USING (true);
-```
+**PDF HTML structure** (rendered in a hidden div with `print:block` CSS):
+1. Cover/Header: Agency logo + name, client name, business name, project name, date, status badge
+2. Strategic Briefing section (from briefings table)
+3. Customer Persona (from briefing_requests.persona)
+4. Brand Positioning (from briefing_requests.positioning)
+5. Content Strategy (from briefing_requests.content_strategy)
+6. Video Scripts — each script rendered with title, and full script content parsed into sections
 
-Note: The anon policies are needed so the public briefing form can read the request by token and submit answers. The edge function uses service role for final processing.
+### 2. `src/index.css`
 
-## New Edge Function: `process-briefing`
+Add `@media print` styles:
+- Hide everything except the PDF container
+- Clean typography, page breaks between scripts
+- Professional formatting with borders, spacing
 
-Receives `{ token }`, reads the `briefing_requests` row, sends form answers to Lovable AI Gateway with tool calling to extract:
-- persona, positioning, tone_of_voice, content_strategy
-- N scripts (matching `video_quantity`) each with: title, objective, hook, scene_structure, narration, visual_direction, call_to_action
+### Files Modified
 
-Then:
-1. Creates a `project` linked to the user
-2. Creates a `briefing` linked to the project
-3. Creates N `scripts` linked to the project
-4. Updates `briefing_requests` with strategic data and status = completed
-
-## New Public Page: `src/pages/ClientBriefingForm.tsx`
-
-Route: `/briefing/:token` (NOT inside ProtectedRoute — public access)
-
-A progressive, guided form with 5 questions:
-1. About the business (textarea + helper chips)
-2. Typical customer (textarea + helper chips)
-3. Problem solved (textarea + helper chips)
-4. Business objective (multi-select chips)
-5. Content references (multi-select chips)
-
-Each question shows example hints and clickable helper options that auto-fill or append to the text. Steps are shown one at a time (wizard-style) for a guided experience.
-
-On submit: saves `form_answers` as JSON to `briefing_requests`, sets status to `submitted`, then calls `process-briefing` edge function.
-
-## CRM Integration
-
-Add a "Novo Cliente + Briefing" dialog in `src/pages/CRM.tsx` with fields:
-- business_name, contact_name, email, whatsapp, project_name, video_quantity (select: 1, 3, 5, 10, 15)
-
-On create: inserts into `briefing_requests` table, gets back the `token`, displays the shareable link with a copy button.
-
-Add a "Clientes & Briefings" tab or section showing all `briefing_requests` with status badges and link to view results.
-
-## Dashboard Integration
-
-Add a "Briefings Recentes" section in Dashboard showing recent `briefing_requests` with status. When status = completed, user can expand to see generated persona, positioning, scripts, and export PDF.
-
-## App.tsx Changes
-
-Add route: `<Route path="/briefing/:token" element={<ClientBriefingForm />} />` (no ProtectedRoute wrapper)
-
-## Files to Create/Modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| Migration SQL | Create `briefing_requests` table |
-| `supabase/functions/process-briefing/index.ts` | New edge function |
-| `supabase/config.toml` | Add function config |
-| `src/pages/ClientBriefingForm.tsx` | New public form page |
-| `src/pages/CRM.tsx` | Add client registration dialog + briefing requests list |
-| `src/pages/Dashboard.tsx` | Add briefing requests section |
-| `src/App.tsx` | Add public route |
+| `src/pages/CRM.tsx` | Add PDF export dialog + button in expanded project view, hidden print container |
+| `src/index.css` | Add `@media print` styles for professional PDF output |
 
