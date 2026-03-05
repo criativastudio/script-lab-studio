@@ -42,6 +42,12 @@
 
     --radius: 0.75rem;
 
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
+
     --success: 268 64% 81%;
     --success-foreground: 260 20% 15%;
     --warning: 30 82% 80%;

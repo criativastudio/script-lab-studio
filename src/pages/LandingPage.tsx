@@ -8,6 +8,7 @@ import {
   Award, Layers, Check, ArrowRight, Menu, X,
   Instagram, Twitter, Youtube, ChevronRight
 } from "lucide-react";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import HeroAnimation from "@/components/landing/HeroAnimation";
@@ -194,13 +195,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex justify-center gap-4"
           >
-            <button
-              onClick={() => navigate("/auth")}
-              className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all duration-300 hover:shadow-[0_0_50px_hsl(var(--primary)/0.4)] hover:scale-105 active:scale-[0.98]"
-            >
+            <RainbowButton onClick={() => navigate("/auth")}>
               Começar grátis agora
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </RainbowButton>
             <button
               onClick={() => {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });

@@ -69,6 +69,11 @@ export default {
           violet: "hsl(var(--holo-violet))",
           pink: "hsl(var(--holo-pink))",
         },
+        "color-1": "hsl(var(--color-1))",
+        "color-2": "hsl(var(--color-2))",
+        "color-3": "hsl(var(--color-3))",
+        "color-4": "hsl(var(--color-4))",
+        "color-5": "hsl(var(--color-5))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -123,6 +128,10 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        rainbow: {
+          "0%": { "background-position": "0%" },
+          "100%": { "background-position": "200%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -134,6 +143,7 @@ export default {
         "gradient-shift": "gradient-shift 6s ease infinite",
         "border-glow": "border-glow 3s ease-in-out infinite",
         "typing-cursor": "typing-cursor 1s step-end infinite",
+        rainbow: "rainbow var(--speed, 2s) infinite linear",
       },
     },
   },
