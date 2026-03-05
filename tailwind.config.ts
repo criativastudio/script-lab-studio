@@ -59,6 +59,16 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        hero: {
+          blue: "hsl(var(--hero-blue))",
+          pink: "hsl(var(--hero-pink))",
+          violet: "hsl(var(--hero-violet))",
+        },
+        holo: {
+          blue: "hsl(var(--holo-blue))",
+          violet: "hsl(var(--holo-violet))",
+          pink: "hsl(var(--holo-pink))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
