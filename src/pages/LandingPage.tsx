@@ -147,7 +147,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── 1. CINEMATIC HERO ── */}
-      <section className="relative min-h-screen flex items-center justify-center bg-[hsl(220_25%_4%)] overflow-hidden pt-16">
+      <section className="relative min-h-screen flex items-center justify-center bg-background overflow-hidden pt-16">
         <CursorGlow />
         <FloatingOrb />
 
@@ -170,7 +170,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-white mb-8"
+            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8"
           >
             Roteiros Profissionais{" "}
             <span className="text-gradient-primary">com IA em Minutos</span>
@@ -181,7 +181,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto max-w-2xl text-base md:text-lg text-[hsl(215_16%_56%)] mb-12"
+            className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground mb-12"
           >
             Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação.
             Sem escrever uma linha sequer.
@@ -205,7 +205,7 @@ export default function LandingPage() {
               onClick={() => {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-[hsl(220_20%_20%)] px-7 py-3.5 text-sm font-medium text-[hsl(210_20%_80%)] transition-all duration-300 hover:border-[hsl(220_20%_30%)] hover:text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-sm font-medium text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
             >
               Ver como funciona
             </button>
@@ -216,7 +216,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-xs text-[hsl(215_16%_46%)] mt-6"
+            className="text-xs text-muted-foreground mt-6"
           >
             Sem cartão de crédito • Setup em 30 segundos
           </motion.p>
@@ -226,7 +226,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex items-center justify-center gap-6 mt-8 text-[hsl(215_16%_36%)]"
+            className="flex items-center justify-center gap-6 mt-8 text-muted-foreground"
           >
             <Instagram className="h-4 w-4" />
             <Youtube className="h-4 w-4" />
@@ -522,13 +522,13 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mx-auto max-w-3xl rounded-3xl bg-[hsl(220_25%_6%)] border border-[hsl(220_20%_14%)] p-10 md:p-20 text-center relative overflow-hidden"
+          className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-10 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-white tracking-tight">
+          <h2 className="relative z-10 font-display text-xl font-light md:text-3xl mb-6 text-foreground tracking-tight">
             Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
           </h2>
-          <p className="relative z-10 text-[hsl(215_16%_56%)] mb-8 max-w-md mx-auto text-lg">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg">
             Roteiros profissionais prontos para gravação em minutos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
@@ -542,7 +542,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               variant="outline"
-              className="gap-2 text-base rounded-full border-[hsl(220_20%_20%)] text-white hover:bg-[hsl(220_20%_12%)]"
+              className="gap-2 text-base rounded-full border-border text-foreground hover:bg-muted"
               onClick={() => {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
               }}

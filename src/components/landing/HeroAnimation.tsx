@@ -33,7 +33,7 @@ const HeroAnimation = () => {
   return (
     <div className="w-full h-full relative">
       {/* Glass reflection overlay */}
-      <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none z-10 rounded-t-2xl" />
+      <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-foreground/[0.04] to-transparent pointer-events-none z-10 rounded-t-2xl" />
 
       <div className="p-4 md:p-6 space-y-3 h-full relative">
         {/* Window dots */}

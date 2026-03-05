@@ -178,10 +178,15 @@
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: hsl(var(--card) / 0.5);
+  border: 1px solid hsl(var(--border) / 0.3);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+}
+
+:is(.dark) .glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card:hover {
@@ -190,10 +195,16 @@
 }
 
 .glass-surface {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: hsl(var(--card) / 0.5);
+  border: 1px solid hsl(var(--border) / 0.3);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+:is(.dark) .glass-surface {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -250,6 +261,21 @@
 
 /* ===== PDF Print Styles ===== */
 @media print {
+  :root {
+    --background: 210 20% 98% !important;
+    --foreground: 220 25% 10% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 220 25% 10% !important;
+    --muted: 210 40% 96% !important;
+    --muted-foreground: 215 16% 47% !important;
+    --border: 214 32% 91% !important;
+  }
+
+  body {
+    background: white !important;
+    color: #1a1a2e !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
