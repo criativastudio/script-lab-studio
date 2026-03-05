@@ -81,6 +81,58 @@ const QUESTIONS = [
     ],
     type: "multi" as const,
   },
+  {
+    key: "pain_points",
+    title: "Dores do seu cliente",
+    question: "Quais são as principais dores, frustrações ou medos que seus clientes enfrentam antes de te encontrar?",
+    example: "Exemplo: Medo de não encontrar um profissional confiável, frustração com resultados ruins de experiências anteriores.",
+    chips: [
+      "Medo de gastar e não ter resultado", "Falta de confiança no profissional",
+      "Experiências ruins anteriores", "Não saber por onde começar",
+      "Preço vs qualidade", "Falta de informação clara",
+      "Vergonha ou insegurança", "Demora no atendimento",
+    ],
+    type: "textarea" as const,
+  },
+  {
+    key: "differentiators",
+    title: "Diferenciais do seu negócio",
+    question: "O que faz seu negócio ser diferente e melhor que a concorrência?",
+    example: "Exemplo: Somos a única clínica da região com tecnologia de scanner 3D e garantia de 5 anos.",
+    chips: [
+      "Atendimento personalizado", "Preço justo",
+      "Tecnologia avançada", "Experiência comprovada",
+      "Localização privilegiada", "Garantia de resultado",
+      "Equipe especializada", "Agilidade no atendimento",
+    ],
+    type: "textarea" as const,
+  },
+  {
+    key: "communication_style",
+    title: "Estilo de comunicação",
+    question: "Como você quer se comunicar nos vídeos? Selecione os estilos que mais combinam.",
+    example: "",
+    chips: [
+      "Educativo", "Autoridade",
+      "Profissional", "Casual / Descontraído",
+      "Estilo influencer", "Storytelling",
+      "Venda direta", "Motivacional",
+    ],
+    type: "multi" as const,
+  },
+  {
+    key: "main_platforms",
+    title: "Plataformas principais",
+    question: "Em quais plataformas você pretende publicar os vídeos?",
+    example: "",
+    chips: [
+      "Instagram Reels", "Instagram Stories",
+      "TikTok", "YouTube",
+      "YouTube Shorts", "Facebook",
+      "LinkedIn", "WhatsApp Status",
+    ],
+    type: "multi" as const,
+  },
 ];
 
 const ClientBriefingForm = () => {
@@ -141,7 +193,6 @@ const ClientBriefingForm = () => {
     if (!briefing || !token) return;
     setSubmitting(true);
 
-    // Save answers
     const { error: updateErr } = await supabase
       .from("briefing_requests")
       .update({ form_answers: answers, status: "submitted" })
@@ -153,14 +204,12 @@ const ClientBriefingForm = () => {
       return;
     }
 
-    // Trigger processing
     const { error: fnErr } = await supabase.functions.invoke("process-briefing", {
       body: { token },
     });
 
     if (fnErr) {
       console.error("Process error:", fnErr);
-      // Still mark as submitted even if processing fails - it can be retried
     }
 
     setSubmitted(true);

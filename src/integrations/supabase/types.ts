@@ -129,6 +129,66 @@ export type Database = {
           },
         ]
       }
+      client_strategic_contexts: {
+        Row: {
+          business_name: string
+          business_niche: string | null
+          communication_style: string | null
+          created_at: string | null
+          customer_persona: string | null
+          differentiators: string | null
+          id: string
+          is_completed: boolean | null
+          main_platforms: string[] | null
+          market_positioning: string | null
+          marketing_objectives: string | null
+          pain_points: string | null
+          products_services: string | null
+          target_audience: string | null
+          tone_of_voice: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          business_niche?: string | null
+          communication_style?: string | null
+          created_at?: string | null
+          customer_persona?: string | null
+          differentiators?: string | null
+          id?: string
+          is_completed?: boolean | null
+          main_platforms?: string[] | null
+          market_positioning?: string | null
+          marketing_objectives?: string | null
+          pain_points?: string | null
+          products_services?: string | null
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          business_niche?: string | null
+          communication_style?: string | null
+          created_at?: string | null
+          customer_persona?: string | null
+          differentiators?: string | null
+          id?: string
+          is_completed?: boolean | null
+          main_platforms?: string[] | null
+          market_positioning?: string | null
+          marketing_objectives?: string | null
+          pain_points?: string | null
+          products_services?: string | null
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
@@ -164,6 +224,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      content_ideas: {
+        Row: {
+          context_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          project_id: string | null
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          project_id?: string | null
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          context_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          project_id?: string | null
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_ideas_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "client_strategic_contexts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_ideas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -376,36 +484,62 @@ export type Database = {
       }
       projects: {
         Row: {
+          campaign_objective: string | null
           client_name: string | null
+          content_style: string | null
+          context_id: string | null
           created_at: string | null
+          funnel_stage: string | null
           id: string
           name: string | null
           objective: string | null
           platform: string | null
+          publishing_frequency: string | null
           status: string | null
           user_id: string | null
+          video_count: number | null
         }
         Insert: {
+          campaign_objective?: string | null
           client_name?: string | null
+          content_style?: string | null
+          context_id?: string | null
           created_at?: string | null
+          funnel_stage?: string | null
           id?: string
           name?: string | null
           objective?: string | null
           platform?: string | null
+          publishing_frequency?: string | null
           status?: string | null
           user_id?: string | null
+          video_count?: number | null
         }
         Update: {
+          campaign_objective?: string | null
           client_name?: string | null
+          content_style?: string | null
+          context_id?: string | null
           created_at?: string | null
+          funnel_stage?: string | null
           id?: string
           name?: string | null
           objective?: string | null
           platform?: string | null
+          publishing_frequency?: string | null
           status?: string | null
           user_id?: string | null
+          video_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "client_strategic_contexts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scripts: {
         Row: {
