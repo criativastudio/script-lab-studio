@@ -77,6 +77,7 @@ export function ClientListView({
   hasActiveFilters, isGroupInactive, setSelectedBusinessName,
   briefingOpen, setBriefingOpen, briefingForm, setBriefingFormState,
   generatedLink, setGeneratedLink, handleCreateClient, toast, onQuickAction,
+  maxVideos, onVideoLimitExceeded,
 }: ClientListViewProps) {
   return (
     <div className="space-y-6">
