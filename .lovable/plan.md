@@ -1,50 +1,40 @@
 
 
-# AI Strategic Brief Builder
+# Fix Section 3: 3D Product Scroll
 
-## Overview
-
-Replace the 9-question form with 4 strategic questions. Add a new edge function `suggest-briefing` that generates adaptive AI suggestions after Question 1. Update the `process-briefing` edge function prompt to extract the full strategic context from only 4 answers. No changes to the downstream workflow (project creation, briefing, scripts, strategic context).
+## Problems
+1. The 3D card (ContainerScroll) overlaps the headline/description due to `-mt-12` on the Card and shared `translateY` motion
+2. HeroAnimation shows generic skeleton UI instead of the real briefing→script flow
+3. Scroll effect (rotateX 20→0) is subtle; container height is very tall making progress slow
 
 ## Changes
 
-### 1. New Edge Function: `supabase/functions/suggest-briefing/index.ts`
+### 1. Fix overlap: `src/components/ui/container-scroll-animation.tsx`
+- Add more spacing between Header and Card (increase gap/padding)
+- Change Card's `-mt-12` to `mt-8` so it doesn't overlap the title
+- Ensure Header has `relative z-20` so it stays above the card
 
-Called after the user completes Question 1 (business context). Sends the business description to the AI and returns contextual suggestions for Questions 2-4 (audience chips, desired outcome chips, brand voice chips). Uses `google/gemini-3-flash-preview` with tool-calling to return structured suggestions.
+### 2. Replace HeroAnimation with real flow: `src/components/landing/HeroAnimation.tsx`
+Rewrite to show the actual platform workflow as an animated sequence:
+- **Step 1**: Briefing form appears (4 questions with typing animation filling in business context)
+- **Step 2**: AI processing indicator (loading spinner/pulse with "Gerando estratégia...")
+- **Step 3**: Generated script output with scene cards appearing one by one (Gancho, Problema, Desenvolvimento, Autoridade, CTA)
 
-### 2. Register in `supabase/config.toml`
+Each step auto-transitions after a few seconds, creating a continuous loop that demonstrates the real product flow: Briefing → AI Analysis → Script Output.
 
-Add `[functions.suggest-briefing]` with `verify_jwt = false`.
+### 3. Enhance scroll effect: `src/components/ui/container-scroll-animation.tsx`
+- Increase initial rotation from 20 to 35 degrees for more dramatic tilt
+- Reduce container height from `h-[60rem] md:h-[80rem]` to `h-[40rem] md:h-[55rem]` so the scroll resolves faster
+- Add `offset: ["start end", "end start"]` to useScroll for better trigger range
 
-### 3. Rewrite `src/pages/ClientBriefingForm.tsx`
-
-Replace the 9-question `QUESTIONS` array with 4 questions:
-
-| # | Key | Title | Type |
-|---|---|---|---|
-| 1 | `business_context` | Contexto do Negócio | textarea + static chips |
-| 2 | `ideal_audience` | Público Ideal | textarea + dynamic AI chips |
-| 3 | `desired_outcome` | Resultado Desejado | multi-select + dynamic AI chips |
-| 4 | `brand_voice` | Voz da Marca | multi-select + dynamic AI chips |
-
-New behavior:
-- After Q1 is answered and the user clicks "Next", call `suggest-briefing` to get dynamic chip suggestions for Q2-Q4.
-- Show a brief loading state while suggestions load.
-- Default/fallback chips remain if AI call fails.
-- Form title changes to "AI Strategic Brief Builder".
-
-### 4. Update `supabase/functions/process-briefing/index.ts`
-
-Update only the `userPrompt` to reference the new 4 answer keys and enhance the system prompt to instruct the AI to infer the full strategic context (niche, persona, pain points, motivations, positioning, tone, content strategy, video categories, funnel stages) from the condensed answers. Also update the `contextData` mapping to use the new keys.
-
-The tool-calling schema and all downstream logic (project creation, briefing insert, scripts insert, strategic context upsert) remain unchanged.
+### 4. Minor adjustment in `src/pages/LandingPage.tsx`
+- Remove the extra wrapping `perspective` style on section 3 (already handled by ContainerScroll internally)
 
 ## Files
 
 | File | Change |
 |---|---|
-| `supabase/functions/suggest-briefing/index.ts` | New -- AI suggestions for adaptive chips |
-| `supabase/config.toml` | Register suggest-briefing |
-| `src/pages/ClientBriefingForm.tsx` | Rewrite with 4 questions + adaptive AI suggestions |
-| `supabase/functions/process-briefing/index.ts` | Update prompt and answer key mapping only |
+| `src/components/ui/container-scroll-animation.tsx` | Fix overlap spacing, enhance scroll rotation |
+| `src/components/landing/HeroAnimation.tsx` | Rewrite with real briefing→script flow animation |
+| `src/pages/LandingPage.tsx` | Remove redundant perspective wrapper on section 3 |
 
