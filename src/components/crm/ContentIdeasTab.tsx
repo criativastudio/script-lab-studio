@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Plus, Lightbulb, FileText, Edit2, Trash2, CheckCircle, Loader2, Brain,
+  Plus, Lightbulb, FileText, Edit2, Trash2, CheckCircle, Loader2, Brain, Zap,
 } from "lucide-react";
+import { HookGenerator } from "@/components/crm/HookGenerator";
 
 interface BriefingRequest {
   id: string; business_name: string; project_name: string; project_id: string | null;
@@ -49,9 +51,17 @@ export function ContentIdeasTab({
   editingIdea, setEditingIdea, editIdeaText, setEditIdeaText,
   handleUpdateIdea, handleDeleteIdea, strategicContextId,
 }: ContentIdeasTabProps) {
+  const [hookGenOpen, setHookGenOpen] = useState(false);
+  const [hookGenTopic, setHookGenTopic] = useState("");
+
   const filteredIdeas = ideasProjectFilter === "all"
     ? contentIdeas
     : contentIdeas.filter(i => i.project_id === ideasProjectFilter);
+
+  const openHookGen = (title: string) => {
+    setHookGenTopic(title);
+    setHookGenOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -165,6 +175,11 @@ export function ContentIdeasTab({
                     {idea.status === "used" && <Badge variant="secondary" className="text-[10px]">Usado</Badge>}
                   </div>
                   <div className="flex gap-0.5">
+                    {strategicContextId && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Gerar Ganchos" onClick={() => openHookGen(idea.title)}>
+                        <Zap className="h-3 w-3 text-primary" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingIdea(idea.id); setEditIdeaText(idea.title); }}>
                       <Edit2 className="h-3 w-3" />
                     </Button>
@@ -177,6 +192,15 @@ export function ContentIdeasTab({
             </Card>
           ))}
         </div>
+      )}
+
+      {strategicContextId && (
+        <HookGenerator
+          open={hookGenOpen}
+          onOpenChange={setHookGenOpen}
+          topic={hookGenTopic}
+          contextId={strategicContextId}
+        />
       )}
     </div>
   );
