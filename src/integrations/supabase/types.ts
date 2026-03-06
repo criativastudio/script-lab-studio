@@ -538,6 +538,42 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          created_at: string
+          id: string
+          paid_at: string | null
+          plan: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          plan: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          plan?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -801,22 +837,64 @@ export type Database = {
       }
       users: {
         Row: {
+          asaas_customer_id: string | null
+          bairro: string | null
+          billing_name: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf: string | null
           created_at: string | null
+          data_expiracao: string | null
           email: string | null
+          endereco: string | null
+          estado: string | null
           id: string
           name: string | null
+          numero: string | null
+          plano_ativo: string | null
+          status_assinatura: string | null
+          whatsapp: string | null
         }
         Insert: {
+          asaas_customer_id?: string | null
+          bairro?: string | null
+          billing_name?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
+          data_expiracao?: string | null
           email?: string | null
+          endereco?: string | null
+          estado?: string | null
           id: string
           name?: string | null
+          numero?: string | null
+          plano_ativo?: string | null
+          status_assinatura?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          asaas_customer_id?: string | null
+          bairro?: string | null
+          billing_name?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
+          data_expiracao?: string | null
           email?: string | null
+          endereco?: string | null
+          estado?: string | null
           id?: string
           name?: string | null
+          numero?: string | null
+          plano_ativo?: string | null
+          status_assinatura?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
