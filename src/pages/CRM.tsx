@@ -262,8 +262,38 @@ const CRM = () => {
   };
 
   // ── Handlers ──────────────────────────────────────────────
+  const showUpgradeToast = (message: string) => {
+    toast({
+      title: "Limite do plano atingido",
+      description: message,
+      action: (
+        <Button size="sm" variant="default" onClick={() => navigate("/checkout/creator_pro")}>
+          Upgrade agora
+        </Button>
+      ),
+    });
+  };
+
   const handleCreateClient = async () => {
     if (!user || !briefingForm.business_name || !briefingForm.project_name) return;
+
+    // Check client limit
+    const clientCount = await getClientCount();
+    const isNewClient = !clientGroups.some(
+      g => g.business_name.trim().toLowerCase() === briefingForm.business_name.trim().toLowerCase()
+    );
+    if (isNewClient && clientCount >= limits.clients) {
+      showUpgradeToast("Você atingiu o limite de clientes do seu plano.");
+      return;
+    }
+
+    // Check monthly briefing limit
+    const briefingCount = await getMonthlyBriefingCount();
+    if (briefingCount >= limits.briefings) {
+      showUpgradeToast("Você atingiu o limite mensal de briefings do seu plano.");
+      return;
+    }
+
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: briefingForm.business_name,
       contact_name: briefingForm.contact_name || null, contact_email: briefingForm.contact_email || null,
