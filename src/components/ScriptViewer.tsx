@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clapperboard, User, Target, Monitor, Clock, Lightbulb, Zap, Film, Heart, Camera, Music } from "lucide-react";
 import { HookGenerator } from "@/components/crm/HookGenerator";
+import { ViralScoreCard } from "@/components/crm/ViralScoreCard";
 
 interface Script {
   id: string;
@@ -32,6 +33,7 @@ interface ScriptViewerProps {
   strategicContextId?: string;
   audience?: string;
   tone?: string;
+  platform?: string;
 }
 
 interface ParsedScript {
@@ -172,7 +174,7 @@ function SectionCard({ icon: Icon, title, children, accent }: { icon: React.Elem
   );
 }
 
-export function ScriptViewer({ script, project, open, onOpenChange, strategicContextId, audience, tone }: ScriptViewerProps) {
+export function ScriptViewer({ script, project, open, onOpenChange, strategicContextId, audience, tone, platform }: ScriptViewerProps) {
   const [hookGenOpen, setHookGenOpen] = useState(false);
 
   if (!script) return null;
@@ -224,6 +226,17 @@ export function ScriptViewer({ script, project, open, onOpenChange, strategicCon
                 </div>
               </CardContent>
             </Card>
+
+
+            {/* Viral Score */}
+            {script.script && (
+              <ViralScoreCard
+                scriptText={script.script}
+                contextId={strategicContextId}
+                platform={platform || project?.platform || undefined}
+                onRegenerateHook={strategicContextId ? () => setHookGenOpen(true) : undefined}
+              />
+            )}
 
             {/* Strategic Overview */}
             {parsed.overview && (
