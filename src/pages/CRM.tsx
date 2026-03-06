@@ -105,6 +105,9 @@ const CRM = () => {
   const [editingScript, setEditingScript] = useState<Script | null>(null);
   const [editScriptForm, setEditScriptForm] = useState({ title: "", script: "" });
 
+  // Plan limit modal
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+
   // PDF state
   const [pdfData, setPdfData] = useState<{ client: BriefingRequest; briefing?: Briefing; scripts: Script[] } | null>(null);
 
