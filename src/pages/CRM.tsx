@@ -310,6 +310,14 @@ const CRM = () => {
 
   const handleCreateProject = async () => {
     if (!user || !selectedGroup || !newProjectForm.project_name) return;
+
+    // Check monthly briefing limit
+    const briefingCount = await getMonthlyBriefingCount();
+    if (briefingCount >= limits.briefings) {
+      showUpgradeToast("Você atingiu o limite mensal de briefings do seu plano.");
+      return;
+    }
+
     const first = selectedGroup.projects[0];
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: first.business_name,
