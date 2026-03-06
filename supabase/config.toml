@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.suggest-briefing]
 verify_jwt = false
+
+[functions.process-payment]
+verify_jwt = false
+
+[functions.check-payment-status]
+verify_jwt = false

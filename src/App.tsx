@@ -17,6 +17,7 @@ import StrategicAnalysis from "./pages/StrategicAnalysis";
 import ClientBriefingForm from "./pages/ClientBriefingForm";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/gerador" element={<ProtectedRoute><ScriptGenerator /></ProtectedRoute>} />
             <Route path="/analise-estrategica" element={<ProtectedRoute><StrategicAnalysis /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+            <Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/briefing/:token" element={<ClientBriefingForm />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -507,7 +507,15 @@ export default function LandingPage() {
                 </ul>
                 <RainbowButton
                   className="w-full rounded-full"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => {
+                    if (p.price === "Grátis") {
+                      navigate("/auth");
+                    } else if (p.name === "Creator Pro") {
+                      navigate("/checkout/creator-pro");
+                    } else {
+                      navigate("/checkout/scale-studio");
+                    }
+                  }}
                 >
                   {p.price === "Grátis" ? "Começar grátis" : "Assinar agora"}
                 </RainbowButton>

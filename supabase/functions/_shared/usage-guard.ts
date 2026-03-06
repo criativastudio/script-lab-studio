@@ -7,11 +7,11 @@ export const PLAN_LIMITS: Record<string, {
   dailyLimit: number;
   monthlyTokens: number;
 }> = {
-  starter:      { briefings: 5,   scriptsPerBriefing: 4,  ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  basic:        { briefings: 5,   scriptsPerBriefing: 4,  ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  creator_pro:  { briefings: 60,  scriptsPerBriefing: 6,  ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  premium:      { briefings: 60,  scriptsPerBriefing: 6,  ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  scale_studio: { briefings: 250, scriptsPerBriefing: 10, ratePerMin: 10, dailyLimit: 400, monthlyTokens: 4000000 },
+  starter:      { briefings: 3,    scriptsPerBriefing: 3,    ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
+  basic:        { briefings: 3,    scriptsPerBriefing: 3,    ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
+  creator_pro:  { briefings: 25,   scriptsPerBriefing: 10,   ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
+  premium:      { briefings: 25,   scriptsPerBriefing: 10,   ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
+  scale_studio: { briefings: 9999, scriptsPerBriefing: 9999, ratePerMin: 10, dailyLimit: 400, monthlyTokens: 4000000 },
 };
 
 export type PlanName = keyof typeof PLAN_LIMITS;
