@@ -960,7 +960,32 @@ const CRM = () => {
         handleCreateClient={handleCreateClient}
         toast={toast}
         onQuickAction={handleQuickAction}
+        maxVideos={limits.scriptsPerBriefing}
+        onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
       />
+
+      {/* Plan Limit Modal */}
+      <Dialog open={planLimitModalOpen} onOpenChange={setPlanLimitModalOpen}>
+        <DialogContent className="max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="rounded-full bg-destructive/10 p-3">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <DialogHeader className="items-center">
+              <DialogTitle className="text-xl">Limite do plano atingido</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Seu plano Start permite até {limits.scriptsPerBriefing} roteiros por briefing. Para criar mais vídeos e roteiros, faça upgrade para o plano Creator Pro.
+            </p>
+            <RainbowButton
+              onClick={() => { setPlanLimitModalOpen(false); navigate("/checkout/creator_pro"); }}
+              className="mt-2 text-base px-10 py-3"
+            >
+              Assinar Agora
+            </RainbowButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
