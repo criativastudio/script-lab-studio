@@ -1,34 +1,18 @@
 
 
-# Fix: Briefing Link "Link inválido ou expirado"
+# Redirect to Login After Signup
 
-## Root Cause
+## Problem
+After creating an account, the user stays on the signup form. They should be switched to the login view while the toast confirmation message appears in the bottom-right corner.
 
-The `briefing_requests` table RLS policies are inconsistent:
-- **Anon SELECT**: `qual: true` — any unauthenticated user can read all rows
-- **Authenticated SELECT**: `user_id = auth.uid() OR has_role(admin)` — only the creator or admin can read
+## Change
 
-When the admin (or any logged-in user) opens the briefing link in the same browser where they're authenticated, the Supabase client sends the auth token. The request uses the `authenticated` role, and since the briefing's `user_id` doesn't match `auth.uid()` (and the user may not be admin), the query returns no results → "Link inválido ou expirado."
+**File: `src/pages/Auth.tsx`**
 
-## Fix
+After successful signup (line 37), add:
+- `setIsSignUp(false)` to switch the form back to login mode
+- Clear the form fields (`setEmail("")`, `setPassword("")`, `setFullName("")`)
+- The toast already appears in the bottom-right (default Toaster position), so no change needed there
 
-**Database migration**: Drop the existing authenticated SELECT policy and recreate it to also allow token-based access. Since anon already allows `true` (no security regression), the simplest fix is to also allow authenticated users unrestricted SELECT on `briefing_requests`.
-
-```sql
-DROP POLICY "Users can view own briefing_requests" ON public.briefing_requests;
-
-CREATE POLICY "Users can view own briefing_requests"
-ON public.briefing_requests
-FOR SELECT
-TO authenticated
-USING (true);
-```
-
-This aligns the authenticated SELECT policy with the existing anon SELECT policy. No other files need changes.
-
-## Files
-
-| File | Change |
-|---|---|
-| Migration SQL | Update authenticated SELECT policy on `briefing_requests` |
+This is a 3-line addition inside the existing `if (isSignUp)` success block. No other files need changes.
 
