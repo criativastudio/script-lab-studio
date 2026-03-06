@@ -57,6 +57,8 @@ interface ProjectsTabProps {
   setNewProjectLink: (v: string | null) => void;
   handleCreateProject: () => void;
   toast: (opts: any) => void;
+  maxVideos?: number;
+  onVideoLimitExceeded?: () => void;
 }
 
 function StrategicCard({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) {
