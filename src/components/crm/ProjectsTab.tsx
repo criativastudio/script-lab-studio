@@ -81,6 +81,7 @@ export function ProjectsTab({
   deleteItem, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   newProjectLink, setNewProjectLink, handleCreateProject, toast,
+  maxVideos, onVideoLimitExceeded,
 }: ProjectsTabProps) {
   return (
     <div className="space-y-4">
