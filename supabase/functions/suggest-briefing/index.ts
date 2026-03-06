@@ -9,14 +9,81 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { business_context } = await req.json();
+    const { business_context, previous_answers, current_step } = await req.json();
+    
     if (!business_context?.trim()) {
       return new Response(JSON.stringify({ error: "business_context is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const step = typeof current_step === "number" ? current_step : 0;
+    const prev = previous_answers || {};
+
+    // Build context block from previous answers
+    const contextLines: string[] = [`Descrição do negócio: "${business_context}"`];
+    if (prev.ideal_audience) contextLines.push(`Público informado: "${Array.isArray(prev.ideal_audience) ? prev.ideal_audience.join(", ") : prev.ideal_audience}"`);
+    if (prev.desired_outcome) contextLines.push(`Resultado desejado: "${Array.isArray(prev.desired_outcome) ? prev.desired_outcome.join(", ") : prev.desired_outcome}"`);
+    if (prev.brand_voice) contextLines.push(`Voz da marca: "${Array.isArray(prev.brand_voice) ? prev.brand_voice.join(", ") : prev.brand_voice}"`);
+
+    // Determine which chip sets to generate based on remaining steps
+    const neededChips: string[] = [];
+    const properties: Record<string, any> = {};
+    const required: string[] = [];
+
+    if (step <= 0) {
+      neededChips.push("audience_chips (6-8 sugestões de público-alvo)");
+      properties.audience_chips = { type: "array", items: { type: "string" }, description: "6-8 audience suggestion chips in Portuguese" };
+      required.push("audience_chips");
+    }
+    if (step <= 1) {
+      neededChips.push("outcome_chips (5-6 sugestões de resultado desejado)");
+      properties.outcome_chips = { type: "array", items: { type: "string" }, description: "5-6 desired outcome chips in Portuguese" };
+      required.push("outcome_chips");
+    }
+    if (step <= 2) {
+      neededChips.push("voice_chips (5-6 sugestões de voz da marca)");
+      properties.voice_chips = { type: "array", items: { type: "string" }, description: "5-6 brand voice chips in Portuguese" };
+      required.push("voice_chips");
+    }
+
+    if (required.length === 0) {
+      return new Response(JSON.stringify({}), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+
+    const systemPrompt = `Você é um especialista em estratégia de conteúdo e marketing digital.
+
+Sua tarefa: gerar sugestões contextuais (chips) para um formulário de briefing de vídeos. As sugestões devem ser em Português (Brasil), concisas (2-6 palavras cada).
+
+REGRAS OBRIGATÓRIAS:
+1. Analise TODAS as informações já fornecidas pelo cliente antes de gerar sugestões.
+2. As sugestões devem ser específicas e coerentes com o nicho/segmento do negócio descrito.
+3. Priorize perfis de público que realmente consumiriam o produto ou serviço.
+4. Se houver informação de localização ou região, inclua sugestões relacionadas ao público local.
+5. Sugira opções que o cliente talvez não tenha considerado, mas que façam sentido para o negócio.
+6. NUNCA gere sugestões genéricas como "público geral" ou "todos os públicos".
+7. Cada chip deve ser curto e objetivo (2-6 palavras).
+8. Se o cliente já informou respostas anteriores, use-as para refinar e contextualizar as próximas sugestões.
+
+Exemplo: Para uma "Confeitaria artesanal em Curitiba", chips de público poderiam ser:
+- "Noivas planejando casamento"
+- "Empresas buscando brindes premium"  
+- "Moradores de Curitiba"
+- "Amantes de doces gourmet"
+- "Mães organizando festas infantis"
+- "Casais em datas comemorativas"`;
+
+    const userPrompt = `Contexto completo do cliente:
+${contextLines.join("\n")}
+
+Com base nessas informações, gere sugestões contextualizadas para:
+${neededChips.join("\n")}
+
+Lembre-se: as sugestões devem ser ESPECÍFICAS para este negócio, não genéricas.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -27,19 +94,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          {
-            role: "system",
-            content: `You are a content strategy expert. Given a business description, generate contextual suggestion chips for a briefing form. Return suggestions in Portuguese (Brazil). Each chip should be concise (2-5 words). Make suggestions specific to the business type described.`,
-          },
-          {
-            role: "user",
-            content: `Business description: "${business_context}"
-
-Generate contextual suggestions for 3 form questions about this business:
-1. Ideal audience (who they should target with videos) - 6-8 suggestions
-2. Desired outcome (what action viewers should take) - 5-6 suggestions  
-3. Brand voice (how the brand should sound) - 5-6 suggestions`,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         tools: [{
           type: "function",
@@ -48,24 +104,8 @@ Generate contextual suggestions for 3 form questions about this business:
             description: "Return contextual chip suggestions for briefing form questions",
             parameters: {
               type: "object",
-              properties: {
-                audience_chips: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "6-8 audience suggestion chips in Portuguese",
-                },
-                outcome_chips: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "5-6 desired outcome chips in Portuguese",
-                },
-                voice_chips: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "5-6 brand voice chips in Portuguese",
-                },
-              },
-              required: ["audience_chips", "outcome_chips", "voice_chips"],
+              properties,
+              required,
               additionalProperties: false,
             },
           },
