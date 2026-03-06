@@ -35,6 +35,10 @@ const Auth = () => {
           title: "Conta criada!",
           description: "Verifique seu email para confirmar sua conta antes de fazer login.",
         });
+        setIsSignUp(false);
+        setEmail("");
+        setPassword("");
+        setFullName("");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
