@@ -590,9 +590,21 @@ const CRM = () => {
 
   const handleGenerateScriptsFromIdeas = async () => {
     if (!user || selectedIdeas.size === 0 || !strategicContext?.id) return;
+
+    // Check monthly script limit
+    const monthlyScripts = await getMonthlyScriptCount();
+    if (monthlyScripts >= limits.scriptsPerMonth) {
+      showUpgradeToast("Você atingiu o limite mensal de geração de roteiros.");
+      return;
+    }
+
+    // Cap to per-briefing and remaining monthly limits
+    const remainingMonthly = limits.scriptsPerMonth - monthlyScripts;
+    const maxScripts = Math.min(selectedIdeas.size, limits.scriptsPerBriefing, remainingMonthly);
+
     setGeneratingScriptsFromIdeas(true);
     try {
-      const ideas = contentIdeas.filter(i => selectedIdeas.has(i.id));
+      const ideas = contentIdeas.filter(i => selectedIdeas.has(i.id)).slice(0, maxScripts);
       let successCount = 0;
       for (const idea of ideas) {
         const ideaProjectId = idea.project_id || selectedGroup?.projects.find(p => p.project_id)?.project_id;
@@ -620,7 +632,6 @@ const CRM = () => {
             script: data.script,
           }).select("id").single();
 
-          // Update memory entry with script_id if it was created by the edge function
           if (scriptData?.id && strategicContext?.id) {
             await supabase.from("client_content_memory")
               .update({ script_id: scriptData.id } as any)
@@ -638,7 +649,13 @@ const CRM = () => {
           if (openProjects.has(p.id)) fetchProjectDetails(p);
         }
       }
-      toast({ title: `${successCount} roteiro(s) gerado(s) com sucesso!` });
+
+      const wasLimited = selectedIdeas.size > maxScripts;
+      if (wasLimited) {
+        toast({ title: `${successCount} roteiro(s) gerado(s)`, description: `Apenas ${maxScripts} de ${selectedIdeas.size} foram gerados devido ao limite do seu plano.` });
+      } else {
+        toast({ title: `${successCount} roteiro(s) gerado(s) com sucesso!` });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao gerar roteiros", description: err.message, variant: "destructive" });
     } finally {
