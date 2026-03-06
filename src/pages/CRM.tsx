@@ -358,6 +358,14 @@ const CRM = () => {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
     }
+
+    // Check monthly script limit
+    const monthlyScripts = await getMonthlyScriptCount();
+    if (monthlyScripts >= limits.scriptsPerMonth) {
+      showUpgradeToast("Você atingiu o limite mensal de geração de roteiros.");
+      return;
+    }
+
     setManualGenerating(true);
     try {
       const { data: fnData, error: fnError } = await supabase.functions.invoke("manual-generate", {
@@ -385,9 +393,15 @@ const CRM = () => {
         goal: fnData.goal, target_audience: fnData.target_audience, content_style: fnData.content_style,
       });
       if (fnData.scripts?.length) {
+        // Cap scripts to plan limit
+        const remainingScripts = limits.scriptsPerMonth - monthlyScripts;
+        const cappedScripts = fnData.scripts.slice(0, Math.min(fnData.scripts.length, limits.scriptsPerBriefing, remainingScripts));
         await supabase.from("scripts").insert(
-          fnData.scripts.map((s: any) => ({ user_id: user.id, project_id: projectId, title: s.title, script: s.script }))
+          cappedScripts.map((s: any) => ({ user_id: user.id, project_id: projectId, title: s.title, script: s.script }))
         );
+        if (cappedScripts.length < fnData.scripts.length) {
+          toast({ title: "Limite de roteiros", description: `Apenas ${cappedScripts.length} roteiro(s) foram gerados devido ao limite do seu plano.` });
+        }
       }
       setManualCreateProjectId(null);
       setManualForm({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" });
