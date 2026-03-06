@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clapperboard, User, Target, Monitor, Clock, Lightbulb, Zap, Film, Heart, Camera, Music } from "lucide-react";
+import { HookGenerator } from "@/components/crm/HookGenerator";
 
 interface Script {
   id: string;
@@ -26,6 +29,9 @@ interface ScriptViewerProps {
   project: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  strategicContextId?: string;
+  audience?: string;
+  tone?: string;
 }
 
 interface ParsedScript {
@@ -166,7 +172,9 @@ function SectionCard({ icon: Icon, title, children, accent }: { icon: React.Elem
   );
 }
 
-export function ScriptViewer({ script, project, open, onOpenChange }: ScriptViewerProps) {
+export function ScriptViewer({ script, project, open, onOpenChange, strategicContextId, audience, tone }: ScriptViewerProps) {
+  const [hookGenOpen, setHookGenOpen] = useState(false);
+
   if (!script) return null;
 
   const parsed = parseScriptText(script.script || "");
@@ -227,9 +235,15 @@ export function ScriptViewer({ script, project, open, onOpenChange }: ScriptView
             {/* Hook */}
             {parsed.hook && (
               <SectionCard icon={Zap} title="Gancho (Primeiros Segundos)" accent>
-                <blockquote className="text-base font-medium text-foreground italic border-l-2 border-primary/40 pl-4">
+                <blockquote className="text-base font-medium text-foreground italic border-l-2 border-primary/40 pl-4 mb-3">
                   "{parsed.hook}"
                 </blockquote>
+                {strategicContextId && (
+                  <Button variant="outline" size="sm" onClick={() => setHookGenOpen(true)}>
+                    <Zap className="h-3.5 w-3.5 mr-1.5" />
+                    Gerar Ganchos
+                  </Button>
+                )}
               </SectionCard>
             )}
 
@@ -304,6 +318,18 @@ export function ScriptViewer({ script, project, open, onOpenChange }: ScriptView
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {strategicContextId && (
+        <HookGenerator
+          open={hookGenOpen}
+          onOpenChange={setHookGenOpen}
+          topic={script.title || ""}
+          contextId={strategicContextId}
+          audience={audience}
+          tone={tone}
+          platform={project?.platform || undefined}
+        />
+      )}
     </Dialog>
   );
 }

@@ -775,7 +775,6 @@ const CRM = () => {
           open={!!viewingScript}
           onOpenChange={(open) => {
             if (!open) {
-              // Mark script as selected in content memory (preference learning)
               if (viewingScript?.id && strategicContext?.id) {
                 supabase.from("client_content_memory")
                   .update({ was_selected: true } as any)
@@ -786,6 +785,9 @@ const CRM = () => {
               setViewingProject(null);
             }
           }}
+          strategicContextId={strategicContext?.id}
+          audience={strategicContext?.target_audience || undefined}
+          tone={strategicContext?.tone_of_voice || strategicContext?.communication_style || undefined}
         />
 
         {/* Hidden PDF print container */}

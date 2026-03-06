@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.generate-ideas]
 verify_jwt = false
+
+[functions.generate-hooks]
+verify_jwt = false
