@@ -66,6 +66,8 @@ interface ClientListViewProps {
   handleCreateClient: () => void;
   toast: (opts: any) => void;
   onQuickAction?: (group: ClientGroup, action: "context" | "projects" | "ideas") => void;
+  maxVideos?: number;
+  onVideoLimitExceeded?: () => void;
 }
 
 export function ClientListView({
