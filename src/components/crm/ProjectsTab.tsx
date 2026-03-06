@@ -57,6 +57,8 @@ interface ProjectsTabProps {
   setNewProjectLink: (v: string | null) => void;
   handleCreateProject: () => void;
   toast: (opts: any) => void;
+  maxVideos?: number;
+  onVideoLimitExceeded?: () => void;
 }
 
 function StrategicCard({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) {
@@ -79,6 +81,7 @@ export function ProjectsTab({
   deleteItem, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   newProjectLink, setNewProjectLink, handleCreateProject, toast,
+  maxVideos, onVideoLimitExceeded,
 }: ProjectsTabProps) {
   return (
     <div className="space-y-4">
@@ -103,7 +106,14 @@ export function ProjectsTab({
                 <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
                 <div>
                   <Label>Quantidade de Vídeos</Label>
-                  <Select value={newProjectForm.video_quantity} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, video_quantity: v })}>
+                  <Select value={newProjectForm.video_quantity} onValueChange={(v) => {
+                    if (maxVideos && parseInt(v) > maxVideos) {
+                      setNewProjectForm({ ...newProjectForm, video_quantity: String(maxVideos) });
+                      onVideoLimitExceeded?.();
+                      return;
+                    }
+                    setNewProjectForm({ ...newProjectForm, video_quantity: v });
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}

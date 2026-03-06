@@ -10,7 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, AlertTriangle } from "lucide-react";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import { useNavigate } from "react-router-dom";
 import { ScriptViewer } from "@/components/ScriptViewer";
 import { ClientListView } from "@/components/crm/ClientListView";
@@ -104,6 +105,9 @@ const CRM = () => {
   const [editBriefingForm, setEditBriefingForm] = useState({ goal: "", target_audience: "", content_style: "" });
   const [editingScript, setEditingScript] = useState<Script | null>(null);
   const [editScriptForm, setEditScriptForm] = useState({ title: "", script: "" });
+
+  // Plan limit modal
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
   // PDF state
   const [pdfData, setPdfData] = useState<{ client: BriefingRequest; briefing?: Briefing; scripts: Script[] } | null>(null);
@@ -750,6 +754,8 @@ const CRM = () => {
                 setNewProjectLink={setNewProjectLink}
                 handleCreateProject={handleCreateProject}
                 toast={toast}
+                maxVideos={limits.scriptsPerBriefing}
+                onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
               />
             ),
             ideasTab: (
@@ -956,7 +962,32 @@ const CRM = () => {
         handleCreateClient={handleCreateClient}
         toast={toast}
         onQuickAction={handleQuickAction}
+        maxVideos={limits.scriptsPerBriefing}
+        onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
       />
+
+      {/* Plan Limit Modal */}
+      <Dialog open={planLimitModalOpen} onOpenChange={setPlanLimitModalOpen}>
+        <DialogContent className="max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="rounded-full bg-destructive/10 p-3">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <DialogHeader className="items-center">
+              <DialogTitle className="text-xl">Limite do plano atingido</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Seu plano Start permite até {limits.scriptsPerBriefing} roteiros por briefing. Para criar mais vídeos e roteiros, faça upgrade para o plano Creator Pro.
+            </p>
+            <RainbowButton
+              onClick={() => { setPlanLimitModalOpen(false); navigate("/checkout/creator_pro"); }}
+              className="mt-2 text-base px-10 py-3"
+            >
+              Assinar Agora
+            </RainbowButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

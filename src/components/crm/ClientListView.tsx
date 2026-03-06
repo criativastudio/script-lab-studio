@@ -66,6 +66,8 @@ interface ClientListViewProps {
   handleCreateClient: () => void;
   toast: (opts: any) => void;
   onQuickAction?: (group: ClientGroup, action: "context" | "projects" | "ideas") => void;
+  maxVideos?: number;
+  onVideoLimitExceeded?: () => void;
 }
 
 export function ClientListView({
@@ -75,6 +77,7 @@ export function ClientListView({
   hasActiveFilters, isGroupInactive, setSelectedBusinessName,
   briefingOpen, setBriefingOpen, briefingForm, setBriefingFormState,
   generatedLink, setGeneratedLink, handleCreateClient, toast, onQuickAction,
+  maxVideos, onVideoLimitExceeded,
 }: ClientListViewProps) {
   return (
     <div className="space-y-6">
@@ -109,7 +112,14 @@ export function ClientListView({
                 <div><Label>Nome do Projeto *</Label><Input value={briefingForm.project_name} onChange={(e) => setBriefingFormState({ ...briefingForm, project_name: e.target.value })} /></div>
                 <div>
                   <Label>Quantidade de Vídeos</Label>
-                  <Select value={briefingForm.video_quantity} onValueChange={(v) => setBriefingFormState({ ...briefingForm, video_quantity: v })}>
+                  <Select value={briefingForm.video_quantity} onValueChange={(v) => {
+                    if (maxVideos && parseInt(v) > maxVideos) {
+                      setBriefingFormState({ ...briefingForm, video_quantity: String(maxVideos) });
+                      onVideoLimitExceeded?.();
+                      return;
+                    }
+                    setBriefingFormState({ ...briefingForm, video_quantity: v });
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}

@@ -1,39 +1,18 @@
 
 
-# Fix START Plan Video Limit with Modal Blocking
+# Redirect to Login After Signup
 
 ## Problem
-Both the "Add Client" and "New Project" forms allow selecting video quantities (1, 3, 5, 10, 15) without enforcing the plan limit. START plan users can select 10 or 15 videos and proceed.
+After creating an account, the user stays on the signup form. They should be switched to the login view while the toast confirmation message appears in the bottom-right corner.
 
-## Solution
+## Change
 
-### 1. Add Plan Limit Modal State (`src/pages/CRM.tsx`)
-- Add `planLimitModalOpen` state boolean
-- When video quantity selection exceeds `limits.scriptsPerBriefing` (3 for START), revert to max allowed and open the modal
-- Pass `limits.scriptsPerBriefing` and limit handler to `ClientListView` and `ProjectsTab`
+**File: `src/pages/Auth.tsx`**
 
-### 2. Intercept Video Quantity Selection (`src/components/crm/ClientListView.tsx`)
-- Wrap the `onValueChange` of the video quantity `Select` to check if `parseInt(v) > maxVideos`
-- If exceeded: revert to `String(maxVideos)` and trigger the limit modal callback
+After successful signup (line 37), add:
+- `setIsSignUp(false)` to switch the form back to login mode
+- Clear the form fields (`setEmail("")`, `setPassword("")`, `setFullName("")`)
+- The toast already appears in the bottom-right (default Toaster position), so no change needed there
 
-### 3. Intercept Video Quantity Selection (`src/components/crm/ProjectsTab.tsx`)
-- Same logic for the "New Project" dialog's video quantity selector
-
-### 4. Plan Limit Modal (`src/pages/CRM.tsx`)
-- Render a centered `Dialog` with:
-  - Title: "Limite do plano atingido"
-  - Message: "Seu plano Start permite até 3 roteiros por briefing. Para criar mais vídeos e roteiros, faça upgrade para o plano Creator Pro."
-  - "Assinar Agora" button styled with the `RainbowButton` component (same as landing page CTAs)
-  - Button redirects to `/checkout/creator_pro`
-
-### 5. Also validate in `handleCreateClient` and `handleCreateProject`
-- Before inserting, clamp `video_quantity` to `limits.scriptsPerBriefing` as a safety net
-
-## Files Modified
-
-| File | Change |
-|---|---|
-| `src/pages/CRM.tsx` | Add modal state, render limit dialog with RainbowButton, pass maxVideos prop, clamp on submit |
-| `src/components/crm/ClientListView.tsx` | Accept `maxVideos` + `onVideoLimitExceeded` props, intercept select |
-| `src/components/crm/ProjectsTab.tsx` | Accept `maxVideos` + `onVideoLimitExceeded` props, intercept select |
+This is a 3-line addition inside the existing `if (isSignUp)` success block. No other files need changes.
 
