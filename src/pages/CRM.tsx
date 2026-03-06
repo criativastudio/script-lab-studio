@@ -788,6 +788,7 @@ const CRM = () => {
           strategicContextId={strategicContext?.id}
           audience={strategicContext?.target_audience || undefined}
           tone={strategicContext?.tone_of_voice || strategicContext?.communication_style || undefined}
+          platform={viewingProject ? undefined : strategicContext?.main_platforms?.[0] || undefined}
         />
 
         {/* Hidden PDF print container */}

@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-hooks]
 verify_jwt = false
+
+[functions.score-script]
+verify_jwt = false
