@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,13 +33,9 @@ function buildMemoryBlocks(memoryEntries: any[]): string {
   const topics = memoryEntries.map(m => m.topic).filter(Boolean);
   const hooks = memoryEntries.map(m => m.hook).filter(Boolean);
   
-  // Category distribution
   const catCounts: Record<string, number> = {};
   const catSelected: Record<string, number> = {};
-  for (const cat of CONTENT_CATEGORIES) {
-    catCounts[cat] = 0;
-    catSelected[cat] = 0;
-  }
+  for (const cat of CONTENT_CATEGORIES) { catCounts[cat] = 0; catSelected[cat] = 0; }
   for (const m of memoryEntries) {
     if (m.content_category && catCounts[m.content_category] !== undefined) {
       catCounts[m.content_category]++;
@@ -47,16 +44,10 @@ function buildMemoryBlocks(memoryEntries: any[]): string {
   }
 
   const total = memoryEntries.length;
-  const catDistribution = CONTENT_CATEGORIES
-    .map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`)
-    .join("\n  ");
-
-  // Find under-represented categories
+  const catDistribution = CONTENT_CATEGORIES.map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`).join("\n  ");
   const avgCount = total / CONTENT_CATEGORIES.length;
   const underRepresented = CONTENT_CATEGORIES.filter(c => catCounts[c] < avgCount * 0.5);
-  const preferred = CONTENT_CATEGORIES
-    .filter(c => catSelected[c] > 0)
-    .sort((a, b) => catSelected[b] - catSelected[a]);
+  const preferred = CONTENT_CATEGORIES.filter(c => catSelected[c] > 0).sort((a, b) => catSelected[b] - catSelected[a]);
 
   let block = `
 MEMÓRIA DE CONTEÚDO DO CLIENTE (${total} entradas anteriores):
@@ -70,13 +61,8 @@ GANCHOS JÁ USADOS (evolua e melhore, NÃO repita):
 DISTRIBUIÇÃO DE CATEGORIAS:
   ${catDistribution}`;
 
-  if (preferred.length > 0) {
-    block += `\n\nPREFERÊNCIA DO CLIENTE (priorize estes estilos): ${preferred.join(", ")}`;
-  }
-  if (underRepresented.length > 0) {
-    block += `\n\nCATEGORIAS SUB-REPRESENTADAS (considere usar): ${underRepresented.join(", ")}`;
-  }
-
+  if (preferred.length > 0) block += `\n\nPREFERÊNCIA DO CLIENTE (priorize estes estilos): ${preferred.join(", ")}`;
+  if (underRepresented.length > 0) block += `\n\nCATEGORIAS SUB-REPRESENTADAS (considere usar): ${underRepresented.join(", ")}`;
   block += `\n\nVocê DEVE criar um ângulo completamente novo e diferente dos listados acima. Evolua os ganchos para versões mais impactantes.`;
 
   return block;
@@ -98,6 +84,12 @@ serve(async (req) => {
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+      // Usage guards
+      if (user_id) {
+        const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+        if (guardResponse) return guardResponse;
+      }
+
       // Layer 1: Strategic Context
       const { data: ctx } = await supabase
         .from("client_strategic_contexts")
@@ -118,6 +110,17 @@ serve(async (req) => {
         }
       }
 
+      // Cache check
+      const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration }));
+      const cached = await checkCache(supabase, pHash);
+      if (cached) {
+        if (user_id) await logUsage(supabase, user_id, "generate-script", "script", 0, pHash);
+        if (idea_id) await supabase.from("content_ideas").update({ status: "used" }).eq("id", idea_id);
+        return new Response(JSON.stringify(cached), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Layer 2: Project Context
       let projectBlock = "";
       if (resolvedProjectId) {
@@ -134,7 +137,7 @@ Contexto do Projeto (Layer 2 — Campanha):
         }
       }
 
-      // Content Memory: query client_content_memory for rich history
+      // Content Memory
       let memoryBlock = "";
       if (ctx?.id) {
         const { data: memoryEntries } = await supabase
@@ -146,7 +149,6 @@ Contexto do Projeto (Layer 2 — Campanha):
         memoryBlock = buildMemoryBlocks(memoryEntries || []);
       }
 
-      // Fallback: if no memory entries yet, use scripts table
       if (!memoryBlock && ctx?.user_id) {
         const { data: prevScripts } = await supabase
           .from("scripts")
@@ -164,7 +166,6 @@ Você DEVE criar um ângulo completamente novo e diferente dos listados acima.`;
         }
       }
 
-      // Tone adaptation
       const toneInstructions = getToneInstructions(ctx?.communication_style);
 
       const contextBlock = ctx ? `
@@ -223,30 +224,12 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
             parameters: {
               type: "object",
               properties: {
-                hook: {
-                  type: "string",
-                  description: "O gancho de abertura escolhido (melhor dos 3 gerados). Deve parar o scroll em 3 segundos.",
-                },
-                strategic_briefing: {
-                  type: "string",
-                  description: "Briefing estratégico: objetivo do vídeo, mensagem central, posição no funil.",
-                },
-                video_structure: {
-                  type: "string",
-                  description: "Estrutura do vídeo com indicações de cena [CENA: descrição] e tempos.",
-                },
-                speaking_script: {
-                  type: "string",
-                  description: "Roteiro de fala completo, palavra por palavra, pronto para gravação.",
-                },
-                cta: {
-                  type: "string",
-                  description: "Chamada para ação alinhada com a etapa do funil.",
-                },
-                recording_style: {
-                  type: "string",
-                  description: "Sugestão de estilo de gravação: enquadramento, cenário, edição, ritmo.",
-                },
+                hook: { type: "string", description: "O gancho de abertura escolhido (melhor dos 3 gerados). Deve parar o scroll em 3 segundos." },
+                strategic_briefing: { type: "string", description: "Briefing estratégico: objetivo do vídeo, mensagem central, posição no funil." },
+                video_structure: { type: "string", description: "Estrutura do vídeo com indicações de cena [CENA: descrição] e tempos." },
+                speaking_script: { type: "string", description: "Roteiro de fala completo, palavra por palavra, pronto para gravação." },
+                cta: { type: "string", description: "Chamada para ação alinhada com a etapa do funil." },
+                recording_style: { type: "string", description: "Sugestão de estilo de gravação: enquadramento, cenário, edição, ritmo." },
                 content_category: {
                   type: "string",
                   enum: ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"],
@@ -268,6 +251,7 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
         },
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
+          max_tokens: 2200,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -298,7 +282,6 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
 
       const data = await response.json();
       
-      // Try structured tool call output first
       let scriptContent = "";
       let structured: Record<string, string> | null = null;
       
@@ -309,7 +292,6 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
             ? JSON.parse(toolCall.function.arguments) 
             : toolCall.function.arguments;
           structured = args;
-          // Build formatted script from structured sections
           scriptContent = `## GANCHO (HOOK)
 ${args.hook}
 
@@ -332,7 +314,6 @@ ${args.recording_style}`;
         }
       }
       
-      // Fallback to regular content
       if (!scriptContent) {
         scriptContent = data.choices?.[0]?.message?.content || "";
       }
@@ -360,11 +341,16 @@ ${args.recording_style}`;
         }
       }
 
-      return new Response(JSON.stringify({ 
-        script: scriptContent, 
-        title: ideaText,
-        structured,
-      }), {
+      const responseData = { script: scriptContent, title: ideaText, structured };
+
+      // Log usage and cache
+      if (user_id) {
+        const tokens = estimateTokens(scriptContent);
+        await logUsage(supabase, user_id, "generate-script", "script", tokens, pHash);
+      }
+      await saveCache(supabase, pHash, "generate-script", responseData);
+
+      return new Response(JSON.stringify(responseData), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -375,6 +361,21 @@ ${args.recording_style}`;
         JSON.stringify({ error: "Campos obrigatórios: briefing, target_audience, platform, video_duration" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Input validation
+    const inputErr = validateInputLength({ briefing, target_audience, platform }, 2000);
+    if (inputErr) {
+      return new Response(JSON.stringify({ error: inputErr }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Usage guards for legacy mode
+    if (user_id) {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+      if (guardResponse) return guardResponse;
     }
 
     const systemPrompt = `Você é um roteirista profissional especializado em vídeos de marketing para redes sociais.
@@ -408,6 +409,7 @@ Gere o roteiro completo e otimizado.`;
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        max_tokens: 2200,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -435,6 +437,15 @@ Gere o roteiro completo e otimizado.`;
 
     const data = await response.json();
     const scriptContent = data.choices?.[0]?.message?.content || "";
+
+    // Log usage for legacy mode
+    if (user_id) {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const tokens = estimateTokens(scriptContent);
+      const pHash = await hashPrompt(JSON.stringify({ briefing, target_audience, platform, video_duration }));
+      await logUsage(supabase, user_id, "generate-script", "script", tokens, pHash);
+      await saveCache(supabase, pHash, "generate-script", { script: scriptContent });
+    }
 
     return new Response(JSON.stringify({ script: scriptContent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

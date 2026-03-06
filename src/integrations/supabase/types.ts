@@ -391,6 +391,33 @@ export type Database = {
           },
         ]
       }
+      generation_cache: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          function_name: string
+          id: string
+          prompt_hash: string
+          response_data: Json
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          function_name: string
+          id?: string
+          prompt_hash: string
+          response_data: Json
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          function_name?: string
+          id?: string
+          prompt_hash?: string
+          response_data?: Json
+        }
+        Relationships: []
+      }
       ideas: {
         Row: {
           created_at: string | null
@@ -721,6 +748,36 @@ export type Database = {
           plan?: string | null
           status?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      usage_logs: {
+        Row: {
+          created_at: string | null
+          function_name: string
+          generation_type: string
+          id: string
+          prompt_hash: string | null
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          function_name: string
+          generation_type: string
+          id?: string
+          prompt_hash?: string | null
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          function_name?: string
+          generation_type?: string
+          id?: string
+          prompt_hash?: string | null
+          tokens_used?: number | null
+          user_id?: string
         }
         Relationships: []
       }

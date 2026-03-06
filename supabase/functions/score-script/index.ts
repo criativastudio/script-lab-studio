@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,9 +11,17 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { script_text, context_id, platform } = await req.json();
+    const { script_text, context_id, platform, user_id } = await req.json();
     if (!script_text) {
       return new Response(JSON.stringify({ error: "script_text is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Input validation
+    const inputErr = validateInputLength({ script_text }, 2000, ["script_text"], 4000);
+    if (inputErr) {
+      return new Response(JSON.stringify({ error: inputErr }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -20,12 +29,28 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Usage guards
+    if (user_id) {
+      const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+      if (guardResponse) return guardResponse;
+
+      const pHash = await hashPrompt(script_text + (context_id || "") + (platform || ""));
+      const cached = await checkCache(supabase, pHash);
+      if (cached) {
+        await logUsage(supabase, user_id, "score-script", "script", 0, pHash);
+        return new Response(JSON.stringify({ success: true, ...cached }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let contextBlock = "";
     if (context_id) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
       const { data: ctx } = await supabase
         .from("client_strategic_contexts")
         .select("*")
@@ -73,6 +98,7 @@ Seja criterioso mas justo. Roteiros excelentes ficam entre 75-90. Apenas roteiro
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        max_tokens: 1500,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -135,6 +161,14 @@ Seja criterioso mas justo. Roteiros excelentes ficam entre 75-90. Apenas roteiro
     const args = typeof toolCall.function.arguments === "string"
       ? JSON.parse(toolCall.function.arguments)
       : toolCall.function.arguments;
+
+    // Log usage and cache
+    if (user_id) {
+      const pHash = await hashPrompt(script_text + (context_id || "") + (platform || ""));
+      const tokens = estimateTokens(JSON.stringify(args));
+      await logUsage(supabase, user_id, "score-script", "script", tokens, pHash);
+      await saveCache(supabase, pHash, "score-script", args);
+    }
 
     return new Response(JSON.stringify({ success: true, ...args }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
