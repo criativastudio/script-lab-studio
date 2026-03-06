@@ -127,14 +127,25 @@ const ClientBriefingForm = () => {
   const currentQ = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
-  const fetchAISuggestions = async (businessContext: string) => {
+  const fetchAISuggestions = async (currentStep: number) => {
+    const businessContext = answers.business_context?.trim();
+    if (!businessContext) return;
+    
     setLoadingSuggestions(true);
     try {
       const { data, error } = await supabase.functions.invoke("suggest-briefing", {
-        body: { business_context: businessContext },
+        body: {
+          business_context: businessContext,
+          previous_answers: answers,
+          current_step: currentStep,
+        },
       });
       if (!error && data && !data.error) {
-        setAiSuggestions(data as AISuggestions);
+        setAiSuggestions((prev) => ({
+          audience_chips: data.audience_chips || prev?.audience_chips || [],
+          outcome_chips: data.outcome_chips || prev?.outcome_chips || [],
+          voice_chips: data.voice_chips || prev?.voice_chips || [],
+        }));
       }
     } catch (e) {
       console.error("Failed to fetch AI suggestions:", e);
@@ -144,10 +155,11 @@ const ClientBriefingForm = () => {
   };
 
   const handleNext = () => {
-    if (step === 0 && !aiSuggestions && answers.business_context?.trim()) {
-      fetchAISuggestions(answers.business_context);
+    const nextStep = step + 1;
+    if (answers.business_context?.trim() && nextStep < questions.length) {
+      fetchAISuggestions(step);
     }
-    setStep(step + 1);
+    setStep(nextStep);
   };
 
   const handleChipClick = (chip: string) => {
