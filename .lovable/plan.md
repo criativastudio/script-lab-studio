@@ -1,50 +1,49 @@
 
 
-# Dedicated Hook Generator
+# Viral Score System
 
 ## Overview
 
-Create a new edge function `generate-hooks` and a UI component (dialog) accessible from the ScriptViewer and ContentIdeasTab that generates 10 hook variations using different psychological triggers, with the client's strategic context injected.
+Create a new edge function `score-script` that uses AI to analyze a script and return a structured viral score (0-100) with 7 criteria breakdowns, strengths, and improvements. Display the score in the ScriptViewer with a color-coded progress bar and action buttons.
 
 ## Changes
 
-### 1. New Edge Function: `supabase/functions/generate-hooks/index.ts`
+### 1. New Edge Function: `supabase/functions/score-script/index.ts`
 
-- Accepts: `context_id`, `topic`, `platform`, `audience`, `tone`, `content_type`
-- Loads strategic context from `client_strategic_contexts` (Layer 1)
-- Queries `client_content_memory` for previous hooks to avoid repetition
-- Uses structured tool-calling to return an array of 10 hooks, each with: `hook` (text), `trigger_type` (one of: curiosity, controversial, authority, problem, fear, statistic, myth_breaking, question, story, bold_statement), `why_it_works` (explanation)
-- Uses `google/gemini-3-flash-preview` via Lovable AI Gateway
+- Accepts: `script_text`, `context_id` (optional), `platform` (optional)
+- Loads strategic context if `context_id` provided (for audience relevance and platform optimization scoring)
+- Uses structured tool-calling to return:
+  - `total_score` (0-100)
+  - `criteria`: object with 7 scores: `hook_strength` (0-20), `message_clarity` (0-15), `audience_relevance` (0-15), `storytelling_structure` (0-15), `emotional_trigger` (0-15), `cta_strength` (0-10), `platform_optimization` (0-10)
+  - `strengths`: string[] (2-4 items)
+  - `improvements`: string[] (2-4 items)
+- Model: `google/gemini-3-flash-preview`
 
 ### 2. Register in `supabase/config.toml`
 
-Add `[functions.generate-hooks]` with `verify_jwt = false`.
+Add `[functions.score-script]` with `verify_jwt = false`.
 
-### 3. New UI Component: `src/components/crm/HookGenerator.tsx`
+### 3. Update `src/components/ScriptViewer.tsx`
 
-A dialog component with:
-- **Inputs**: Topic (pre-filled from idea/script title), Platform select, Content type select. Audience and tone auto-loaded from strategic context.
-- **Generate button** → calls the edge function
-- **Results**: Grid/list of 10 hook cards, each showing hook text, trigger type badge, and "why it works" explanation
-- **"Generate New Hooks" button** to regenerate without closing
-- **Copy button** on each hook card
+Add a **Viral Score** section card below the header card:
+- "Analisar Score" button triggers the edge function call
+- Once scored, display:
+  - Total score with color-coded Progress bar (green >= 70, yellow >= 40, red < 40)
+  - 7 criteria bars with individual scores
+  - Strengths as green badges
+  - Improvements as yellow badges
+- Action buttons: "Melhorar Roteiro", "Regenerar Gancho", "Otimizar para Plataforma" (these open the HookGenerator or are placeholders for future features)
 
-### 4. Integration Points
+### 4. Update `src/pages/CRM.tsx`
 
-**`src/components/ScriptViewer.tsx`**: Add a "Gerar Ganchos" button in the hook section that opens the HookGenerator dialog, pre-filled with the script's topic.
-
-**`src/components/crm/ContentIdeasTab.tsx`**: Add a "Ganchos" action button on each idea card that opens HookGenerator pre-filled with the idea title.
-
-**`src/pages/CRM.tsx`**: Pass `strategicContext` down to components that need it for the hook generator.
+Pass `context_id` and `platform` to ScriptViewer so the score function can use strategic context.
 
 ## Files
 
 | File | Change |
 |---|---|
-| `supabase/functions/generate-hooks/index.ts` | New edge function |
+| `supabase/functions/score-script/index.ts` | New edge function |
 | `supabase/config.toml` | Register new function |
-| `src/components/crm/HookGenerator.tsx` | New dialog component |
-| `src/components/ScriptViewer.tsx` | Add "Gerar Ganchos" button |
-| `src/components/crm/ContentIdeasTab.tsx` | Add hook generator trigger per idea |
-| `src/pages/CRM.tsx` | Pass strategicContext to child components |
+| `src/components/ScriptViewer.tsx` | Add viral score UI with progress bars, strengths/improvements, action buttons |
+| `src/pages/CRM.tsx` | Pass context_id to ScriptViewer (already passes strategicContextId — verify it flows correctly) |
 
