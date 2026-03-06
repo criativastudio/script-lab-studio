@@ -754,6 +754,8 @@ const CRM = () => {
                 setNewProjectLink={setNewProjectLink}
                 handleCreateProject={handleCreateProject}
                 toast={toast}
+                maxVideos={limits.scriptsPerBriefing}
+                onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
               />
             ),
             ideasTab: (
