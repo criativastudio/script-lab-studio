@@ -515,11 +515,18 @@ const CRM = () => {
       toast({ title: "Preencha o contexto estratégico primeiro", variant: "destructive" });
       return;
     }
+
+    // Cap ideas to plan limit
+    const cappedCount = Math.min(count, limits.ideasPerBriefing);
+    if (cappedCount < count) {
+      toast({ title: "Limite de ideias", description: `Seu plano permite até ${limits.ideasPerBriefing} ideias por briefing.` });
+    }
+
     setGeneratingIdeas(true);
     try {
       const projectId = ideasProjectFilter !== "all" ? ideasProjectFilter : undefined;
       const { data, error } = await supabase.functions.invoke("generate-ideas", {
-        body: { context_id: strategicContext.id, project_id: projectId, count, user_id: user.id },
+        body: { context_id: strategicContext.id, project_id: projectId, count: cappedCount, user_id: user.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
