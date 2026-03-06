@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Sparkles, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ScriptViewer } from "@/components/ScriptViewer";
 import { ClientListView } from "@/components/crm/ClientListView";
 import { ClientDetailView } from "@/components/crm/ClientDetailView";
@@ -54,6 +56,8 @@ const briefingStatusLabels: Record<string, string> = { pending: "Pendente", subm
 const CRM = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { limits, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount } = usePlanLimits();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
@@ -258,8 +262,38 @@ const CRM = () => {
   };
 
   // ── Handlers ──────────────────────────────────────────────
+  const showUpgradeToast = (message: string) => {
+    toast({
+      title: "Limite do plano atingido",
+      description: message,
+      action: (
+        <Button size="sm" variant="default" onClick={() => navigate("/checkout/creator_pro")}>
+          Upgrade agora
+        </Button>
+      ),
+    });
+  };
+
   const handleCreateClient = async () => {
     if (!user || !briefingForm.business_name || !briefingForm.project_name) return;
+
+    // Check client limit
+    const clientCount = await getClientCount();
+    const isNewClient = !clientGroups.some(
+      g => g.business_name.trim().toLowerCase() === briefingForm.business_name.trim().toLowerCase()
+    );
+    if (isNewClient && clientCount >= limits.clients) {
+      showUpgradeToast("Você atingiu o limite de clientes do seu plano.");
+      return;
+    }
+
+    // Check monthly briefing limit
+    const briefingCount = await getMonthlyBriefingCount();
+    if (briefingCount >= limits.briefings) {
+      showUpgradeToast("Você atingiu o limite mensal de briefings do seu plano.");
+      return;
+    }
+
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: briefingForm.business_name,
       contact_name: briefingForm.contact_name || null, contact_email: briefingForm.contact_email || null,
@@ -276,6 +310,14 @@ const CRM = () => {
 
   const handleCreateProject = async () => {
     if (!user || !selectedGroup || !newProjectForm.project_name) return;
+
+    // Check monthly briefing limit
+    const briefingCount = await getMonthlyBriefingCount();
+    if (briefingCount >= limits.briefings) {
+      showUpgradeToast("Você atingiu o limite mensal de briefings do seu plano.");
+      return;
+    }
+
     const first = selectedGroup.projects[0];
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: first.business_name,
@@ -316,6 +358,14 @@ const CRM = () => {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
     }
+
+    // Check monthly script limit
+    const monthlyScripts = await getMonthlyScriptCount();
+    if (monthlyScripts >= limits.scriptsPerMonth) {
+      showUpgradeToast("Você atingiu o limite mensal de geração de roteiros.");
+      return;
+    }
+
     setManualGenerating(true);
     try {
       const { data: fnData, error: fnError } = await supabase.functions.invoke("manual-generate", {
@@ -343,9 +393,15 @@ const CRM = () => {
         goal: fnData.goal, target_audience: fnData.target_audience, content_style: fnData.content_style,
       });
       if (fnData.scripts?.length) {
+        // Cap scripts to plan limit
+        const remainingScripts = limits.scriptsPerMonth - monthlyScripts;
+        const cappedScripts = fnData.scripts.slice(0, Math.min(fnData.scripts.length, limits.scriptsPerBriefing, remainingScripts));
         await supabase.from("scripts").insert(
-          fnData.scripts.map((s: any) => ({ user_id: user.id, project_id: projectId, title: s.title, script: s.script }))
+          cappedScripts.map((s: any) => ({ user_id: user.id, project_id: projectId, title: s.title, script: s.script }))
         );
+        if (cappedScripts.length < fnData.scripts.length) {
+          toast({ title: "Limite de roteiros", description: `Apenas ${cappedScripts.length} roteiro(s) foram gerados devido ao limite do seu plano.` });
+        }
       }
       setManualCreateProjectId(null);
       setManualForm({ objective: "", target_audience: "", platform: "", hook: "", duration: "30s", notes: "" });
@@ -473,11 +529,18 @@ const CRM = () => {
       toast({ title: "Preencha o contexto estratégico primeiro", variant: "destructive" });
       return;
     }
+
+    // Cap ideas to plan limit
+    const cappedCount = Math.min(count, limits.ideasPerBriefing);
+    if (cappedCount < count) {
+      toast({ title: "Limite de ideias", description: `Seu plano permite até ${limits.ideasPerBriefing} ideias por briefing.` });
+    }
+
     setGeneratingIdeas(true);
     try {
       const projectId = ideasProjectFilter !== "all" ? ideasProjectFilter : undefined;
       const { data, error } = await supabase.functions.invoke("generate-ideas", {
-        body: { context_id: strategicContext.id, project_id: projectId, count, user_id: user.id },
+        body: { context_id: strategicContext.id, project_id: projectId, count: cappedCount, user_id: user.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -527,9 +590,21 @@ const CRM = () => {
 
   const handleGenerateScriptsFromIdeas = async () => {
     if (!user || selectedIdeas.size === 0 || !strategicContext?.id) return;
+
+    // Check monthly script limit
+    const monthlyScripts = await getMonthlyScriptCount();
+    if (monthlyScripts >= limits.scriptsPerMonth) {
+      showUpgradeToast("Você atingiu o limite mensal de geração de roteiros.");
+      return;
+    }
+
+    // Cap to per-briefing and remaining monthly limits
+    const remainingMonthly = limits.scriptsPerMonth - monthlyScripts;
+    const maxScripts = Math.min(selectedIdeas.size, limits.scriptsPerBriefing, remainingMonthly);
+
     setGeneratingScriptsFromIdeas(true);
     try {
-      const ideas = contentIdeas.filter(i => selectedIdeas.has(i.id));
+      const ideas = contentIdeas.filter(i => selectedIdeas.has(i.id)).slice(0, maxScripts);
       let successCount = 0;
       for (const idea of ideas) {
         const ideaProjectId = idea.project_id || selectedGroup?.projects.find(p => p.project_id)?.project_id;
@@ -557,7 +632,6 @@ const CRM = () => {
             script: data.script,
           }).select("id").single();
 
-          // Update memory entry with script_id if it was created by the edge function
           if (scriptData?.id && strategicContext?.id) {
             await supabase.from("client_content_memory")
               .update({ script_id: scriptData.id } as any)
@@ -575,7 +649,13 @@ const CRM = () => {
           if (openProjects.has(p.id)) fetchProjectDetails(p);
         }
       }
-      toast({ title: `${successCount} roteiro(s) gerado(s) com sucesso!` });
+
+      const wasLimited = selectedIdeas.size > maxScripts;
+      if (wasLimited) {
+        toast({ title: `${successCount} roteiro(s) gerado(s)`, description: `Apenas ${maxScripts} de ${selectedIdeas.size} foram gerados devido ao limite do seu plano.` });
+      } else {
+        toast({ title: `${successCount} roteiro(s) gerado(s) com sucesso!` });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao gerar roteiros", description: err.message, variant: "destructive" });
     } finally {
