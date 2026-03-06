@@ -245,7 +245,7 @@ export default function LandingPage() {
         <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(var(--hero-pink)/0.08)] -bottom-20 right-0" />
 
-        <div className="relative z-10" style={{ perspective: "1600px", transformStyle: "preserve-3d" as const }}>
+        <div className="relative z-10">
           <ContainerScroll
             titleComponent={
               <motion.div
