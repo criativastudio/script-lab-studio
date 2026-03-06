@@ -1,109 +1,94 @@
 
 
-# Usage Limits & Abuse Protection
+# Checkout Transparente com Asaas
 
 ## Overview
 
-Add backend-only usage tracking, rate limiting, caching, and token budgets to all AI generation edge functions. No UI changes. Uses two new DB tables and a shared helper module.
+Create a transparent checkout page integrated with Asaas payment gateway for credit card subscriptions. Update plan limits to match new pricing. Add billing fields to the `users` table, create a `payments` table, and build two edge functions (`process-payment`, `check-payment-status`). The checkout page follows the landing page's visual identity.
+
+## Plan Limit Updates
+
+The usage-guard plan limits need updating to match the new plan tiers:
+
+| Plan | Briefings/mo | Scripts/briefing |
+|------|-------------|-----------------|
+| starter | 3 | 3 |
+| creator_pro | 25 | 10 |
+| scale_studio | unlimited (9999) | unlimited (9999) |
 
 ## Database Changes
 
-### New table: `usage_logs`
-Tracks every AI generation call per user for monthly/daily counting and token budget tracking.
+### 1. Alter `users` table -- add billing fields
+Add columns: `whatsapp`, `cpf`, `billing_name`, `cep`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `plano_ativo`, `data_expiracao`, `asaas_customer_id`, `status_assinatura`.
 
-```sql
-CREATE TABLE public.usage_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  function_name text NOT NULL,        -- 'process-briefing', 'generate-script', 'manual-generate', etc.
-  generation_type text NOT NULL,      -- 'briefing' or 'script'
-  tokens_used integer DEFAULT 0,
-  prompt_hash text,                   -- SHA-256 hash for cache lookups
-  created_at timestamptz DEFAULT now()
-);
-CREATE INDEX idx_usage_logs_user_month ON public.usage_logs (user_id, created_at);
-CREATE INDEX idx_usage_logs_prompt_hash ON public.usage_logs (prompt_hash);
-ALTER TABLE public.usage_logs ENABLE ROW LEVEL SECURITY;
--- Only service role writes; users can read own
-CREATE POLICY "Users can view own usage" ON public.usage_logs FOR SELECT USING (user_id = auth.uid() OR has_role(auth.uid(), 'admin'));
-```
+### 2. Create `payments` table
+Columns: `id`, `user_id`, `plan`, `amount`, `status`, `asaas_payment_id`, `asaas_subscription_id`, `paid_at`, `created_at`. RLS: users read own, service role writes.
 
-### New table: `generation_cache`
-Stores cached AI responses keyed by prompt hash.
+## Secrets Required
 
-```sql
-CREATE TABLE public.generation_cache (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_hash text UNIQUE NOT NULL,
-  function_name text NOT NULL,
-  response_data jsonb NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  expires_at timestamptz DEFAULT (now() + interval '7 days')
-);
-CREATE INDEX idx_cache_hash ON public.generation_cache (prompt_hash);
-ALTER TABLE public.generation_cache ENABLE ROW LEVEL SECURITY;
--- No public access; only service role reads/writes
-```
+- `ASAAS_API_KEY` -- Asaas API key
+- `ASAAS_BASE_URL` -- `https://sandbox.asaas.com/api/v3` (sandbox) or production URL
 
-## Plan Configuration (constant in edge functions)
+These must be added before the edge functions work.
 
-```typescript
-const PLAN_LIMITS = {
-  starter:      { briefings: 5,   scriptsPerBriefing: 4,  ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  basic:        { briefings: 5,   scriptsPerBriefing: 4,  ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  creator_pro:  { briefings: 60,  scriptsPerBriefing: 6,  ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  premium:      { briefings: 60,  scriptsPerBriefing: 6,  ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  scale_studio: { briefings: 250, scriptsPerBriefing: 10, ratePerMin: 10, dailyLimit: 400, monthlyTokens: 4000000 },
-};
-// Map existing plan names (basic/premium) to new tiers
-```
+## Edge Functions
 
-## Shared Helper: `supabase/functions/_shared/usage-guard.ts`
+### `process-payment` (verify_jwt = true)
+1. Validate JWT, extract userId, verify it matches request
+2. Sanitize CPF (digits only), card number (remove spaces)
+3. Create or find Asaas customer (`POST /customers`)
+4. For paid plans: create Asaas subscription (`POST /subscriptions`) with `billingType: CREDIT_CARD`, `cycle: MONTHLY`, card tokenization via `creditCard` + `creditCardHolderInfo` fields
+5. Save to `payments` table and update `users` billing fields + `subscriptions` table
+6. Rollback on failure (delete Asaas subscription if DB write fails)
+7. Never log full card numbers or CVV
 
-A shared module imported by all AI edge functions with these functions:
+### `check-payment-status` (verify_jwt = true)
+1. Validate JWT
+2. Query `payments` table for latest payment by user
+3. If has `asaas_subscription_id`, fetch status from Asaas (`GET /subscriptions/{id}`)
+4. Return mapped status: ACTIVE, PENDING, APPROVED, REJECTED
 
-1. **`getUserPlan(supabase, userId)`** -- queries `subscriptions` table, returns plan name (defaults to `starter`)
-2. **`checkRateLimit(supabase, userId, plan, functionName)`** -- counts `usage_logs` in last 60 seconds; rejects if over `ratePerMin`
-3. **`checkDailyLimit(supabase, userId, plan)`** -- counts today's logs; rejects if over `dailyLimit`
-4. **`checkMonthlyBriefings(supabase, userId, plan)`** -- counts this month's briefing-type logs; rejects if over `briefings` limit
-5. **`checkMonthlyTokenBudget(supabase, userId, plan)`** -- sums `tokens_used` this month; rejects if over `monthlyTokens`
-6. **`checkCache(supabase, promptHash)`** -- looks up `generation_cache` by hash; returns cached response or null
-7. **`saveCache(supabase, promptHash, functionName, responseData)`** -- inserts into `generation_cache`
-8. **`logUsage(supabase, userId, functionName, generationType, tokensUsed, promptHash)`** -- inserts into `usage_logs`
-9. **`hashPrompt(content)`** -- SHA-256 hash of prompt string
-10. **`validateInputLength(fields, maxLen)`** -- checks each field is under character limit
+## Frontend
 
-## Edge Function Changes
+### New page: `src/pages/Checkout.tsx`
+Route: `/checkout/:plan` (protected)
 
-### All AI functions (`process-briefing`, `generate-script`, `manual-generate`, `generate-ideas`, `generate-hooks`, `score-script`)
+Follows the landing page visual identity (dark theme, lavender/peach palette, Blauer Nue font, glass-card styling).
 
-Add at the top of each handler (after auth/setup, before AI call):
+**Form sections:**
+1. **Plan summary** -- shows selected plan name, price, features
+2. **Personal data** -- CPF (mask + Luhn-like digit validation), billing name
+3. **Address** -- CEP (mask, auto-fill via ViaCEP `https://viacep.com.br/ws/{cep}/json/`), logradouro, numero, complemento, bairro, cidade, estado
+4. **Card data** -- card holder name, card number (mask + Luhn validation), expiry MM/YY, CVV (3-4 digits)
 
-1. Import shared helper
-2. Resolve `userId` and `plan`
-3. Validate input lengths (2000 chars per field, 4000 for descriptions)
-4. Check rate limit → 429 if exceeded
-5. Check daily limit → 429 if exceeded  
-6. Check monthly briefings/scripts limit → 403 with user-friendly message
-7. Check monthly token budget → 403 with generic "limit reached" message
-8. Check cache → return cached result if found
-9. Add `max_tokens: 3700` to AI gateway request body (1500 for briefing-only, 2200 for script-only)
-10. After successful AI response: log usage with estimated tokens, save to cache
+**Behavior:**
+- Real-time field validation with error messages
+- Input masks for CPF (`999.999.999-99`), card (`9999 9999 9999 9999`), CEP (`99999-999`)
+- On submit: call `process-payment` edge function, show loading state
+- After success: poll `check-payment-status` every 2s for up to 60s
+- On confirmed: redirect to `/dashboard` with success toast
+- On error: show friendly error message, allow retry
 
-Error messages shown to users reference briefing/script limits only, never tokens.
+### Update `src/pages/LandingPage.tsx`
+Change plan button `onClick` to navigate to `/checkout/starter`, `/checkout/creator-pro`, `/checkout/scale-studio` (Starter goes to `/auth` for free signup).
+
+### Update `src/App.tsx`
+Add route: `<Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />`
+
+## Update Usage Guards
+
+Update `supabase/functions/_shared/usage-guard.ts` PLAN_LIMITS to match new plan values (3/3, 25/10, 9999/9999).
 
 ## Files
 
 | File | Change |
 |---|---|
-| Migration SQL | Create `usage_logs` and `generation_cache` tables |
-| `supabase/functions/_shared/usage-guard.ts` | New shared helper module |
-| `supabase/functions/process-briefing/index.ts` | Add guards, caching, token limits, usage logging |
-| `supabase/functions/generate-script/index.ts` | Add guards, caching, token limits, usage logging |
-| `supabase/functions/manual-generate/index.ts` | Add guards, caching, token limits, usage logging |
-| `supabase/functions/generate-ideas/index.ts` | Add guards, caching, token limits, usage logging |
-| `supabase/functions/generate-hooks/index.ts` | Add guards, caching, token limits, usage logging |
-| `supabase/functions/score-script/index.ts` | Add guards, caching, token limits, usage logging |
-
-No UI changes. No flow changes. Backend-only protection.
+| Migration SQL | Add billing columns to `users`, create `payments` table |
+| `supabase/functions/process-payment/index.ts` | New -- Asaas payment processing |
+| `supabase/functions/check-payment-status/index.ts` | New -- payment status polling |
+| `supabase/config.toml` | Register both new functions with `verify_jwt = true` |
+| `src/pages/Checkout.tsx` | New -- checkout page with form |
+| `src/App.tsx` | Add checkout route |
+| `src/pages/LandingPage.tsx` | Update plan button navigation |
+| `supabase/functions/_shared/usage-guard.ts` | Update plan limits |
 
