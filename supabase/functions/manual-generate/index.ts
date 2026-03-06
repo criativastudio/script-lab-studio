@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { objective, target_audience, platform, hook, duration, notes, video_quantity } = await req.json();
+    const { objective, target_audience, platform, hook, duration, notes, video_quantity, user_id } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -20,6 +22,32 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Input validation
+    const inputErr = validateInputLength({ objective, target_audience, platform, hook, notes }, 2000);
+    if (inputErr) {
+      return new Response(JSON.stringify({ error: inputErr }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Usage guards
+    if (user_id) {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const guardResponse = await runGuards(supabase, user_id, "briefing", corsHeaders);
+      if (guardResponse) return guardResponse;
+
+      // Cache check
+      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity });
+      const pHash = await hashPrompt(promptContent);
+      const cached = await checkCache(supabase, pHash);
+      if (cached) {
+        await logUsage(supabase, user_id, "manual-generate", "briefing", 0, pHash);
+        return new Response(JSON.stringify(cached), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const qty = video_quantity || 1;
@@ -47,6 +75,7 @@ Escreva tudo em português do Brasil.`;
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        max_tokens: 3700,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -90,21 +119,18 @@ Escreva tudo em português do Brasil.`;
       const status = response.status;
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const text = await response.text();
       console.error("AI gateway error:", status, text);
       return new Response(JSON.stringify({ error: "Erro no gateway de IA." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -112,12 +138,21 @@ Escreva tudo em português do Brasil.`;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
       return new Response(JSON.stringify({ error: "Resposta inesperada da IA." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const result = JSON.parse(toolCall.function.arguments);
+
+    // Log usage and cache
+    if (user_id) {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity });
+      const pHash = await hashPrompt(promptContent);
+      const tokens = estimateTokens(JSON.stringify(result));
+      await logUsage(supabase, user_id, "manual-generate", "briefing", tokens, pHash);
+      await saveCache(supabase, pHash, "manual-generate", result);
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

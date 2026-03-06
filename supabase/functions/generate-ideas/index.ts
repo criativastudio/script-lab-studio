@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +25,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Usage guards
+    const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+    if (guardResponse) return guardResponse;
 
     // Load strategic context
     const { data: ctx, error: ctxErr } = await supabase
@@ -62,7 +67,7 @@ Quantidade de vídeos: ${proj.video_count || count}`;
 
     const existingTopics = (existingIdeas || []).map((i: any) => i.title).join("\n- ");
 
-    // Load content memory for category distribution and preferences
+    // Load content memory for category distribution
     let memoryBlock = "";
     const { data: memoryEntries } = await supabase
       .from("client_content_memory")
@@ -73,34 +78,42 @@ Quantidade de vídeos: ${proj.video_count || count}`;
     if (memoryEntries && memoryEntries.length > 0) {
       const catCounts: Record<string, number> = {};
       const catSelected: Record<string, number> = {};
-      for (const cat of CONTENT_CATEGORIES) {
-        catCounts[cat] = 0;
-        catSelected[cat] = 0;
-      }
+      for (const cat of CONTENT_CATEGORIES) { catCounts[cat] = 0; catSelected[cat] = 0; }
       for (const m of memoryEntries) {
         if (m.content_category && catCounts[m.content_category] !== undefined) {
           catCounts[m.content_category]++;
           if (m.was_selected) catSelected[m.content_category]++;
         }
       }
-
       const avgCount = memoryEntries.length / CONTENT_CATEGORIES.length;
       const underRepresented = CONTENT_CATEGORIES.filter(c => catCounts[c] < avgCount * 0.5);
-      const preferred = CONTENT_CATEGORIES
-        .filter(c => catSelected[c] > 0)
-        .sort((a, b) => catSelected[b] - catSelected[a]);
-
-      const catDistribution = CONTENT_CATEGORIES
-        .map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`)
-        .join(", ");
+      const preferred = CONTENT_CATEGORIES.filter(c => catSelected[c] > 0).sort((a, b) => catSelected[b] - catSelected[a]);
+      const catDistribution = CONTENT_CATEGORIES.map(c => `${c}: ${catCounts[c]} gerados, ${catSelected[c]} selecionados`).join(", ");
 
       memoryBlock = `\nDISTRIBUIÇÃO DE CATEGORIAS ATUAL: ${catDistribution}`;
-      if (preferred.length > 0) {
-        memoryBlock += `\nCATEGORIAS PREFERIDAS PELO CLIENTE: ${preferred.join(", ")} — gere mais ideias nessas categorias.`;
+      if (preferred.length > 0) memoryBlock += `\nCATEGORIAS PREFERIDAS PELO CLIENTE: ${preferred.join(", ")} — gere mais ideias nessas categorias.`;
+      if (underRepresented.length > 0) memoryBlock += `\nCATEGORIAS SUB-REPRESENTADAS: ${underRepresented.join(", ")} — inclua ideias nessas categorias para balancear.`;
+    }
+
+    // Cache check
+    const promptContent = JSON.stringify({ context_id, project_id, count, existingTopics: existingTopics.substring(0, 500) });
+    const pHash = await hashPrompt(promptContent);
+    const cached = await checkCache(supabase, pHash);
+    if (cached) {
+      // Still insert into DB even from cache
+      const ideas = cached.ideas || [];
+      if (ideas.length > 0) {
+        const inserts = ideas.map((idea: any) => ({
+          user_id, project_id: project_id || null, context_id,
+          title: idea.title, description: idea.description || null,
+          content_category: idea.content_category || null, status: "pending",
+        }));
+        await supabase.from("content_ideas").insert(inserts);
       }
-      if (underRepresented.length > 0) {
-        memoryBlock += `\nCATEGORIAS SUB-REPRESENTADAS: ${underRepresented.join(", ")} — inclua ideias nessas categorias para balancear.`;
-      }
+      await logUsage(supabase, user_id, "generate-ideas", "script", 0, pHash);
+      return new Response(JSON.stringify({ success: true, ideas, count: ideas.length }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const systemPrompt = `Você é um estrategista de conteúdo especializado em marketing digital. Gere ideias de conteúdo para vídeos usando a função fornecida. As ideias devem ser específicas, acionáveis e relevantes para o negócio do cliente.
@@ -137,6 +150,7 @@ Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter u
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        max_tokens: 2200,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -205,19 +219,20 @@ Gere exatamente ${count} ideias de conteúdo para vídeos. Cada ideia deve ter u
     const result = JSON.parse(toolCall.function.arguments);
     const ideas = result.ideas || [];
 
-    // Insert ideas into database with content_category
+    // Insert ideas into database
     if (ideas.length > 0) {
       const inserts = ideas.map((idea: any) => ({
-        user_id,
-        project_id: project_id || null,
-        context_id,
-        title: idea.title,
-        description: idea.description || null,
-        content_category: idea.content_category || null,
-        status: "pending",
+        user_id, project_id: project_id || null, context_id,
+        title: idea.title, description: idea.description || null,
+        content_category: idea.content_category || null, status: "pending",
       }));
       await supabase.from("content_ideas").insert(inserts);
     }
+
+    // Log usage and cache
+    const tokens = estimateTokens(JSON.stringify(result));
+    await logUsage(supabase, user_id, "generate-ideas", "script", tokens, pHash);
+    await saveCache(supabase, pHash, "generate-ideas", result);
 
     return new Response(JSON.stringify({ success: true, ideas, count: ideas.length }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

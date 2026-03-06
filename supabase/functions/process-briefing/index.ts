@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,13 +43,28 @@ serve(async (req) => {
       });
     }
 
+    // Usage guards
+    const guardResponse = await runGuards(supabase, br.user_id, "briefing", corsHeaders);
+    if (guardResponse) return guardResponse;
+
+    // Cache check
+    const answers = br.form_answers || {};
+    const promptContent = JSON.stringify({ business_name: br.business_name, project_name: br.project_name, video_quantity: br.video_quantity, answers });
+    const pHash = await hashPrompt(promptContent);
+    const cached = await checkCache(supabase, pHash);
+
     // Update status to processing
     await supabase.from("briefing_requests").update({ status: "processing" }).eq("id", br.id);
 
-    const answers = br.form_answers || {};
-    const videoCount = br.video_quantity || 3;
+    let result: any;
 
-    const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional de alto nível. A partir de respostas condensadas de um briefing estratégico com apenas 4 perguntas, você deve:
+    if (cached) {
+      result = cached;
+      await logUsage(supabase, br.user_id, "process-briefing", "briefing", 0, pHash);
+    } else {
+      const videoCount = br.video_quantity || 3;
+
+      const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional de alto nível. A partir de respostas condensadas de um briefing estratégico com apenas 4 perguntas, você deve:
 
 1. INFERIR o contexto estratégico completo do negócio:
    - Nicho de mercado
@@ -64,7 +80,7 @@ serve(async (req) => {
 
 Responda usando a função fornecida.`;
 
-    const userPrompt = `
+      const userPrompt = `
 Cliente: ${br.business_name}
 Projeto: ${br.project_name}
 Quantidade de vídeos: ${videoCount}
@@ -78,87 +94,92 @@ Respostas do briefing estratégico:
 A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exatamente ${videoCount} roteiros estratégicos diferentes. Cada roteiro deve ser completo e pronto para produção.
 `;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "generate_briefing_and_scripts",
-            description: "Generate strategic briefing and video scripts",
-            parameters: {
-              type: "object",
-              properties: {
-                persona: { type: "string", description: "Detailed customer persona description" },
-                positioning: { type: "string", description: "Brand positioning strategy" },
-                tone_of_voice: { type: "string", description: "Recommended tone of voice for content" },
-                content_strategy: { type: "string", description: "Overall content strategy" },
-                scripts: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      objective: { type: "string" },
-                      hook: { type: "string" },
-                      scene_structure: { type: "string" },
-                      narration: { type: "string" },
-                      visual_direction: { type: "string" },
-                      call_to_action: { type: "string" },
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          max_tokens: 3700,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "generate_briefing_and_scripts",
+              description: "Generate strategic briefing and video scripts",
+              parameters: {
+                type: "object",
+                properties: {
+                  persona: { type: "string", description: "Detailed customer persona description" },
+                  positioning: { type: "string", description: "Brand positioning strategy" },
+                  tone_of_voice: { type: "string", description: "Recommended tone of voice for content" },
+                  content_strategy: { type: "string", description: "Overall content strategy" },
+                  scripts: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        objective: { type: "string" },
+                        hook: { type: "string" },
+                        scene_structure: { type: "string" },
+                        narration: { type: "string" },
+                        visual_direction: { type: "string" },
+                        call_to_action: { type: "string" },
+                      },
+                      required: ["title", "objective", "hook", "scene_structure", "narration", "visual_direction", "call_to_action"],
+                      additionalProperties: false,
                     },
-                    required: ["title", "objective", "hook", "scene_structure", "narration", "visual_direction", "call_to_action"],
-                    additionalProperties: false,
+                    description: `Exactly ${videoCount} video scripts`,
                   },
-                  description: `Exactly ${videoCount} video scripts`,
                 },
+                required: ["persona", "positioning", "tone_of_voice", "content_strategy", "scripts"],
+                additionalProperties: false,
               },
-              required: ["persona", "positioning", "tone_of_voice", "content_strategy", "scripts"],
-              additionalProperties: false,
             },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "generate_briefing_and_scripts" } },
-      }),
-    });
+          }],
+          tool_choice: { type: "function", function: { name: "generate_briefing_and_scripts" } },
+        }),
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI Gateway error:", response.status, errText);
-      await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("AI Gateway error:", response.status, errText);
+        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: "Payment required for AI processing." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ error: "AI processing failed" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required for AI processing." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+      const aiData = await response.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) {
+        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
+        return new Response(JSON.stringify({ error: "AI did not return structured data" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "AI processing failed" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
-    const aiData = await response.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-      return new Response(JSON.stringify({ error: "AI did not return structured data" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      result = JSON.parse(toolCall.function.arguments);
+      const tokens = estimateTokens(JSON.stringify(result));
+      await logUsage(supabase, br.user_id, "process-briefing", "briefing", tokens, pHash);
+      await saveCache(supabase, pHash, "process-briefing", result);
     }
-
-    const result = JSON.parse(toolCall.function.arguments);
 
     // 1. Create project
     const { data: project, error: projErr } = await supabase.from("projects").insert({
@@ -209,7 +230,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       status: "completed",
     }).eq("id", br.id);
 
-    // 5. Create/update strategic context from form answers
+    // 5. Create/update strategic context
     const contextData: Record<string, any> = {
       user_id: br.user_id,
       business_name: br.business_name,
@@ -219,8 +240,8 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       customer_persona: result.persona || null,
       tone_of_voice: result.tone_of_voice || null,
       market_positioning: result.positioning || null,
-      pain_points: null, // inferred by AI into result.persona
-      differentiators: null, // inferred by AI into result.positioning
+      pain_points: null,
+      differentiators: null,
       marketing_objectives: Array.isArray(answers.desired_outcome)
         ? answers.desired_outcome.join(", ")
         : (answers.desired_outcome || null),
@@ -231,7 +252,6 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       is_completed: true,
     };
 
-    // Upsert: try update first, then insert
     const { data: existingCtx } = await supabase
       .from("client_strategic_contexts")
       .select("id")
@@ -240,9 +260,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       .single();
 
     if (existingCtx) {
-      await supabase.from("client_strategic_contexts")
-        .update(contextData)
-        .eq("id", existingCtx.id);
+      await supabase.from("client_strategic_contexts").update(contextData).eq("id", existingCtx.id);
     } else {
       await supabase.from("client_strategic_contexts").insert(contextData);
     }
