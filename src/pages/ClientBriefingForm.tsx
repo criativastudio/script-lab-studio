@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader2, CheckCircle, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 
 interface BriefingRequest {
   id: string;
@@ -17,123 +17,40 @@ interface BriefingRequest {
   form_answers: any;
 }
 
-const QUESTIONS = [
-  {
-    key: "about_business",
-    title: "Sobre o seu negócio",
-    question: "Descreva brevemente sua empresa, o que vende e a cidade/região onde atua.",
-    example: "Exemplo: Somos uma clínica odontológica em Porto Velho especializada em estética dental.",
-    chips: [
-      "Serviço local", "Negócio online", "Loja física",
-      "Clínica ou serviço profissional", "Restaurante ou alimentação",
-      "Produtos no varejo", "Produtos digitais", "Educação ou treinamento",
-    ],
-    type: "textarea" as const,
-  },
-  {
-    key: "typical_customer",
-    title: "Cliente típico",
-    question: "Descreva o tipo de cliente que geralmente compra de você.",
-    example: "Exemplo: Mulheres entre 25 e 45 anos que se preocupam com aparência e autoestima.",
-    chips: [
-      "Homens", "Mulheres", "Famílias", "Empresários",
-      "Jovens profissionais", "Estudantes",
-      "Pessoas buscando melhoria estética", "Pessoas buscando economia",
-      "Pessoas buscando conveniência",
-    ],
-    type: "textarea" as const,
-  },
-  {
-    key: "problem_solved",
-    title: "Problema resolvido",
-    question: "Qual problema seu produto ou serviço resolve para seus clientes?",
-    example: "Exemplo: Muitas pessoas se sentem inseguras com o sorriso.",
-    chips: [
-      "Falta de tempo", "Dor ou desconforto", "Baixa autoconfiança",
-      "Dificuldade em encontrar serviços de qualidade",
-      "Preços altos no mercado", "Falta de profissionais especializados",
-      "Necessidade de conveniência", "Necessidade de melhores resultados",
-    ],
-    type: "textarea" as const,
-  },
-  {
-    key: "business_objectives",
-    title: "Objetivo dos vídeos",
-    question: "O que você quer que esses vídeos alcancem?",
-    example: "",
-    chips: [
-      "Atrair novos clientes", "Promover um produto",
-      "Apresentar a empresa", "Aumentar vendas",
-      "Construir autoridade", "Fortalecer posicionamento da marca",
-    ],
-    type: "multi" as const,
-  },
-  {
-    key: "content_references",
-    title: "Referências de conteúdo",
-    question: "Você tem exemplos de vídeos ou criadores que gosta?",
-    example: "",
-    chips: [
-      "Estilo reels do Instagram", "Vídeos educativos",
-      "Antes e depois", "Depoimentos",
-      "Vídeos de storytelling", "Demonstração de produto",
-      "Vídeos de autoridade/especialista",
-    ],
-    type: "multi" as const,
-  },
-  {
-    key: "pain_points",
-    title: "Dores do seu cliente",
-    question: "Quais são as principais dores, frustrações ou medos que seus clientes enfrentam antes de te encontrar?",
-    example: "Exemplo: Medo de não encontrar um profissional confiável, frustração com resultados ruins de experiências anteriores.",
-    chips: [
-      "Medo de gastar e não ter resultado", "Falta de confiança no profissional",
-      "Experiências ruins anteriores", "Não saber por onde começar",
-      "Preço vs qualidade", "Falta de informação clara",
-      "Vergonha ou insegurança", "Demora no atendimento",
-    ],
-    type: "textarea" as const,
-  },
-  {
-    key: "differentiators",
-    title: "Diferenciais do seu negócio",
-    question: "O que faz seu negócio ser diferente e melhor que a concorrência?",
-    example: "Exemplo: Somos a única clínica da região com tecnologia de scanner 3D e garantia de 5 anos.",
-    chips: [
-      "Atendimento personalizado", "Preço justo",
-      "Tecnologia avançada", "Experiência comprovada",
-      "Localização privilegiada", "Garantia de resultado",
-      "Equipe especializada", "Agilidade no atendimento",
-    ],
-    type: "textarea" as const,
-  },
-  {
-    key: "communication_style",
-    title: "Estilo de comunicação",
-    question: "Como você quer se comunicar nos vídeos? Selecione os estilos que mais combinam.",
-    example: "",
-    chips: [
-      "Educativo", "Autoridade",
-      "Profissional", "Casual / Descontraído",
-      "Estilo influencer", "Storytelling",
-      "Venda direta", "Motivacional",
-    ],
-    type: "multi" as const,
-  },
-  {
-    key: "main_platforms",
-    title: "Plataformas principais",
-    question: "Em quais plataformas você pretende publicar os vídeos?",
-    example: "",
-    chips: [
-      "Instagram Reels", "Instagram Stories",
-      "TikTok", "YouTube",
-      "YouTube Shorts", "Facebook",
-      "LinkedIn", "WhatsApp Status",
-    ],
-    type: "multi" as const,
-  },
-];
+interface AISuggestions {
+  audience_chips: string[];
+  outcome_chips: string[];
+  voice_chips: string[];
+}
+
+const DEFAULT_CHIPS = {
+  business_context: [
+    "Serviço local", "Negócio online", "Loja física",
+    "Clínica ou consultório", "Restaurante ou alimentação",
+    "Educação ou treinamento", "Produtos digitais",
+  ],
+  ideal_audience: [
+    "Mulheres 25-45 anos", "Homens 30-50 anos", "Jovens profissionais",
+    "Empresários", "Famílias", "Estudantes",
+  ],
+  desired_outcome: [
+    "Seguir o perfil", "Enviar mensagem", "Comprar um produto",
+    "Construir autoridade", "Educar a audiência",
+  ],
+  brand_voice: [
+    "Especialista e autoritário", "Educativo e útil",
+    "Amigável e próximo", "Provocativo e ousado", "Inspiracional",
+  ],
+};
+
+interface Question {
+  key: string;
+  title: string;
+  question: string;
+  example: string;
+  chips: string[];
+  type: "textarea" | "multi";
+}
 
 const ClientBriefingForm = () => {
   const { token } = useParams<{ token: string }>();
@@ -144,6 +61,8 @@ const ClientBriefingForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestions | null>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -170,8 +89,66 @@ const ClientBriefingForm = () => {
     load();
   }, [token]);
 
-  const currentQ = QUESTIONS[step];
-  const progress = ((step + 1) / QUESTIONS.length) * 100;
+  const questions: Question[] = [
+    {
+      key: "business_context",
+      title: "Contexto do Negócio",
+      question: "O que seu negócio faz, para quem vende e qual o principal problema que resolve?",
+      example: "Exemplo: Somos uma clínica odontológica em Porto Velho especializada em estética dental. Atendemos mulheres que querem um sorriso mais bonito e confiante.",
+      chips: DEFAULT_CHIPS.business_context,
+      type: "textarea",
+    },
+    {
+      key: "ideal_audience",
+      title: "Público Ideal",
+      question: "Quem é o público ideal que você quer atrair com seus vídeos?",
+      example: "Exemplo: Mulheres entre 25 e 45 anos que se preocupam com aparência e autoestima.",
+      chips: aiSuggestions?.audience_chips || DEFAULT_CHIPS.ideal_audience,
+      type: "textarea",
+    },
+    {
+      key: "desired_outcome",
+      title: "Resultado Desejado",
+      question: "Qual ação você quer que os espectadores tomem após assistir seus vídeos?",
+      example: "",
+      chips: aiSuggestions?.outcome_chips || DEFAULT_CHIPS.desired_outcome,
+      type: "multi",
+    },
+    {
+      key: "brand_voice",
+      title: "Voz da Marca",
+      question: "Como sua marca deve soar nos vídeos?",
+      example: "",
+      chips: aiSuggestions?.voice_chips || DEFAULT_CHIPS.brand_voice,
+      type: "multi",
+    },
+  ];
+
+  const currentQ = questions[step];
+  const progress = ((step + 1) / questions.length) * 100;
+
+  const fetchAISuggestions = async (businessContext: string) => {
+    setLoadingSuggestions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-briefing", {
+        body: { business_context: businessContext },
+      });
+      if (!error && data && !data.error) {
+        setAiSuggestions(data as AISuggestions);
+      }
+    } catch (e) {
+      console.error("Failed to fetch AI suggestions:", e);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 0 && !aiSuggestions && answers.business_context?.trim()) {
+      fetchAISuggestions(answers.business_context);
+    }
+    setStep(step + 1);
+  };
 
   const handleChipClick = (chip: string) => {
     const key = currentQ.key;
@@ -269,14 +246,17 @@ const ClientBriefingForm = () => {
       <div className="max-w-2xl w-full space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">
-            Briefing Estratégico
-          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">
+              AI Strategic Brief Builder
+            </h1>
+          </div>
           <p className="text-muted-foreground">
             {briefing?.business_name} — {briefing?.project_name}
           </p>
           <div className="flex items-center gap-3 justify-center">
-            <span className="text-sm text-muted-foreground">Pergunta {step + 1} de {QUESTIONS.length}</span>
+            <span className="text-sm text-muted-foreground">Pergunta {step + 1} de {questions.length}</span>
             <Badge variant="secondary">{briefing?.video_quantity} vídeos</Badge>
           </div>
           <Progress value={progress} className="h-2 mt-2" />
@@ -292,6 +272,22 @@ const ClientBriefingForm = () => {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Loading suggestions indicator */}
+            {loadingSuggestions && step > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Gerando sugestões personalizadas com IA...</span>
+              </div>
+            )}
+
+            {/* AI badge for dynamic chips */}
+            {aiSuggestions && step > 0 && !loadingSuggestions && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span>Sugestões personalizadas pela IA</span>
+              </div>
+            )}
+
             {/* Helper chips */}
             <div className="flex flex-wrap gap-2">
               {currentQ.chips.map((chip) => {
@@ -345,8 +341,8 @@ const ClientBriefingForm = () => {
             Anterior
           </Button>
 
-          {step < QUESTIONS.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={!canProceed()}>
+          {step < questions.length - 1 ? (
+            <Button onClick={handleNext} disabled={!canProceed()}>
               Próximo
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>

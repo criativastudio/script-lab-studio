@@ -48,25 +48,34 @@ serve(async (req) => {
     const answers = br.form_answers || {};
     const videoCount = br.video_quantity || 3;
 
-    const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional. Analise as respostas do cliente e gere uma estratégia completa de conteúdo com roteiros para vídeos. Responda usando a função fornecida.`;
+    const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional de alto nível. A partir de respostas condensadas de um briefing estratégico com apenas 4 perguntas, você deve:
+
+1. INFERIR o contexto estratégico completo do negócio:
+   - Nicho de mercado
+   - Persona detalhada do cliente ideal
+   - Dores e motivações do público-alvo
+   - Posicionamento de marca
+   - Tom de voz adequado
+   - Estratégia de conteúdo
+   - Categorias de vídeo recomendadas
+   - Etapas do funil de conteúdo
+
+2. GERAR roteiros completos e prontos para produção baseados nessa análise.
+
+Responda usando a função fornecida.`;
 
     const userPrompt = `
 Cliente: ${br.business_name}
 Projeto: ${br.project_name}
 Quantidade de vídeos: ${videoCount}
 
-Respostas do formulário:
-1. Sobre o negócio: ${answers.about_business || "Não informado"}
-2. Cliente típico: ${answers.typical_customer || "Não informado"}
-3. Problema resolvido: ${answers.problem_solved || "Não informado"}
-4. Objetivo do negócio: ${JSON.stringify(answers.business_objectives || [])}
-5. Referências de conteúdo: ${JSON.stringify(answers.content_references || [])}
-6. Estilo de comunicação: ${JSON.stringify(answers.communication_style || [])}
-7. Plataformas principais: ${JSON.stringify(answers.main_platforms || [])}
-8. Dores do cliente: ${answers.pain_points || "Não informado"}
-9. Diferenciais: ${answers.differentiators || "Não informado"}
+Respostas do briefing estratégico:
+1. Contexto do negócio (o que faz, para quem vende, problema que resolve): ${answers.business_context || "Não informado"}
+2. Público ideal para os vídeos: ${answers.ideal_audience || "Não informado"}
+3. Resultado desejado (ação dos espectadores): ${JSON.stringify(answers.desired_outcome || [])}
+4. Voz da marca: ${JSON.stringify(answers.brand_voice || [])}
 
-Gere exatamente ${videoCount} roteiros estratégicos diferentes para este cliente. Cada roteiro deve ser completo e pronto para produção.
+A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exatamente ${videoCount} roteiros estratégicos diferentes. Cada roteiro deve ser completo e pronto para produção.
 `;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -205,20 +214,20 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes para este client
       user_id: br.user_id,
       business_name: br.business_name,
       business_niche: br.niche || null,
-      products_services: answers.about_business || null,
-      target_audience: answers.typical_customer || result.persona || null,
+      products_services: answers.business_context || null,
+      target_audience: answers.ideal_audience || result.persona || null,
       customer_persona: result.persona || null,
       tone_of_voice: result.tone_of_voice || null,
       market_positioning: result.positioning || null,
-      pain_points: answers.pain_points || answers.problem_solved || null,
-      differentiators: answers.differentiators || null,
-      marketing_objectives: Array.isArray(answers.business_objectives)
-        ? answers.business_objectives.join(", ")
-        : (answers.business_objectives || null),
-      main_platforms: Array.isArray(answers.main_platforms) ? answers.main_platforms : [],
-      communication_style: Array.isArray(answers.communication_style)
-        ? answers.communication_style.join(", ")
-        : (answers.communication_style || null),
+      pain_points: null, // inferred by AI into result.persona
+      differentiators: null, // inferred by AI into result.positioning
+      marketing_objectives: Array.isArray(answers.desired_outcome)
+        ? answers.desired_outcome.join(", ")
+        : (answers.desired_outcome || null),
+      main_platforms: [],
+      communication_style: Array.isArray(answers.brand_voice)
+        ? answers.brand_voice.join(", ")
+        : (answers.brand_voice || null),
       is_completed: true,
     };
 

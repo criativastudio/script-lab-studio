@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.score-script]
 verify_jwt = false
+
+[functions.suggest-briefing]
+verify_jwt = false
