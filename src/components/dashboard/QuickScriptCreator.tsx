@@ -213,12 +213,9 @@ export function QuickScriptCreator() {
                 />
               </div>
 
-              <RainbowButton
-                className="w-full"
-                onClick={handleGenerate}
-                disabled={loading}
-              >
-                {loading ? (
+              {limitReached && (
+                <UpgradePrompt message="Você atingiu o limite de roteiros do seu plano este mês." className="mt-2" />
+              )}
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Gerando...
