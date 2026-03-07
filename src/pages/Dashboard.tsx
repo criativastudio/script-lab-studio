@@ -123,37 +123,6 @@ const Dashboard = () => {
           <p className="text-sm text-muted-foreground">Visão geral da sua produção audiovisual</p>
         </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <form
-              className="flex gap-2"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!user || !quickIdea.trim()) return;
-                const { error } = await supabase.from("ideas").insert({ idea: quickIdea.trim(), user_id: user.id });
-                if (error) {
-                  toast({ title: "Erro", description: error.message, variant: "destructive" });
-                  return;
-                }
-                setQuickIdea("");
-                toast({ title: "Ideia salva!" });
-              }}
-            >
-              <Lightbulb className="h-5 w-5 text-muted-foreground mt-2.5" />
-              <Input
-                placeholder="Capture uma ideia rápida..."
-                value={quickIdea}
-                onChange={(e) => setQuickIdea(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Salvar
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card) => (
             <Card key={card.title}>
