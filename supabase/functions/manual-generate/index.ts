@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { objective, target_audience, platform, hook, duration, notes, video_quantity, user_id } = await req.json();
+    const { objective, target_audience, platform, hook, duration, notes, video_quantity, user_id, business_name, niche } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -25,7 +25,7 @@ serve(async (req) => {
     }
 
     // Input validation
-    const inputErr = validateInputLength({ objective, target_audience, platform, hook, notes }, 2000);
+    const inputErr = validateInputLength({ objective, target_audience, platform, hook, notes, business_name, niche }, 2000);
     if (inputErr) {
       return new Response(JSON.stringify({ error: inputErr }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -39,7 +39,7 @@ serve(async (req) => {
       if (guardResponse) return guardResponse;
 
       // Cache check
-      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity });
+      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
       const pHash = await hashPrompt(promptContent);
       const cached = await checkCache(supabase, pHash);
       if (cached) {
@@ -51,14 +51,25 @@ serve(async (req) => {
     }
 
     const qty = video_quantity || 1;
+    const bName = business_name || "a empresa";
+    const bNiche = niche || "geral";
 
     const systemPrompt = `Você é um estrategista de conteúdo digital e roteirista profissional para redes sociais.
-Com base nas informações fornecidas pelo usuário, crie um briefing estratégico completo e ${qty} roteiro(s) de vídeo.
-O briefing deve incluir: objetivo claro, público-alvo detalhado e estilo de conteúdo.
-Cada roteiro deve ter: título atrativo, e o roteiro completo com GANCHO, DESENVOLVIMENTO e CTA, incluindo indicações de cena e falas.
+Com base nas informações fornecidas pelo usuário, crie um planejamento estratégico completo e ${qty} roteiro(s) de vídeo.
+
+O resultado DEVE incluir obrigatoriamente:
+1. **Briefing**: Objetivo claro e estratégia de conteúdo para ${bName} no nicho ${bNiche}.
+2. **Persona**: Descrição detalhada da persona ideal do público-alvo, incluindo dores, desejos e comportamento.
+3. **Posicionamento**: Como a marca deve se posicionar no mercado e se diferenciar da concorrência.
+4. **Tom de Voz**: Estilo de comunicação, linguagem e personalidade da marca nas redes sociais.
+5. **Funil de Conteúdo**: Estratégia de conteúdo dividida em Topo (awareness), Meio (consideração) e Fundo (conversão) do funil.
+6. **Roteiro(s)**: Cada roteiro deve ter título atrativo e o roteiro completo com GANCHO, DESENVOLVIMENTO e CTA, incluindo indicações de cena e falas.
+
 Escreva tudo em português do Brasil.`;
 
     const userPrompt = `Informações do cliente:
+- Empresa: ${bName}
+- Nicho: ${bNiche}
 - Objetivo: ${objective}
 - Público-alvo: ${target_audience}
 - Plataforma: ${platform}
@@ -75,7 +86,7 @@ Escreva tudo em português do Brasil.`;
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        max_tokens: 3700,
+        max_tokens: 4000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -85,13 +96,17 @@ Escreva tudo em português do Brasil.`;
             type: "function",
             function: {
               name: "generate_briefing_and_scripts",
-              description: "Retorna briefing estratégico e roteiros de vídeo estruturados.",
+              description: "Retorna briefing estratégico completo com persona, posicionamento, tom de voz, funil e roteiros.",
               parameters: {
                 type: "object",
                 properties: {
-                  goal: { type: "string", description: "Objetivo estratégico do conteúdo" },
+                  goal: { type: "string", description: "Briefing: objetivo estratégico do conteúdo" },
                   target_audience: { type: "string", description: "Público-alvo detalhado" },
                   content_style: { type: "string", description: "Estilo e tom do conteúdo" },
+                  persona: { type: "string", description: "Persona detalhada do público-alvo com dores, desejos e comportamento" },
+                  positioning: { type: "string", description: "Posicionamento da marca no mercado e diferenciais competitivos" },
+                  tone_of_voice: { type: "string", description: "Tom de voz e estilo de comunicação da marca" },
+                  content_funnel: { type: "string", description: "Estratégia de funil de conteúdo: Topo, Meio e Fundo" },
                   scripts: {
                     type: "array",
                     items: {
@@ -105,7 +120,7 @@ Escreva tudo em português do Brasil.`;
                     },
                   },
                 },
-                required: ["goal", "target_audience", "content_style", "scripts"],
+                required: ["goal", "target_audience", "content_style", "persona", "positioning", "tone_of_voice", "content_funnel", "scripts"],
                 additionalProperties: false,
               },
             },
@@ -147,7 +162,7 @@ Escreva tudo em português do Brasil.`;
     // Log usage and cache
     if (user_id) {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity });
+      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
       const pHash = await hashPrompt(promptContent);
       const tokens = estimateTokens(JSON.stringify(result));
       await logUsage(supabase, user_id, "manual-generate", "briefing", tokens, pHash);
