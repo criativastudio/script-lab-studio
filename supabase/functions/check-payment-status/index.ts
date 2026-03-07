@@ -5,7 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
+const HOST = Deno.env.get("HOST") || "0.0.0.0";
+const PORT = Number(Deno.env.get("PORT") || 8000);
+
+Deno.serve({ hostname: HOST, port: PORT }, async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
