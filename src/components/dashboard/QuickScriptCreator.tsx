@@ -216,6 +216,13 @@ export function QuickScriptCreator() {
               {limitReached && (
                 <UpgradePrompt message="Você atingiu o limite de roteiros do seu plano este mês." className="mt-2" />
               )}
+
+              <RainbowButton
+                className="w-full"
+                onClick={handleGenerate}
+                disabled={loading || limitReached}
+              >
+                {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Gerando...
@@ -258,8 +265,6 @@ export function QuickScriptCreator() {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      <UpgradePrompt open={showUpgrade} onOpenChange={setShowUpgrade} />
     </>
   );
 }
