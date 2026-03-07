@@ -88,6 +88,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedDemoChip, setSelectedDemoChip] = useState("");
 
   const navLinks = [
     { label: "Problema", href: "#problema" },
