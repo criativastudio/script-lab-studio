@@ -50,7 +50,7 @@ export function QuickScriptCreator() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<GeneratedResult | null>(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
   const handleGenerate = async () => {
     if (!user) return;
