@@ -247,7 +247,7 @@ export default function LandingPage() {
       }} />
 
       {/* ── 3. 3D PRODUCT SCROLL ── */}
-      <section className="relative overflow-hidden">
+      <section id="produto-3d" className="relative overflow-hidden">
         <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(var(--hero-pink)/0.08)] -bottom-20 right-0" />
 
