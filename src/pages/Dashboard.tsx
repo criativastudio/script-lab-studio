@@ -10,11 +10,39 @@ import { FolderOpen, FileText, Lightbulb, BookOpen, Plus, Target, Download } fro
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-interface Project { id: string; name: string | null; client_name: string | null; platform: string | null; status: string | null; created_at: string | null; }
-interface Script { id: string; title: string | null; script: string | null; created_at: string | null; }
-interface Idea { id: string; idea: string | null; created_at: string | null; }
-interface StrategicReport { id: string; business_name: string; status: string | null; created_at: string; }
-interface BriefingRequest { id: string; business_name: string; project_name: string; video_quantity: number; status: string; created_at: string; }
+interface Project {
+  id: string;
+  name: string | null;
+  client_name: string | null;
+  platform: string | null;
+  status: string | null;
+  created_at: string | null;
+}
+interface Script {
+  id: string;
+  title: string | null;
+  script: string | null;
+  created_at: string | null;
+}
+interface Idea {
+  id: string;
+  idea: string | null;
+  created_at: string | null;
+}
+interface StrategicReport {
+  id: string;
+  business_name: string;
+  status: string | null;
+  created_at: string;
+}
+interface BriefingRequest {
+  id: string;
+  business_name: string;
+  project_name: string;
+  video_quantity: number;
+  status: string;
+  created_at: string;
+}
 
 const Dashboard = () => {
   const { user, isAdmin } = useAuth();
@@ -32,7 +60,17 @@ const Dashboard = () => {
     const uid = user.id;
 
     const fetch = async () => {
-      const [projCount, scriptCount, ideaCount, briefCount, projRecent, scriptRecent, ideaRecent, reportsRecent, briefingReqRecent] = await Promise.all([
+      const [
+        projCount,
+        scriptCount,
+        ideaCount,
+        briefCount,
+        projRecent,
+        scriptRecent,
+        ideaRecent,
+        reportsRecent,
+        briefingReqRecent,
+      ] = await Promise.all([
         supabase.from("projects").select("id", { count: "exact", head: true }).eq("user_id", uid),
         supabase.from("scripts").select("id", { count: "exact", head: true }).eq("user_id", uid),
         supabase.from("ideas").select("id", { count: "exact", head: true }).eq("user_id", uid),
@@ -40,8 +78,18 @@ const Dashboard = () => {
         supabase.from("projects").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
         supabase.from("scripts").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
         supabase.from("ideas").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
-        supabase.from("strategic_reports").select("id, business_name, status, created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
-        supabase.from("briefing_requests").select("id, business_name, project_name, video_quantity, status, created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
+        supabase
+          .from("strategic_reports")
+          .select("id, business_name, status, created_at")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("briefing_requests")
+          .select("id, business_name, project_name, video_quantity, status, created_at")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
 
       setStats({
@@ -71,7 +119,7 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Content Intelligence Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Visão geral da sua produção audiovisual</p>
         </div>
 
@@ -83,14 +131,25 @@ const Dashboard = () => {
                 e.preventDefault();
                 if (!user || !quickIdea.trim()) return;
                 const { error } = await supabase.from("ideas").insert({ idea: quickIdea.trim(), user_id: user.id });
-                if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+                if (error) {
+                  toast({ title: "Erro", description: error.message, variant: "destructive" });
+                  return;
+                }
                 setQuickIdea("");
                 toast({ title: "Ideia salva!" });
               }}
             >
               <Lightbulb className="h-5 w-5 text-muted-foreground mt-2.5" />
-              <Input placeholder="Capture uma ideia rápida..." value={quickIdea} onChange={(e) => setQuickIdea(e.target.value)} className="flex-1" />
-              <Button type="submit" size="sm"><Plus className="h-4 w-4 mr-1" />Salvar</Button>
+              <Input
+                placeholder="Capture uma ideia rápida..."
+                value={quickIdea}
+                onChange={(e) => setQuickIdea(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Salvar
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -111,11 +170,16 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card>
-            <CardHeader><CardTitle className="text-sm">Projetos Recentes</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm">Projetos Recentes</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {recentProjects.length === 0 && <p className="text-sm text-muted-foreground">Nenhum projeto ainda.</p>}
               {recentProjects.map((p) => (
-                <div key={p.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
+                <div
+                  key={p.id}
+                  className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0"
+                >
                   <span className="font-medium truncate">{p.name || p.client_name || "Sem nome"}</span>
                   <span className="text-xs text-muted-foreground">{p.platform}</span>
                 </div>
@@ -124,7 +188,9 @@ const Dashboard = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-sm">Roteiros Recentes</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm">Roteiros Recentes</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {recentScripts.length === 0 && <p className="text-sm text-muted-foreground">Nenhum roteiro ainda.</p>}
               {recentScripts.map((s) => (
@@ -137,7 +203,9 @@ const Dashboard = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-sm">Ideias Recentes</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm">Ideias Recentes</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {recentIdeas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma ideia ainda.</p>}
               {recentIdeas.map((i) => (
@@ -164,23 +232,44 @@ const Dashboard = () => {
             </Link>
           </CardHeader>
           <CardContent className="space-y-2">
-            {recentBriefings.length === 0 && <p className="text-sm text-muted-foreground">Nenhum briefing de cliente ainda.</p>}
+            {recentBriefings.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum briefing de cliente ainda.</p>
+            )}
             {recentBriefings.map((b) => (
-              <div key={b.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
+              <div
+                key={b.id}
+                className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0"
+              >
                 <div>
                   <span className="font-medium">{b.business_name}</span>
-                  <span className="text-muted-foreground ml-2 text-xs">{b.project_name} • {b.video_quantity} vídeos</span>
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    {b.project_name} • {b.video_quantity} vídeos
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-xs px-2 py-0.5 rounded",
-                    b.status === "completed" ? "bg-accent text-accent-foreground" :
-                    b.status === "processing" ? "bg-primary text-primary-foreground" :
-                    b.status === "submitted" ? "bg-warning text-warning-foreground" :
-                    "bg-muted text-muted-foreground"
-                  )}>
-                    {b.status === "completed" ? "Concluído" : b.status === "processing" ? "Processando" : b.status === "submitted" ? "Enviado" : "Pendente"}
+                  <span
+                    className={cn(
+                      "text-xs px-2 py-0.5 rounded",
+                      b.status === "completed"
+                        ? "bg-accent text-accent-foreground"
+                        : b.status === "processing"
+                          ? "bg-primary text-primary-foreground"
+                          : b.status === "submitted"
+                            ? "bg-warning text-warning-foreground"
+                            : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {b.status === "completed"
+                      ? "Concluído"
+                      : b.status === "processing"
+                        ? "Processando"
+                        : b.status === "submitted"
+                          ? "Enviado"
+                          : "Pendente"}
                   </span>
-                  <span className="text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString("pt-BR")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(b.created_at).toLocaleDateString("pt-BR")}
+                  </span>
                 </div>
               </div>
             ))}
@@ -202,15 +291,27 @@ const Dashboard = () => {
             </Link>
           </CardHeader>
           <CardContent className="space-y-2">
-            {recentReports.length === 0 && <p className="text-sm text-muted-foreground">Nenhum relatório estratégico ainda.</p>}
+            {recentReports.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum relatório estratégico ainda.</p>
+            )}
             {recentReports.map((r) => (
-              <div key={r.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
+              <div
+                key={r.id}
+                className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0"
+              >
                 <span className="font-medium truncate">{r.business_name}</span>
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-xs px-2 py-0.5 rounded", r.status === "completed" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground")}>
+                  <span
+                    className={cn(
+                      "text-xs px-2 py-0.5 rounded",
+                      r.status === "completed" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground",
+                    )}
+                  >
                     {r.status === "completed" ? "Concluído" : "Processando"}
                   </span>
-                  <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("pt-BR")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(r.created_at).toLocaleDateString("pt-BR")}
+                  </span>
                 </div>
               </div>
             ))}
