@@ -3,10 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import {
-  Sun, Moon, Lightbulb, ThumbsDown, FileX, Target,
-  FileText, Users, Mic, Clock, Brain, TrendingUp,
-  Award, Layers, Check, ArrowRight, Menu, X,
-  Instagram, Twitter, Youtube, ChevronRight
+  Sun,
+  Moon,
+  Lightbulb,
+  ThumbsDown,
+  FileX,
+  Target,
+  FileText,
+  Users,
+  Mic,
+  Clock,
+  Brain,
+  TrendingUp,
+  Award,
+  Layers,
+  Check,
+  ArrowRight,
+  Menu,
+  X,
+  Instagram,
+  Twitter,
+  Youtube,
+  ChevronRight,
 } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Button } from "@/components/ui/button";
@@ -22,15 +40,34 @@ import SocialProof from "@/components/landing/SocialProof";
 
 const problems = [
   { icon: Lightbulb, title: "Falta de ideias", desc: "Fica travado sem saber qual conteúdo criar ou como começar." },
-  { icon: ThumbsDown, title: "Vídeos sem engajamento", desc: "Grava vídeos que ninguém assiste porque falta estratégia." },
+  {
+    icon: ThumbsDown,
+    title: "Vídeos sem engajamento",
+    desc: "Grava vídeos que ninguém assiste porque falta estratégia.",
+  },
   { icon: FileX, title: "Sem roteiro definido", desc: "Começa a gravar sem saber o que dizer e perde tempo editando." },
   { icon: Target, title: "Sem posicionamento", desc: "Conteúdos genéricos que não conectam com o público certo." },
 ];
 
 const steps = [
-  { icon: FileText, num: "01", title: "Crie seu briefing", desc: "Defina objetivo, público e estilo — a IA faz o resto." },
-  { icon: Users, num: "02", title: "Defina persona e estratégia", desc: "Persona, tom de voz e funil são gerados automaticamente." },
-  { icon: Mic, num: "03", title: "Gere roteiros prontos", desc: "Receba roteiros cena a cena, prontos para gravar em minutos." },
+  {
+    icon: FileText,
+    num: "01",
+    title: "Crie seu briefing",
+    desc: "Defina objetivo, público e estilo — a IA faz o resto.",
+  },
+  {
+    icon: Users,
+    num: "02",
+    title: "Defina persona e estratégia",
+    desc: "Persona, tom de voz e funil são gerados automaticamente.",
+  },
+  {
+    icon: Mic,
+    num: "03",
+    title: "Gere roteiros prontos",
+    desc: "Receba roteiros cena a cena, prontos para gravar em minutos.",
+  },
 ];
 
 const scenes = [
@@ -64,8 +101,13 @@ const plans = [
     period: "/mês",
     desc: "Para criadores e pequenas empresas.",
     features: [
-      "25 briefings/mês", "Até 10 roteiros por briefing", "Definição de persona", "Tom de voz",
-      "Estratégia de funil", "Ganchos virais", "Templates de roteiro",
+      "25 briefings/mês",
+      "Até 10 roteiros por briefing",
+      "Definição de persona",
+      "Tom de voz",
+      "Estratégia de funil",
+      "Ganchos virais",
+      "Templates de roteiro",
       "Suporte para Reels, TikTok, YouTube e Ads",
     ],
     highlight: true,
@@ -76,9 +118,14 @@ const plans = [
     period: "/mês",
     desc: "Para agências e produtoras.",
     features: [
-      "Briefings ilimitados", "Roteiros ilimitados", "Geração em lote",
-      "Biblioteca de persona", "Biblioteca de marca", "Calendário de conteúdo",
-      "Workspace para equipes", "Organização por campanhas",
+      "Briefings ilimitados",
+      "Roteiros ilimitados",
+      "Geração em lote",
+      "Biblioteca de persona",
+      "Biblioteca de marca",
+      "Calendário de conteúdo",
+      "Workspace para equipes",
+      "Organização por campanhas",
     ],
     highlight: false,
   },
@@ -88,7 +135,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedDemoChip, setSelectedDemoChip] = useState("");
 
   const navLinks = [
     { label: "Problema", href: "#problema" },
@@ -108,7 +154,11 @@ export default function LandingPage() {
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((l) => (
-              <a key={l.href} href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                key={l.href}
+                href={l.href}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {l.label}
               </a>
             ))}
@@ -124,7 +174,10 @@ export default function LandingPage() {
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            <RainbowButton className="hidden md:inline-flex gap-1.5 h-9 px-4 text-sm rounded-full" onClick={() => navigate("/auth")}>
+            <RainbowButton
+              className="hidden md:inline-flex gap-1.5 h-9 px-4 text-sm rounded-full"
+              onClick={() => navigate("/auth")}
+            >
               Começar grátis <ArrowRight className="h-3.5 w-3.5" />
             </RainbowButton>
 
@@ -137,7 +190,12 @@ export default function LandingPage() {
         {menuOpen && (
           <div className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-2xl px-4 pb-4 pt-2 space-y-3">
             {navLinks.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground">
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className="block text-sm text-muted-foreground hover:text-foreground"
+              >
                 {l.label}
               </a>
             ))}
@@ -174,8 +232,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
-            Roteiros Profissionais{" "}
-            <span className="text-gradient-primary">com IA em Minutos</span>
+            Roteiros Profissionais <span className="text-gradient-primary">com IA em Minutos</span>
           </motion.h1>
 
           {/* Description */}
@@ -185,8 +242,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
-            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação.
-            Sem escrever uma linha sequer.
+            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação. Sem escrever uma linha
+            sequer.
           </motion.p>
 
           {/* CTA */}
@@ -229,8 +286,12 @@ export default function LandingPage() {
           >
             <Instagram className="h-4 w-4" />
             <Youtube className="h-4 w-4" />
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61.01 3.91.02.09 1.46.56 2.95 1.54 4.02.98 1.08 2.34 1.66 3.7 1.93v3.89c-1.28-.07-2.56-.4-3.7-.97-.54-.27-1.04-.59-1.51-.95-.01 2.09.01 4.18-.01 6.27-.11 1.33-.58 2.64-1.37 3.72-.94 1.31-2.31 2.28-3.84 2.73-1.02.3-2.1.4-3.15.27-1.53-.19-2.98-.89-4.09-1.97-1.28-1.22-2.05-2.93-2.15-4.7-.02-.52-.01-1.04.03-1.55.2-1.67 1.02-3.24 2.25-4.35 1.39-1.27 3.28-2.02 5.19-1.95.02 1.42-.01 2.84-.02 4.26-.74-.14-1.55-.05-2.2.36-.52.3-.93.76-1.18 1.29-.17.36-.25.76-.26 1.16.04.98.5 1.93 1.26 2.53.72.59 1.69.87 2.6.75.74-.09 1.44-.46 1.92-1.03.3-.36.52-.79.59-1.25.09-.75.07-1.5.07-2.26V.02h3.32z"/></svg>
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.525.02c1.31-.02 2.61.01 3.91.02.09 1.46.56 2.95 1.54 4.02.98 1.08 2.34 1.66 3.7 1.93v3.89c-1.28-.07-2.56-.4-3.7-.97-.54-.27-1.04-.59-1.51-.95-.01 2.09.01 4.18-.01 6.27-.11 1.33-.58 2.64-1.37 3.72-.94 1.31-2.31 2.28-3.84 2.73-1.02.3-2.1.4-3.15.27-1.53-.19-2.98-.89-4.09-1.97-1.28-1.22-2.05-2.93-2.15-4.7-.02-.52-.01-1.04.03-1.55.2-1.67 1.02-3.24 2.25-4.35 1.39-1.27 3.28-2.02 5.19-1.95.02 1.42-.01 2.84-.02 4.26-.74-.14-1.55-.05-2.2.36-.52.3-.93.76-1.18 1.29-.17.36-.25.76-.26 1.16.04.98.5 1.93 1.26 2.53.72.59 1.69.87 2.6.75.74-.09 1.44-.46 1.92-1.03.3-.36.52-.79.59-1.25.09-.75.07-1.5.07-2.26V.02h3.32z" />
+            </svg>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+            </svg>
           </motion.div>
         </div>
 
@@ -239,15 +300,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── 2. AI INTERACTION DEMO ── */}
-      <AIInputDemo onChipSelected={(chip) => {
-        setSelectedDemoChip(chip);
-        setTimeout(() => {
-          document.getElementById("produto-3d")?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }} />
+      <AIInputDemo />
 
       {/* ── 3. 3D PRODUCT SCROLL ── */}
-      <section id="produto-3d" className="relative overflow-hidden">
+      <section className="relative overflow-hidden">
         <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(var(--hero-pink)/0.08)] -bottom-20 right-0" />
 
@@ -270,7 +326,7 @@ export default function LandingPage() {
               </motion.div>
             }
           >
-            <HeroAnimation selectedChip={selectedDemoChip} onReset={() => setSelectedDemoChip("")} />
+            <HeroAnimation />
           </ContainerScroll>
         </div>
 
@@ -291,7 +347,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">A solução</Badge>
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
+              A solução
+            </Badge>
             <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
@@ -331,7 +389,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">O problema</Badge>
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
+              O problema
+            </Badge>
             <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
@@ -378,7 +438,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Exemplo</Badge>
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
+              Exemplo
+            </Badge>
             <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
@@ -425,7 +487,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Benefícios</Badge>
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
+              Benefícios
+            </Badge>
             <h2 className="font-display text-2xl font-light md:text-4xl mb-14 tracking-tight max-w-xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
@@ -471,7 +535,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">Planos</Badge>
+            <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
+              Planos
+            </Badge>
             <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
@@ -495,7 +561,9 @@ export default function LandingPage() {
                 }`}
               >
                 {p.highlight && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">Mais popular</Badge>
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">
+                    Mais popular
+                  </Badge>
                 )}
                 <h3 className="text-xl font-bold mb-1">{p.name}</h3>
                 <p className="text-xs font-light text-muted-foreground mb-4">{p.desc}</p>
@@ -545,16 +613,13 @@ export default function LandingPage() {
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
           <h2 className="relative z-10 font-display text-2xl font-light md:text-4xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
-            Comece a Criar Roteiros com IA <span className="text-gradient-primary">Hoje</span>
+            Comece a Criar Roteiros Estratégicos <span className="text-gradient-primary">Hoje</span>
           </h2>
           <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base md:text-lg font-light">
             Roteiros profissionais prontos para gravação em minutos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
-            <RainbowButton
-              className="gap-2 text-base rounded-full"
-              onClick={() => navigate("/auth")}
-            >
+            <RainbowButton className="gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
               Garantir meu acesso grátis <ArrowRight className="h-4 w-4" />
             </RainbowButton>
             <Button
@@ -579,14 +644,26 @@ export default function LandingPage() {
             Script<span className="text-gradient-primary">Lab</span> Studio
           </span>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Termos</a>
-            <a href="#" className="hover:text-foreground transition-colors">Privacidade</a>
-            <a href="#" className="hover:text-foreground transition-colors">Contato</a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Termos
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Privacidade
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Contato
+            </a>
           </div>
           <div className="flex gap-4 text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors"><Instagram className="h-4 w-4" /></a>
-            <a href="#" className="hover:text-foreground transition-colors"><Twitter className="h-4 w-4" /></a>
-            <a href="#" className="hover:text-foreground transition-colors"><Youtube className="h-4 w-4" /></a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              <Instagram className="h-4 w-4" />
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              <Twitter className="h-4 w-4" />
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              <Youtube className="h-4 w-4" />
+            </a>
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-muted-foreground">
