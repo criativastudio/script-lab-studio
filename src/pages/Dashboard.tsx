@@ -120,9 +120,7 @@ const Dashboard = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Visão geral dos seus projetos de vídeo e planejamento estratégico
-          </p>
+          <p className="text-sm text-muted-foreground">Visão geral dos seus projetos de planejamento estratégico</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
