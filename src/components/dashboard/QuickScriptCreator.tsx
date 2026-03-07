@@ -61,7 +61,7 @@ export function QuickScriptCreator() {
 
     const currentCount = await getMonthlyScriptCount();
     if (currentCount >= limits.scriptsPerMonth) {
-      setShowUpgrade(true);
+      setLimitReached(true);
       return;
     }
 
