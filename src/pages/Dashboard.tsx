@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FolderOpen, FileText, Lightbulb, BookOpen, Plus, Target, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { QuickScriptCreator } from "@/components/dashboard/QuickScriptCreator";
 
 interface Project {
   id: string;
@@ -136,6 +137,8 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        <QuickScriptCreator />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card>
