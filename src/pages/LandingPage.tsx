@@ -239,7 +239,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── 2. AI INTERACTION DEMO ── */}
-      <AIInputDemo />
+      <AIInputDemo onChipSelected={(chip) => {
+        setSelectedDemoChip(chip);
+        setTimeout(() => {
+          document.getElementById("produto-3d")?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }} />
 
       {/* ── 3. 3D PRODUCT SCROLL ── */}
       <section className="relative overflow-hidden">
