@@ -270,7 +270,7 @@ export default function LandingPage() {
               </motion.div>
             }
           >
-            <HeroAnimation />
+            <HeroAnimation selectedChip={selectedDemoChip} onReset={() => setSelectedDemoChip("")} />
           </ContainerScroll>
         </div>
 
