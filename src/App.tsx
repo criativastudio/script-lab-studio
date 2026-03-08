@@ -18,6 +18,7 @@ import ClientBriefingForm from "./pages/ClientBriefingForm";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import Checkout from "./pages/Checkout";
+import CarouselGenerator from "./pages/CarouselGenerator";
 
 const queryClient = new QueryClient();
 
