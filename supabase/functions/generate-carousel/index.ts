@@ -205,7 +205,7 @@ Gere também: legenda do post (120-180 palavras), 3 opções alternativas de cap
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -218,6 +218,8 @@ Gere também: legenda do post (120-180 palavras), 3 opções alternativas de cap
 
     if (!aiRes.ok) {
       const status = aiRes.status;
+      const errBody = await aiRes.text();
+      console.error("AI gateway error:", status, errBody);
       if (status === 429 || status === 402) {
         return new Response(JSON.stringify({ error: "Serviço temporariamente indisponível. Tente novamente em instantes." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
