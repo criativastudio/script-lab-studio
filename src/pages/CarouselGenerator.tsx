@@ -345,7 +345,7 @@ const CarouselGenerator = () => {
           </TabsContent>
         </Tabs>
 
-        <UpgradePrompt open={showUpgrade} onOpenChange={setShowUpgrade} title="Limite de roteiros atingido" description="Você atingiu o limite mensal de roteiros do seu plano. Faça upgrade para continuar gerando." />
+        {showUpgrade && <UpgradePrompt message="Você atingiu o limite mensal de roteiros do seu plano. Faça upgrade para continuar gerando." />}
       </div>
     </DashboardLayout>
   );
