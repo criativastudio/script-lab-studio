@@ -232,7 +232,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
-            Roteiros Profissionais <span className="text-gradient-primary">com IA em Minutos</span>
+            Roteiros Estratégicos <span className="text-gradient-primary">em Minutos</span>
           </motion.h1>
 
           {/* Description */}
