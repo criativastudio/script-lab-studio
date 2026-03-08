@@ -58,6 +58,19 @@ serve(async (req) => {
     const bName = business_name || "a empresa";
     const bNiche = niche || "geral";
 
+    // Build enriched context from strategic fields if available
+    const contextBlock = customer_persona || tone_of_voice || market_positioning
+      ? `\n\nContexto estratégico do cliente:
+- Persona: ${customer_persona || "Não informado"}
+- Tom de Voz: ${tone_of_voice || "Não informado"}
+- Posicionamento: ${market_positioning || "Não informado"}
+- Estilo de Comunicação: ${communication_style || "Não informado"}
+- Produtos/Serviços: ${products_services || "Não informado"}
+- Dores do Público: ${pain_points || "Não informado"}
+- Diferenciais: ${differentiators || "Não informado"}
+- Objetivos de Marketing: ${marketing_objectives || "Não informado"}`
+      : "";
+
     const systemPrompt = `Você é um estrategista de conteúdo digital e roteirista profissional para redes sociais.
 Com base nas informações fornecidas pelo usuário, crie um planejamento estratégico completo e ${qty} roteiro(s) de vídeo.
 
@@ -69,7 +82,7 @@ O resultado DEVE incluir obrigatoriamente:
 5. **Funil de Conteúdo**: Estratégia de conteúdo dividida em Topo (awareness), Meio (consideração) e Fundo (conversão) do funil.
 6. **Roteiro(s)**: Cada roteiro deve ter título atrativo e o roteiro completo com GANCHO, DESENVOLVIMENTO e CTA, incluindo indicações de cena e falas.
 
-Escreva tudo em português do Brasil.`;
+Escreva tudo em português do Brasil.${contextBlock}`;
 
     const userPrompt = `Informações do cliente:
 - Empresa: ${bName}
