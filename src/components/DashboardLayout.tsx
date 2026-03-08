@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target, Sun, Moon, Menu } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target, Sun, Moon, Menu, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/crm", label: "Clientes", icon: Users },
   { href: "/gerador", label: "Gerador IA", icon: Sparkles },
   { href: "/analise-estrategica", label: "Análise Estratégica", icon: Target },
+  { href: "/carrossel", label: "Carrossel", icon: LayoutList },
   { href: "/metrics", label: "Análises", icon: BarChart3 },
   { href: "/whatsapp", label: "Distribuição", icon: Send },
 ];
