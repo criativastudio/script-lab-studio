@@ -139,12 +139,17 @@ export function ClientDetailView({
           <TabsTrigger value="calendar" className="flex items-center gap-1.5 rounded-lg">
             <Calendar className="h-4 w-4" />Calendário
           </TabsTrigger>
+          <TabsTrigger value="carousels" className="flex items-center gap-1.5 rounded-lg">
+            <LayoutList className="h-4 w-4" />Carrosséis
+            <Badge variant="secondary" className="ml-1 text-[10px] py-0">{carouselsCount}</Badge>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="context" className="space-y-4 mt-4">{children.contextTab}</TabsContent>
         <TabsContent value="projects" className="space-y-4 mt-4">{children.projectsTab}</TabsContent>
         <TabsContent value="ideas" className="space-y-4 mt-4">{children.ideasTab}</TabsContent>
         <TabsContent value="calendar" className="space-y-4 mt-4">{children.calendarTab}</TabsContent>
+        <TabsContent value="carousels" className="space-y-4 mt-4">{children.carouselsTab}</TabsContent>
       </Tabs>
     </div>
   );
