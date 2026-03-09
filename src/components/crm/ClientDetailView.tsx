@@ -51,7 +51,7 @@ interface ClientDetailViewProps {
 export function ClientDetailView({
   selectedGroup, activeTab, setActiveTab, onBack,
   isGroupInactive, handleToggleActive, handleDeleteClient, downloadAllPdf,
-  contentIdeasCount, strategicContextCompleted, children,
+  contentIdeasCount, carouselsCount, strategicContextCompleted, children,
 }: ClientDetailViewProps) {
   const first = selectedGroup.projects[0];
 
