@@ -128,9 +128,7 @@ const CarouselGenerator = () => {
   const handleSaveScript = async () => {
     if (!user || !script) return;
     const fullText = script.slides.map((s) => `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
-      + `\n\n---\n\n## Legenda\n${script.caption}`
-      + `\n\n## Capas Alternativas\n${script.alternative_covers.map((c, i) => `${i + 1}. ${c}`).join("\n")}`
-      + `\n\n## Aberturas A/B\n${script.ab_openings.map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
+      + `\n\n---\n\n## Legenda\n${script.caption}`;
 
     const { error } = await supabase.from("scripts").insert({
       title: `Carrossel — ${selectedBusiness}`,
@@ -143,6 +141,71 @@ const CarouselGenerator = () => {
     } else {
       toast({ title: "Roteiro salvo com sucesso!" });
     }
+  };
+
+  const getSlideTypeLabel = (num: number) => {
+    if (num === 1) return "Hook";
+    if (num === 6) return "CTA";
+    return "Desenvolvimento";
+  };
+
+  const getSlideAccent = (num: number) => {
+    if (num === 1) return "border-primary/50 bg-primary/5";
+    if (num === 6) return "border-accent/50 bg-accent/5";
+    return "";
+  };
+
+  const handleDownloadPDF = () => {
+    if (!script) return;
+    const dateStr = new Date().toLocaleDateString("pt-BR");
+    const slidesHtml = script.slides.map((s) => `
+      <div style="border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:16px;page-break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:#6b7280;">S${s.slide_number}</span>
+          <span style="font-size:13px;font-weight:600;color:#374151;">${getSlideTypeLabel(s.slide_number)}</span>
+        </div>
+        <p style="font-size:16px;font-weight:500;color:#111827;margin:0 0 16px 0;line-height:1.5;">${s.text}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
+          <div><strong>Visual:</strong> ${s.visual_suggestion}</div>
+          <div><strong>Arte:</strong> ${s.art_text}</div>
+          <div><strong>Alt:</strong> ${s.alt_text}</div>
+        </div>
+      </div>
+    `).join("");
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<html><head><title>Carrossel — ${selectedBusiness}</title>
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: #fff; }
+        .cover { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; page-break-after: always; padding: 60px; }
+        .cover h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .cover .meta { font-size: 14px; color: #6b7280; margin-top: 16px; }
+        .content { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151; }
+        .caption { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-top: 24px; }
+        .caption h3 { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .caption p { font-size: 14px; color: #4b5563; line-height: 1.6; }
+        @media print { .cover { page-break-after: always; } }
+      </style></head><body>
+        <div class="cover">
+          <h1>Carrossel Instagram</h1>
+          <p style="font-size:18px;color:#6b7280;">${selectedBusiness}</p>
+          ${ideaTitle ? `<p style="font-size:16px;color:#9ca3af;margin-top:8px;">${ideaTitle}</p>` : ""}
+          <p class="meta">${dateStr}</p>
+        </div>
+        <div class="content">
+          <h2 class="section-title">Slides do Carrossel</h2>
+          ${slidesHtml}
+          <div class="caption">
+            <h3>Legenda do Post</h3>
+            <p>${script.caption}</p>
+          </div>
+        </div>
+      </body></html>`);
+    win.document.close();
+    win.print();
   };
 
   const copyToClipboard = (text: string) => {
