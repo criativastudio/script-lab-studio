@@ -207,10 +207,7 @@ export function ContentGenerator() {
       const slides = (data.slides || []).map((s: any) =>
         `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`
       ).join("\n\n---\n\n");
-      return slides
-        + `\n\n---\n\n## Legenda\n${data.caption || ""}`
-        + `\n\n## Capas Alternativas\n${(data.alternative_covers || []).map((c: string, i: number) => `${i + 1}. ${c}`).join("\n")}`
-        + `\n\n## Aberturas A/B\n${(data.ab_openings || []).map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}`;
+      return slides + `\n\n---\n\n## Legenda\n${data.caption || ""}`;
     }
 
     const parts: string[] = [];
