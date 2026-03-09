@@ -249,12 +249,25 @@ const CRM = () => {
 
   useEffect(() => { fetchClients(); }, [user]);
 
+  const fetchClientCarousels = useCallback(async (businessName: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("scripts")
+      .select("*")
+      .eq("user_id", user.id)
+      .ilike("title", `%Carrossel%`)
+      .ilike("title", `%${businessName}%`)
+      .order("created_at", { ascending: false });
+    setClientCarousels((data as Script[]) || []);
+  }, [user]);
+
   useEffect(() => {
     if (selectedGroup) {
       fetchStrategicContext(selectedGroup.business_name);
       fetchContentIdeas(selectedGroup.business_name);
+      fetchClientCarousels(selectedGroup.business_name);
     }
-  }, [selectedGroup?.business_name, fetchStrategicContext, fetchContentIdeas]);
+  }, [selectedGroup?.business_name, fetchStrategicContext, fetchContentIdeas, fetchClientCarousels]);
 
   const toggleProject = (project: BriefingRequest) => {
     setOpenProjects((prev) => {
