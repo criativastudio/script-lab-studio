@@ -20,6 +20,7 @@ import { StrategicContextTab } from "@/components/crm/StrategicContextTab";
 import { ProjectsTab } from "@/components/crm/ProjectsTab";
 import { ContentIdeasTab } from "@/components/crm/ContentIdeasTab";
 import { ContentCalendarTab } from "@/components/crm/ContentCalendarTab";
+import { CarouselsTab } from "@/components/crm/CarouselsTab";
 
 // ── Types ──────────────────────────────────────────────────────
 interface BriefingRequest {
@@ -131,6 +132,9 @@ const CRM = () => {
 
   // Tab state
   const [activeTab, setActiveTab] = useState("context");
+
+  // Client carousels
+  const [clientCarousels, setClientCarousels] = useState<Script[]>([]);
 
   // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
@@ -245,12 +249,25 @@ const CRM = () => {
 
   useEffect(() => { fetchClients(); }, [user]);
 
+  const fetchClientCarousels = useCallback(async (businessName: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("scripts")
+      .select("*")
+      .eq("user_id", user.id)
+      .ilike("title", `%Carrossel%`)
+      .ilike("title", `%${businessName}%`)
+      .order("created_at", { ascending: false });
+    setClientCarousels((data as Script[]) || []);
+  }, [user]);
+
   useEffect(() => {
     if (selectedGroup) {
       fetchStrategicContext(selectedGroup.business_name);
       fetchContentIdeas(selectedGroup.business_name);
+      fetchClientCarousels(selectedGroup.business_name);
     }
-  }, [selectedGroup?.business_name, fetchStrategicContext, fetchContentIdeas]);
+  }, [selectedGroup?.business_name, fetchStrategicContext, fetchContentIdeas, fetchClientCarousels]);
 
   const toggleProject = (project: BriefingRequest) => {
     setOpenProjects((prev) => {
@@ -710,6 +727,7 @@ const CRM = () => {
           handleDeleteClient={handleDeleteClient}
           downloadAllPdf={downloadAllPdf}
           contentIdeasCount={contentIdeas.length}
+          carouselsCount={clientCarousels.length}
           strategicContextCompleted={!!strategicContext?.is_completed}
         >
           {{
@@ -785,6 +803,13 @@ const CRM = () => {
             ),
             calendarTab: (
               <ContentCalendarTab contentIdeas={contentIdeas} />
+            ),
+            carouselsTab: (
+              <CarouselsTab
+                carousels={clientCarousels}
+                onRefresh={() => fetchClientCarousels(selectedGroup.projects[0].business_name)}
+                toast={toast}
+              />
             ),
           }}
         </ClientDetailView>
