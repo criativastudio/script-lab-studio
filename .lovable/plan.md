@@ -1,18 +1,38 @@
 
 
-# Redirect to Login After Signup
+# Persistência de Carrosséis no CRM — Aba "Carrosséis" no Card do Cliente
 
-## Problem
-After creating an account, the user stays on the signup form. They should be switched to the login view while the toast confirmation message appears in the bottom-right corner.
+## Overview
 
-## Change
+Adicionar uma aba "Carrosséis" no card do cliente (CRM) que lista todos os carrosséis gerados (já salvos na tabela `scripts` com título contendo "Carrossel"), permitindo visualizar, editar e exportar em PDF.
 
-**File: `src/pages/Auth.tsx`**
+## Dados
 
-After successful signup (line 37), add:
-- `setIsSignUp(false)` to switch the form back to login mode
-- Clear the form fields (`setEmail("")`, `setPassword("")`, `setFullName("")`)
-- The toast already appears in the bottom-right (default Toaster position), so no change needed there
+Os carrosséis já são salvos na tabela `scripts` com título no formato `{business_name} — Carrossel — {data}`. A filtragem será feita via `ilike` no título.
 
-This is a 3-line addition inside the existing `if (isSignUp)` success block. No other files need changes.
+## Arquivos
+
+| Arquivo | Alteração |
+|---|---|
+| `src/components/crm/CarouselsTab.tsx` | **Novo** — Componente da aba com lista de carrosséis, modais de visualização/edição, e export PDF |
+| `src/components/crm/ClientDetailView.tsx` | Adicionar aba "Carrosséis" no TabsList + TabsContent, receber `carouselsTab` nos children |
+| `src/pages/CRM.tsx` | Fetch carrosséis do cliente selecionado, passar `carouselsTab` ao `ClientDetailView` |
+
+## Detalhes
+
+### CarouselsTab
+- Recebe `carousels: Script[]` + callbacks para edit/delete/refresh
+- Lista cada carrossel com título, data, botões: Visualizar, Editar, Baixar PDF
+- Modal de visualização: renderiza o conteúdo markdown do carrossel
+- Modal de edição: título + textarea do conteúdo, salva via `supabase.update`
+- PDF: abre nova janela com HTML estilizado premium (mesmo padrão do ContentGenerator)
+
+### ClientDetailView
+- Novo child `carouselsTab` + prop `carouselsCount`
+- Nova `TabsTrigger` com ícone `LayoutList` e badge com contagem
+
+### CRM.tsx
+- Estado `clientCarousels: Script[]`
+- Fetch ao selecionar cliente: `scripts` filtrado por `ilike title '%Carrossel%'` e `ilike title '%{business_name}%'`
+- Funções `handleEditCarousel`, `handleDeleteCarousel`
 
