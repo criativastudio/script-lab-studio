@@ -12,7 +12,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
-import { Loader2, Lightbulb, LayoutList, Sparkles, Save, Copy } from "lucide-react";
+import { Loader2, Lightbulb, LayoutList, Sparkles, Save, Copy, Download } from "lucide-react";
 
 interface StrategicContext {
   id: string;
@@ -45,8 +45,6 @@ interface SlideData {
 interface ScriptResult {
   slides: SlideData[];
   caption: string;
-  alternative_covers: string[];
-  ab_openings: string[];
 }
 
 const CarouselGenerator = () => {
@@ -115,7 +113,7 @@ const CarouselGenerator = () => {
         setIdeas(data.ideas);
         setScript(null);
       } else {
-        setScript({ slides: data.slides, caption: data.caption, alternative_covers: data.alternative_covers, ab_openings: data.ab_openings });
+        setScript({ slides: data.slides, caption: data.caption });
         setIdeas(null);
       }
 
@@ -130,9 +128,7 @@ const CarouselGenerator = () => {
   const handleSaveScript = async () => {
     if (!user || !script) return;
     const fullText = script.slides.map((s) => `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
-      + `\n\n---\n\n## Legenda\n${script.caption}`
-      + `\n\n## Capas Alternativas\n${script.alternative_covers.map((c, i) => `${i + 1}. ${c}`).join("\n")}`
-      + `\n\n## Aberturas A/B\n${script.ab_openings.map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
+      + `\n\n---\n\n## Legenda\n${script.caption}`;
 
     const { error } = await supabase.from("scripts").insert({
       title: `Carrossel — ${selectedBusiness}`,
@@ -145,6 +141,71 @@ const CarouselGenerator = () => {
     } else {
       toast({ title: "Roteiro salvo com sucesso!" });
     }
+  };
+
+  const getSlideTypeLabel = (num: number) => {
+    if (num === 1) return "Hook";
+    if (num === 6) return "CTA";
+    return "Desenvolvimento";
+  };
+
+  const getSlideAccent = (num: number) => {
+    if (num === 1) return "border-primary/50 bg-primary/5";
+    if (num === 6) return "border-accent/50 bg-accent/5";
+    return "";
+  };
+
+  const handleDownloadPDF = () => {
+    if (!script) return;
+    const dateStr = new Date().toLocaleDateString("pt-BR");
+    const slidesHtml = script.slides.map((s) => `
+      <div style="border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:16px;page-break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:#6b7280;">S${s.slide_number}</span>
+          <span style="font-size:13px;font-weight:600;color:#374151;">${getSlideTypeLabel(s.slide_number)}</span>
+        </div>
+        <p style="font-size:16px;font-weight:500;color:#111827;margin:0 0 16px 0;line-height:1.5;">${s.text}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
+          <div><strong>Visual:</strong> ${s.visual_suggestion}</div>
+          <div><strong>Arte:</strong> ${s.art_text}</div>
+          <div><strong>Alt:</strong> ${s.alt_text}</div>
+        </div>
+      </div>
+    `).join("");
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<html><head><title>Carrossel — ${selectedBusiness}</title>
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: #fff; }
+        .cover { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; page-break-after: always; padding: 60px; }
+        .cover h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .cover .meta { font-size: 14px; color: #6b7280; margin-top: 16px; }
+        .content { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151; }
+        .caption { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-top: 24px; }
+        .caption h3 { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .caption p { font-size: 14px; color: #4b5563; line-height: 1.6; }
+        @media print { .cover { page-break-after: always; } }
+      </style></head><body>
+        <div class="cover">
+          <h1>Carrossel Instagram</h1>
+          <p style="font-size:18px;color:#6b7280;">${selectedBusiness}</p>
+          ${ideaTitle ? `<p style="font-size:16px;color:#9ca3af;margin-top:8px;">${ideaTitle}</p>` : ""}
+          <p class="meta">${dateStr}</p>
+        </div>
+        <div class="content">
+          <h2 class="section-title">Slides do Carrossel</h2>
+          ${slidesHtml}
+          <div class="caption">
+            <h3>Legenda do Post</h3>
+            <p>${script.caption}</p>
+          </div>
+        </div>
+      </body></html>`);
+    win.document.close();
+    win.print();
   };
 
   const copyToClipboard = (text: string) => {
@@ -278,10 +339,11 @@ const CarouselGenerator = () => {
                 {/* Slides */}
                 <div className="grid gap-3">
                   {script.slides.map((slide) => (
-                    <Card key={slide.slide_number}>
+                    <Card key={slide.slide_number} className={getSlideAccent(slide.slide_number)}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Badge variant="secondary">S{slide.slide_number}</Badge>
+                          <span className="text-xs text-muted-foreground font-normal">{getSlideTypeLabel(slide.slide_number)}</span>
                           {slide.slide_label}
                         </CardTitle>
                       </CardHeader>
@@ -310,36 +372,15 @@ const CarouselGenerator = () => {
                   </CardContent>
                 </Card>
 
-                {/* Variations */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Capas Alternativas</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {script.alternative_covers.map((c, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{i + 1}</Badge>
-                          <span>{c}</span>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Aberturas A/B</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {script.ab_openings.map((a, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{String.fromCharCode(65 + i)}</Badge>
-                          <span>{a}</span>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <Button onClick={handleSaveScript} className="flex-1">
+                    <Save className="h-4 w-4 mr-2" />Salvar Roteiro
+                  </Button>
+                  <Button onClick={handleDownloadPDF} variant="outline" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />Baixar PDF
+                  </Button>
                 </div>
-
-                {/* Save */}
-                <Button onClick={handleSaveScript} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />Salvar Roteiro
-                </Button>
               </div>
             )}
           </TabsContent>

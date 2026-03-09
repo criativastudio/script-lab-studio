@@ -76,21 +76,23 @@ BRIEFING ESTRATÉGICO DO CLIENTE:
 - Estilo de comunicação: ${context.communication_style || "Não definido"}
 `.trim();
 
-    const systemPrompt = `Você é um especialista em estratégia de conteúdo para Instagram focado em crescimento orgânico e geração de autoridade.
-Sua função é criar ideias e roteiros estratégicos de carrossel que gerem alto alcance para não seguidores, salvamentos e compartilhamentos.
+    const systemPrompt = `Você é um especialista em carrosséis para Instagram focado em ALCANCE PARA NÃO SEGUIDORES.
+Sua missão é criar conteúdo que maximize descoberta, salvamentos e compartilhamentos — fazendo o Instagram distribuir o post para pessoas que ainda não seguem o perfil.
 
 ${contextBlock}
 
 REGRAS OBRIGATÓRIAS:
-- Nunca gerar conteúdo genérico. Toda ideia deve estar alinhada ao nicho, persona e objetivos do cliente.
-- O conteúdo deve ser útil, prático e salvarável.
-- Linguagem deve respeitar o tom de voz definido no briefing.
-- Headlines devem ser fortes, específicas e conectadas com dores ou desejos da persona.
-- O conteúdo deve ser otimizado para Instagram.
-- Frases curtas, máximo de 16 palavras por slide.
-- Linguagem clara e direta, fácil leitura em mobile.
+- Texto CURTO por slide — máximo 12 palavras por frase.
+- Linguagem SIMPLES e DIRETA — como se falasse com um amigo.
+- Conteúdo focado em DESCOBERTA: curiosidade, utilidade ou quebra de crença.
+- Nunca genérico. Tudo adaptado ao nicho, persona e dores do cliente.
+- O hook (S1) deve INTERROMPER o scroll e gerar curiosidade irresistível.
+- Cada slide de desenvolvimento (S2-S5) apresenta 1 IDEIA CLARA, sem enrolação.
+- O CTA (S6) fecha com chamada estratégica (seguir, salvar ou compartilhar).
+- Priorizar: números específicos, contrastes, listas, revelações inesperadas.
+- Otimizado para mobile — fácil de ler em 2 segundos por slide.
 
-MÉTRICAS DE REFERÊNCIA:
+MÉTRICAS-ALVO:
 - Salvamentos ≥ 8%
 - Compartilhamentos ≥ 5%
 - Alcance de não seguidores ≥ 60%
@@ -134,28 +136,24 @@ Cada ideia deve conter: headline poderoso, ângulo estratégico, objetivo no fun
         },
       };
     } else {
-      userPrompt = `Crie um roteiro COMPLETO de carrossel para Instagram com 10 slides (S1–S10).${idea_title ? ` Tema: ${idea_title}` : ""}${topic ? ` Palavras-chave: ${topic}` : ""}
+      userPrompt = `Crie um roteiro de carrossel para Instagram com 6 slides otimizado para ALCANCE DE NÃO SEGUIDORES.${idea_title ? ` Tema: ${idea_title}` : ""}${topic ? ` Palavras-chave: ${topic}` : ""}
 
-ESTRUTURA OBRIGATÓRIA:
-S1 – CAPA: Gancho forte com no máximo 9 palavras.
-S2 – CONTEXTO DA DOR: Situação real que a persona vive.
-S3 – PROMESSA DO CONTEÚDO: Resultado claro ao continuar.
-S4 – PASSO 1: Primeira ação prática.
-S5 – PASSO 2: Segunda ação prática.
-S6 – PASSO 3: Terceira ação prática.
-S7 – DICA OU INSIGHT EXTRA.
-S8 – PROVA: Número, exemplo real ou mini estudo.
-S9 – ERRO COMUM: Erro que a maioria comete e a forma correta.
-S10 – CTA: Chamada para ação estratégica.
+ESTRUTURA OBRIGATÓRIA (6 slides):
+S1 – HOOK: Gancho forte que interrompa o scroll e gere curiosidade. Máximo 9 palavras.
+S2 – DESENVOLVIMENTO 1: Primeira ideia clara, texto curto e direto.
+S3 – DESENVOLVIMENTO 2: Segunda ideia clara, texto curto e direto.
+S4 – DESENVOLVIMENTO 3: Terceira ideia clara, texto curto e direto.
+S5 – DESENVOLVIMENTO 4: Quarta ideia clara, texto curto e direto.
+S6 – CTA: Conclusão da ideia com chamada para ação (seguir, salvar ou compartilhar).
 
 Para cada slide gere: texto do slide, sugestão visual, texto da arte, e alt text para SEO.
-Gere também: legenda do post (120-180 palavras), 3 opções alternativas de capa, 2 variações de abertura para testes A/B.`;
+Gere também: legenda do post (120-180 palavras).`;
 
       toolSchema = {
         type: "function",
         function: {
           name: "generate_carousel_script",
-          description: "Gera roteiro completo de carrossel com 10 slides",
+          description: "Gera roteiro de carrossel com 6 slides para alcance de não seguidores",
           parameters: {
             type: "object",
             properties: {
@@ -175,18 +173,8 @@ Gere também: legenda do post (120-180 palavras), 3 opções alternativas de cap
                 },
               },
               caption: { type: "string", description: "Legenda do post (120-180 palavras)" },
-              alternative_covers: {
-                type: "array",
-                items: { type: "string" },
-                description: "3 opções alternativas de capa",
-              },
-              ab_openings: {
-                type: "array",
-                items: { type: "string" },
-                description: "2 variações de abertura para testes A/B",
-              },
             },
-            required: ["slides", "caption", "alternative_covers", "ab_openings"],
+            required: ["slides", "caption"],
           },
         },
       };
