@@ -804,6 +804,13 @@ const CRM = () => {
             calendarTab: (
               <ContentCalendarTab contentIdeas={contentIdeas} />
             ),
+            carouselsTab: (
+              <CarouselsTab
+                carousels={clientCarousels}
+                onRefresh={() => fetchClientCarousels(selectedGroup.projects[0].business_name)}
+                toast={toast}
+              />
+            ),
           }}
         </ClientDetailView>
 
