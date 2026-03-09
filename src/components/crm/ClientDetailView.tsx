@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   ArrowLeft, Trash2, Download, Power, Users, Mail, Phone,
-  Brain, Hash, Lightbulb, Calendar,
+  Brain, Hash, Lightbulb, Calendar, LayoutList,
 } from "lucide-react";
 import { StepIndicator } from "./StepIndicator";
 
