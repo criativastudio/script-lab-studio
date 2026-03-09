@@ -727,6 +727,7 @@ const CRM = () => {
           handleDeleteClient={handleDeleteClient}
           downloadAllPdf={downloadAllPdf}
           contentIdeasCount={contentIdeas.length}
+          carouselsCount={clientCarousels.length}
           strategicContextCompleted={!!strategicContext?.is_completed}
         >
           {{
