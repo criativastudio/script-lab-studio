@@ -45,8 +45,6 @@ interface SlideData {
 interface ScriptResult {
   slides: SlideData[];
   caption: string;
-  alternative_covers: string[];
-  ab_openings: string[];
 }
 
 const CarouselGenerator = () => {
