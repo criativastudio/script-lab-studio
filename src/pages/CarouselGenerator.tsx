@@ -339,10 +339,11 @@ const CarouselGenerator = () => {
                 {/* Slides */}
                 <div className="grid gap-3">
                   {script.slides.map((slide) => (
-                    <Card key={slide.slide_number}>
+                    <Card key={slide.slide_number} className={getSlideAccent(slide.slide_number)}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Badge variant="secondary">S{slide.slide_number}</Badge>
+                          <span className="text-xs text-muted-foreground font-normal">{getSlideTypeLabel(slide.slide_number)}</span>
                           {slide.slide_label}
                         </CardTitle>
                       </CardHeader>
@@ -371,36 +372,15 @@ const CarouselGenerator = () => {
                   </CardContent>
                 </Card>
 
-                {/* Variations */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Capas Alternativas</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {script.alternative_covers.map((c, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{i + 1}</Badge>
-                          <span>{c}</span>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Aberturas A/B</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {script.ab_openings.map((a, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{String.fromCharCode(65 + i)}</Badge>
-                          <span>{a}</span>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <Button onClick={handleSaveScript} className="flex-1">
+                    <Save className="h-4 w-4 mr-2" />Salvar Roteiro
+                  </Button>
+                  <Button onClick={handleDownloadPDF} variant="outline" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />Baixar PDF
+                  </Button>
                 </div>
-
-                {/* Save */}
-                <Button onClick={handleSaveScript} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />Salvar Roteiro
-                </Button>
               </div>
             )}
           </TabsContent>
