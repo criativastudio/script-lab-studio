@@ -37,12 +37,14 @@ interface ClientDetailViewProps {
   handleDeleteClient: (g: ClientGroup) => void;
   downloadAllPdf: () => void;
   contentIdeasCount: number;
+  carouselsCount: number;
   strategicContextCompleted: boolean;
   children: {
     contextTab: React.ReactNode;
     projectsTab: React.ReactNode;
     ideasTab: React.ReactNode;
     calendarTab: React.ReactNode;
+    carouselsTab: React.ReactNode;
   };
 }
 
