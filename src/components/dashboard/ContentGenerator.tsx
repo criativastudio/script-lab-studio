@@ -46,8 +46,6 @@ interface GeneratedResult {
   // Carousel fields
   slides?: { slide_number: number; slide_label: string; text: string; visual_suggestion: string; art_text: string; alt_text: string }[];
   caption?: string;
-  alternative_covers?: string[];
-  ab_openings?: string[];
 }
 
 interface HistoryItem {
