@@ -113,7 +113,7 @@ const CarouselGenerator = () => {
         setIdeas(data.ideas);
         setScript(null);
       } else {
-        setScript({ slides: data.slides, caption: data.caption, alternative_covers: data.alternative_covers, ab_openings: data.ab_openings });
+        setScript({ slides: data.slides, caption: data.caption });
         setIdeas(null);
       }
 
