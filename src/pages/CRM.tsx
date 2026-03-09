@@ -20,6 +20,7 @@ import { StrategicContextTab } from "@/components/crm/StrategicContextTab";
 import { ProjectsTab } from "@/components/crm/ProjectsTab";
 import { ContentIdeasTab } from "@/components/crm/ContentIdeasTab";
 import { ContentCalendarTab } from "@/components/crm/ContentCalendarTab";
+import { CarouselsTab } from "@/components/crm/CarouselsTab";
 
 // ── Types ──────────────────────────────────────────────────────
 interface BriefingRequest {
