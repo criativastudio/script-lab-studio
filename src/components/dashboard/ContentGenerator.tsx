@@ -401,16 +401,6 @@ export function ContentGenerator() {
                 </div>
               </div>
 
-              {/* Context badges */}
-              {selectedContext && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedContext.business_niche && <Badge variant="secondary">{selectedContext.business_niche}</Badge>}
-                  {selectedContext.tone_of_voice && <Badge variant="outline">{selectedContext.tone_of_voice}</Badge>}
-                  {selectedContext.customer_persona && (
-                    <Badge variant="outline" className="max-w-[200px] truncate">{selectedContext.customer_persona}</Badge>
-                  )}
-                </div>
-              )}
 
               <div className="space-y-1.5">
                 <Label htmlFor="cg-keywords">Palavras-chave / Tema (opcional)</Label>
