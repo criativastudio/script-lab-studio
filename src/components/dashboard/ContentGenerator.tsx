@@ -335,9 +335,10 @@ export function ContentGenerator() {
   const renderCarouselResult = (data: GeneratedResult) => (
     <>
       {data.slides?.map((slide) => (
-        <div key={slide.slide_number} className="rounded-lg border border-border bg-muted/50 p-3 mb-3">
+        <div key={slide.slide_number} className={`rounded-lg border p-3 mb-3 ${slide.slide_number === 1 ? "border-primary/50 bg-primary/5" : slide.slide_number === 6 ? "border-accent/50 bg-accent/5" : "border-border bg-muted/50"}`}>
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="secondary">S{slide.slide_number}</Badge>
+            <span className="text-xs text-muted-foreground">{getSlideTypeLabel(slide.slide_number)}</span>
             <span className="text-sm font-semibold text-foreground">{slide.slide_label}</span>
           </div>
           <p className="text-sm font-medium text-foreground mb-2">{slide.text}</p>
@@ -352,22 +353,6 @@ export function ContentGenerator() {
         <div className="rounded-lg border border-border bg-muted/50 p-3 mb-3">
           <span className="text-sm font-semibold text-foreground">Legenda</span>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{data.caption}</p>
-        </div>
-      )}
-      {data.alternative_covers && data.alternative_covers.length > 0 && (
-        <div className="rounded-lg border border-border bg-muted/50 p-3 mb-3">
-          <span className="text-sm font-semibold text-foreground">Capas Alternativas</span>
-          {data.alternative_covers.map((c, i) => (
-            <p key={i} className="text-sm text-muted-foreground">{i + 1}. {c}</p>
-          ))}
-        </div>
-      )}
-      {data.ab_openings && data.ab_openings.length > 0 && (
-        <div className="rounded-lg border border-border bg-muted/50 p-3 mb-3">
-          <span className="text-sm font-semibold text-foreground">Aberturas A/B</span>
-          {data.ab_openings.map((a, i) => (
-            <p key={i} className="text-sm text-muted-foreground">{String.fromCharCode(65 + i)}. {a}</p>
-          ))}
         </div>
       )}
     </>

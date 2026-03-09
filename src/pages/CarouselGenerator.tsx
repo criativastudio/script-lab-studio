@@ -12,7 +12,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
-import { Loader2, Lightbulb, LayoutList, Sparkles, Save, Copy } from "lucide-react";
+import { Loader2, Lightbulb, LayoutList, Sparkles, Save, Copy, Download } from "lucide-react";
 
 interface StrategicContext {
   id: string;
