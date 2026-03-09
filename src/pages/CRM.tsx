@@ -133,6 +133,9 @@ const CRM = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState("context");
 
+  // Client carousels
+  const [clientCarousels, setClientCarousels] = useState<Script[]>([]);
+
   // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
     const map = new Map<string, BriefingRequest[]>();
