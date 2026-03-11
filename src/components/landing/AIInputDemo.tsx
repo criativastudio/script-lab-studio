@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 
-const industries = [
-  "Saúde e Bem-estar",
-  "Educação Online",
-  "E-commerce de Moda",
-  "Mercado Financeiro",
-  "Marketing Digital",
-  "Gastronomia",
-  "Advocacia",
-  "Imobiliário",
+const placeholderExamples = [
+  "Meu nicho é odontologia",
+  "Meu nicho é advocacia",
+  "Meu nicho é confeitaria",
+  "Meu nicho é loja de carros",
+  "Meu nicho é médico dermatologista",
+  "Meu nicho é imobiliária",
+  "Meu nicho é personal trainer",
+  "Meu nicho é marketing digital",
 ];
 
 const chips = [
@@ -28,46 +28,57 @@ interface AIInputDemoProps {
 
 export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [typed, setTyped] = useState("");
+  const [animatedText, setAnimatedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isManual, setIsManual] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Animated placeholder cycling (only when input is empty and not focused)
+  const showAnimation = !isFocused && inputValue === "";
 
   useEffect(() => {
-    if (isManual) return;
+    if (!showAnimation) return;
 
-    const word = industries[currentIndex];
+    const word = placeholderExamples[currentIndex];
 
-    if (!isDeleting && typed === word) {
+    if (!isDeleting && animatedText === word) {
       const timeout = setTimeout(() => setIsDeleting(true), 1800);
       return () => clearTimeout(timeout);
     }
 
-    if (isDeleting && typed === "") {
+    if (isDeleting && animatedText === "") {
       setIsDeleting(false);
-      setCurrentIndex((prev) => (prev + 1) % industries.length);
+      setCurrentIndex((prev) => (prev + 1) % placeholderExamples.length);
       return;
     }
 
     const speed = isDeleting ? 30 : 60;
     const timeout = setTimeout(() => {
-      setTyped(
+      setAnimatedText(
         isDeleting
-          ? word.substring(0, typed.length - 1)
-          : word.substring(0, typed.length + 1)
+          ? word.substring(0, animatedText.length - 1)
+          : word.substring(0, animatedText.length + 1)
       );
     }, speed);
 
     return () => clearTimeout(timeout);
-  }, [typed, isDeleting, currentIndex, isManual]);
+  }, [animatedText, isDeleting, currentIndex, showAnimation]);
 
-  const handleChipClick = (chip: string) => {
-    setIsManual(true);
-    setTyped(chip);
+  const handleSubmit = () => {
+    if (!inputValue.trim()) return;
+    onChipSelected?.(inputValue.trim());
   };
 
-  const handleArrowClick = () => {
-    if (!typed.trim()) return;
-    onChipSelected?.(typed);
+  const handleChipClick = (chip: string) => {
+    setInputValue(chip);
+    onChipSelected?.(chip);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
   };
 
   return (
@@ -112,12 +123,27 @@ export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
           >
             <div className="relative flex items-center rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-[0_8px_40px_hsl(var(--primary)/0.06),0_2px_12px_rgba(0,0,0,0.08)] px-5 py-4 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_8px_60px_hsl(var(--primary)/0.12),0_0_0_1px_hsl(var(--primary)/0.15)]">
               <Sparkles className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-              <div className="flex-1 text-left">
-                <span className="text-foreground">{typed}</span>
-                <span className="inline-block w-0.5 h-5 bg-primary ml-0.5 animate-typing-cursor align-middle" />
+              <div className="flex-1 relative">
+                {showAnimation && (
+                  <div className="absolute inset-0 flex items-center pointer-events-none">
+                    <span className="text-muted-foreground/60">{animatedText}</span>
+                    <span className="inline-block w-0.5 h-5 bg-primary ml-0.5 animate-typing-cursor" />
+                  </div>
+                )}
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full bg-transparent text-foreground outline-none text-sm md:text-base placeholder:text-transparent"
+                  placeholder="Digite seu nicho..."
+                />
               </div>
               <button
-                onClick={handleArrowClick}
+                onClick={handleSubmit}
                 className="ml-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all duration-200 hover:scale-110 hover:shadow-[0_0_24px_hsl(var(--primary)/0.4)] active:scale-95"
               >
                 <ArrowRight className="h-4 w-4" />

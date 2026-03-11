@@ -180,13 +180,24 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
 
 function getDemoData(chip: string): DemoStepData {
   const override = demoDataMap[chip] || {};
-  return {
+  const base = {
     ...defaultDemo,
     ...override,
     roteiro: { ...defaultDemo.roteiro, ...override.roteiro },
     briefing: { ...defaultDemo.briefing, ...override.briefing },
     carrossel: override.carrossel || defaultDemo.carrossel,
   };
+  // For custom niches not in the map, inject the niche name
+  if (!demoDataMap[chip]) {
+    base.persona = `Profissional de ${chip}, 25-50 anos, busca autoridade digital e captação de clientes no segmento.`;
+    base.posicionamento = `Referência em ${chip} com conteúdo estratégico que gera resultados reais.`;
+    base.briefing = {
+      objetivo: `Gerar leads qualificados para ${chip} via conteúdo orgânico`,
+      publico: `Público-alvo de ${chip} em fase de decisão`,
+      estilo: "Direto, com dados e storytelling",
+    };
+  }
+  return base;
 }
 
 // ── Step card for demo mode ──
@@ -292,7 +303,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
   const demo = isDemo ? getDemoData(selectedChip) : null;
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
+    <div className="w-full h-full relative overflow-hidden select-none" onCopy={(e) => e.preventDefault()}>
       <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-foreground/[0.04] to-transparent pointer-events-none z-10 rounded-t-2xl" />
 
       <div className="p-4 md:p-6 h-full relative">
