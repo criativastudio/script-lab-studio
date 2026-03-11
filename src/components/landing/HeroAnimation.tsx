@@ -5,6 +5,7 @@ import { FileText, Sparkles, CheckCircle2, Loader2, ArrowLeft, User, Target, Mic
 // ── Default animation data ──
 
 type Phase = "briefing" | "processing" | "script";
+type DemoPhase = "form" | "processing" | "briefing" | "script" | "carousel";
 
 const briefingFields = [
   { label: "Contexto do Negócio", value: "Clínica odontológica premium focada em lentes de contato dental e harmonização facial..." },
@@ -25,12 +26,9 @@ const BRIEFING_DURATION = 5000;
 const PROCESSING_DURATION = 2500;
 const SCRIPT_DURATION = 6000;
 
-// ── Demo data for chip-selected mode ──
+// ── Demo data ──
 
-interface CarouselSlide {
-  label: string;
-  text: string;
-}
+interface CarouselSlide { label: string; text: string; }
 
 interface DemoStepData {
   persona: string;
@@ -40,6 +38,7 @@ interface DemoStepData {
   briefing: { objetivo: string; publico: string; estilo: string };
   roteiro: { gancho: string; desenvolvimento: string; cta: string };
   carrossel: CarouselSlide[];
+  formAnswers: { contexto: string; publico: string; resultado: string; voz: string };
 }
 
 const defaultDemo: DemoStepData = {
@@ -65,6 +64,12 @@ const defaultDemo: DemoStepData = {
     { label: "S5 — Método", text: "Topo: awareness. Meio: educação. Fundo: oferta." },
     { label: "S6 — CTA", text: "Link na bio → Análise gratuita do seu conteúdo." },
   ],
+  formAnswers: {
+    contexto: "Negócio digital focado em crescimento orgânico e autoridade no mercado.",
+    publico: "Empreendedores digitais, 25-45 anos, em fase de crescimento.",
+    resultado: "Gerar leads qualificados via conteúdo orgânico",
+    voz: "Educativo, próximo e com autoridade",
+  },
 };
 
 const demoDataMap: Record<string, Partial<DemoStepData>> = {
@@ -72,11 +77,7 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
     persona: "Mulher, 28-40, criadora de conteúdo e empreendedora digital que busca engajamento real.",
     posicionamento: "Especialista em Reels que convertem seguidores em clientes.",
     tomDeVoz: ["Dinâmico", "Inspirador", "Próximo"],
-    roteiro: {
-      gancho: "Para de fazer Reels bonitos que não vendem nada.",
-      desenvolvimento: "O algoritmo prioriza retenção. Use ganchos nos primeiros 0,5s, entregue valor no meio e feche com CTA claro.",
-      cta: "Salva esse vídeo e aplica no seu próximo Reel.",
-    },
+    roteiro: { gancho: "Para de fazer Reels bonitos que não vendem nada.", desenvolvimento: "O algoritmo prioriza retenção. Use ganchos nos primeiros 0,5s, entregue valor no meio e feche com CTA claro.", cta: "Salva esse vídeo e aplica no seu próximo Reel." },
     carrossel: [
       { label: "S1 — Hook", text: "Seus Reels são bonitos mas não vendem?" },
       { label: "S2 — Erro", text: "Estética sem estratégia = vaidade métrica." },
@@ -85,16 +86,13 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Passo a passo", text: "1. Hook visual 2. Dor 3. Solução 4. CTA" },
       { label: "S6 — CTA", text: "Salva e aplica no seu próximo Reel →" },
     ],
+    formAnswers: { contexto: "Criação de Reels estratégicos para Instagram que convertem seguidores em clientes.", publico: "Mulheres 28-40, criadoras de conteúdo e empreendedoras digitais.", resultado: "Aumentar engajamento e conversão via Reels", voz: "Dinâmico, inspirador e próximo" },
   },
   "TikTok virais": {
     persona: "Jovem criador(a), 20-35, quer viralizar com conteúdo autêntico e monetizar a audiência.",
     posicionamento: "Fábrica de virais com método replicável baseado em dados.",
     tomDeVoz: ["Ousado", "Descontraído", "Provocador"],
-    roteiro: {
-      gancho: "Esse formato fez 2 milhões de views em 48 horas.",
-      desenvolvimento: "TikTok recompensa originalidade e ritmo. Pattern interrupt nos primeiros 2s, loop visual, e texto que complementa o áudio.",
-      cta: "Segue pra mais formatos que viralizam.",
-    },
+    roteiro: { gancho: "Esse formato fez 2 milhões de views em 48 horas.", desenvolvimento: "TikTok recompensa originalidade e ritmo. Pattern interrupt nos primeiros 2s, loop visual, e texto que complementa o áudio.", cta: "Segue pra mais formatos que viralizam." },
     carrossel: [
       { label: "S1 — Hook", text: "2M de views em 48h com esse formato." },
       { label: "S2 — Segredo", text: "Pattern interrupt nos primeiros 2 segundos." },
@@ -103,16 +101,13 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Template", text: "Hook → Tensão → Reveal → Loop." },
       { label: "S6 — CTA", text: "Segue pra mais formatos que viralizam →" },
     ],
+    formAnswers: { contexto: "Produção de conteúdo viral para TikTok com método replicável.", publico: "Jovens criadores 20-35 que querem viralizar e monetizar.", resultado: "Viralizar com conteúdo autêntico e monetizar", voz: "Ousado, descontraído e provocador" },
   },
   "Storytelling de marca": {
     persona: "Fundador(a) de marca, 30-50, quer construir conexão emocional com a audiência.",
     posicionamento: "Marca que inspira através de histórias reais e propósito genuíno.",
     tomDeVoz: ["Emocional", "Autêntico", "Inspirador"],
-    roteiro: {
-      gancho: "Tudo começou com um 'não' que mudou tudo.",
-      desenvolvimento: "As marcas que as pessoas amam não vendem produtos — elas contam histórias. Vulnerabilidade gera conexão.",
-      cta: "Conta nos comentários: qual foi o 'não' que te transformou?",
-    },
+    roteiro: { gancho: "Tudo começou com um 'não' que mudou tudo.", desenvolvimento: "As marcas que as pessoas amam não vendem produtos — elas contam histórias. Vulnerabilidade gera conexão.", cta: "Conta nos comentários: qual foi o 'não' que te transformou?" },
     carrossel: [
       { label: "S1 — Hook", text: "Tudo começou com um 'não'." },
       { label: "S2 — Origem", text: "A história por trás da marca." },
@@ -121,16 +116,13 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Impacto", text: "As vidas que transformamos." },
       { label: "S6 — CTA", text: "Qual foi o 'não' que te transformou? →" },
     ],
+    formAnswers: { contexto: "Construção de marca através de storytelling emocional e propósito genuíno.", publico: "Fundadores de marca 30-50, buscam conexão emocional com audiência.", resultado: "Construir conexão emocional e lealdade à marca", voz: "Emocional, autêntico e inspirador" },
   },
   "Vídeos para YouTube": {
     persona: "Criador(a) de conteúdo, 25-45, quer construir canal com autoridade e monetização.",
     posicionamento: "Canal referência que educa e entretém com profundidade.",
     tomDeVoz: ["Educativo", "Profundo", "Cativante"],
-    roteiro: {
-      gancho: "O maior erro dos canais pequenos é esse.",
-      desenvolvimento: "YouTube é um mecanismo de busca. Títulos com curiosidade, thumbnails com contraste, e os primeiros 30s decidem tudo.",
-      cta: "Se inscreve e ativa o sino pra não perder o próximo vídeo.",
-    },
+    roteiro: { gancho: "O maior erro dos canais pequenos é esse.", desenvolvimento: "YouTube é um mecanismo de busca. Títulos com curiosidade, thumbnails com contraste, e os primeiros 30s decidem tudo.", cta: "Se inscreve e ativa o sino pra não perder o próximo vídeo." },
     carrossel: [
       { label: "S1 — Hook", text: "O maior erro dos canais pequenos." },
       { label: "S2 — Dado", text: "70% da decisão está na thumbnail." },
@@ -139,16 +131,13 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Método", text: "SEO + Thumbnail + Hook = Crescimento." },
       { label: "S6 — CTA", text: "Se inscreve e ativa o sino →" },
     ],
+    formAnswers: { contexto: "Canal YouTube focado em educar e entreter com profundidade e autoridade.", publico: "Criadores de conteúdo 25-45 que querem monetizar seu canal.", resultado: "Construir canal com autoridade e monetização", voz: "Educativo, profundo e cativante" },
   },
   "Ads para Meta": {
     persona: "Gestor(a) de tráfego, 28-50, quer ROAS positivo e escala previsível.",
     posicionamento: "Performance criativa que transforma investimento em retorno mensurável.",
     tomDeVoz: ["Direto", "Técnico", "Persuasivo"],
-    roteiro: {
-      gancho: "Seu anúncio não vende? O problema não é o público.",
-      desenvolvimento: "80% da performance de um ad está no criativo. Hook visual em 1s, proposta de valor clara, prova social, e urgência real.",
-      cta: "Clique no link e receba o template de criativo que mais converte.",
-    },
+    roteiro: { gancho: "Seu anúncio não vende? O problema não é o público.", desenvolvimento: "80% da performance de um ad está no criativo. Hook visual em 1s, proposta de valor clara, prova social, e urgência real.", cta: "Clique no link e receba o template de criativo que mais converte." },
     carrossel: [
       { label: "S1 — Hook", text: "Seu ad não vende? O problema é o criativo." },
       { label: "S2 — Dado", text: "80% da performance está no criativo." },
@@ -157,16 +146,13 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Template", text: "Dor → Solução → Prova → Oferta → CTA." },
       { label: "S6 — CTA", text: "Baixe o template que mais converte →" },
     ],
+    formAnswers: { contexto: "Criação de anúncios para Meta Ads com foco em ROAS e escala.", publico: "Gestores de tráfego 28-50 buscando ROAS positivo.", resultado: "ROAS positivo e escala previsível", voz: "Direto, técnico e persuasivo" },
   },
   "Conteúdo educacional": {
     persona: "Professor(a) ou mentor(a), 30-55, quer transformar conhecimento em autoridade digital.",
     posicionamento: "Educador(a) digital que simplifica o complexo e inspira ação.",
     tomDeVoz: ["Didático", "Acessível", "Motivador"],
-    roteiro: {
-      gancho: "Se você ainda ensina assim, está perdendo alunos.",
-      desenvolvimento: "Conteúdo educacional que engaja usa a regra dos 3: conceito, exemplo prático, e aplicação imediata.",
-      cta: "Salva pra aplicar na sua próxima aula ou conteúdo.",
-    },
+    roteiro: { gancho: "Se você ainda ensina assim, está perdendo alunos.", desenvolvimento: "Conteúdo educacional que engaja usa a regra dos 3: conceito, exemplo prático, e aplicação imediata.", cta: "Salva pra aplicar na sua próxima aula ou conteúdo." },
     carrossel: [
       { label: "S1 — Hook", text: "Ensina assim? Está perdendo alunos." },
       { label: "S2 — Problema", text: "Conteúdo denso demais afasta." },
@@ -175,51 +161,35 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       { label: "S5 — Aplicação", text: "Use em aulas, posts e mentorias." },
       { label: "S6 — CTA", text: "Salva e aplica na próxima aula →" },
     ],
+    formAnswers: { contexto: "Transformar conhecimento em autoridade digital através de conteúdo educacional.", publico: "Professores e mentores 30-55 em busca de presença digital.", resultado: "Transformar conhecimento em autoridade digital", voz: "Didático, acessível e motivador" },
   },
 };
 
 function getDemoData(chip: string): DemoStepData {
   const override = demoDataMap[chip] || {};
-  const base = {
+  const base: DemoStepData = {
     ...defaultDemo,
     ...override,
     roteiro: { ...defaultDemo.roteiro, ...override.roteiro },
     briefing: { ...defaultDemo.briefing, ...override.briefing },
     carrossel: override.carrossel || defaultDemo.carrossel,
+    formAnswers: override.formAnswers || defaultDemo.formAnswers,
   };
-  // For custom niches not in the map, inject the niche name
   if (!demoDataMap[chip]) {
     base.persona = `Profissional de ${chip}, 25-50 anos, busca autoridade digital e captação de clientes no segmento.`;
     base.posicionamento = `Referência em ${chip} com conteúdo estratégico que gera resultados reais.`;
-    base.briefing = {
-      objetivo: `Gerar leads qualificados para ${chip} via conteúdo orgânico`,
-      publico: `Público-alvo de ${chip} em fase de decisão`,
-      estilo: "Direto, com dados e storytelling",
+    base.briefing = { objetivo: `Gerar leads qualificados para ${chip} via conteúdo orgânico`, publico: `Público-alvo de ${chip} em fase de decisão`, estilo: "Direto, com dados e storytelling" };
+    base.formAnswers = {
+      contexto: `${chip} — negócio focado em crescimento orgânico e autoridade no mercado.`,
+      publico: `Público-alvo de ${chip}, 25-50 anos, em fase de decisão de compra.`,
+      resultado: `Gerar leads qualificados para ${chip} via conteúdo orgânico`,
+      voz: "Educativo, próximo e com autoridade",
     };
   }
   return base;
 }
 
-// ── Step card for demo mode ──
-
-function StepCard({ icon: Icon, title, children, delay }: { icon: React.ElementType; title: string; children: React.ReactNode; delay: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      className="rounded-lg border border-border/25 bg-muted/5 p-2.5 space-y-1.5"
-    >
-      <div className="flex items-center gap-1.5">
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
-          <Icon className="h-2.5 w-2.5 text-primary" />
-        </div>
-        <span className="text-[10px] font-medium text-foreground">{title}</span>
-      </div>
-      <div className="text-[9px] md:text-[10px] text-muted-foreground leading-relaxed">{children}</div>
-    </motion.div>
-  );
-}
+const DEMO_PHASES: DemoPhase[] = ["form", "processing", "briefing", "script", "carousel"];
 
 // ── Main component ──
 
@@ -234,78 +204,143 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
   const [typedText, setTypedText] = useState("");
   const [visibleScenes, setVisibleScenes] = useState(0);
 
-  const isDemo = !!selectedChip;
+  // Demo states
+  const [demoPhase, setDemoPhase] = useState<DemoPhase>("form");
+  const [formFieldIdx, setFormFieldIdx] = useState(0);
+  const [formTypedText, setFormTypedText] = useState("");
+  const [completedFormFields, setCompletedFormFields] = useState<number[]>([]);
+  const [visibleBriefingItems, setVisibleBriefingItems] = useState(0);
+  const [visibleScriptItems, setVisibleScriptItems] = useState(0);
+  const [visibleCarouselItems, setVisibleCarouselItems] = useState(0);
 
-  // Phase cycling (only when not in demo mode)
+  const isDemo = !!selectedChip;
+  const demo = isDemo ? getDemoData(selectedChip) : null;
+
+  // Reset demo on chip change
+  useEffect(() => {
+    if (isDemo) {
+      setDemoPhase("form");
+      setFormFieldIdx(0);
+      setFormTypedText("");
+      setCompletedFormFields([]);
+      setVisibleBriefingItems(0);
+      setVisibleScriptItems(0);
+      setVisibleCarouselItems(0);
+    }
+  }, [selectedChip, isDemo]);
+
+  const formFields = demo ? [
+    { label: "Contexto do Negócio", value: demo.formAnswers.contexto },
+    { label: "Público Ideal", value: demo.formAnswers.publico },
+    { label: "Resultado Desejado", value: demo.formAnswers.resultado },
+    { label: "Voz da Marca", value: demo.formAnswers.voz },
+  ] : [];
+
+  // Demo: form typing
+  useEffect(() => {
+    if (!isDemo || demoPhase !== "form") return;
+    if (formFieldIdx >= formFields.length) {
+      const t = setTimeout(() => setDemoPhase("processing"), 600);
+      return () => clearTimeout(t);
+    }
+    const field = formFields[formFieldIdx];
+    let charIdx = 0;
+    setFormTypedText("");
+    const interval = setInterval(() => {
+      if (charIdx <= field.value.length) {
+        setFormTypedText(field.value.slice(0, charIdx));
+        charIdx++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => {
+          setCompletedFormFields(prev => [...prev, formFieldIdx]);
+          setFormFieldIdx(prev => prev + 1);
+          setFormTypedText("");
+        }, 300);
+      }
+    }, 20);
+    return () => clearInterval(interval);
+  }, [isDemo, demoPhase, formFieldIdx]);
+
+  // Demo: phase auto-transitions
+  useEffect(() => {
+    if (!isDemo || demoPhase === "form") return;
+    const durations: Partial<Record<DemoPhase, number>> = { processing: 2000, briefing: 3500, script: 3500 };
+    const nextMap: Partial<Record<DemoPhase, DemoPhase>> = { processing: "briefing", briefing: "script", script: "carousel" };
+    const duration = durations[demoPhase];
+    const next = nextMap[demoPhase];
+    if (duration && next) {
+      const t = setTimeout(() => setDemoPhase(next), duration);
+      return () => clearTimeout(t);
+    }
+  }, [isDemo, demoPhase]);
+
+  // Demo: briefing reveal
+  useEffect(() => {
+    if (!isDemo || demoPhase !== "briefing") return;
+    setVisibleBriefingItems(0);
+    let count = 0;
+    const interval = setInterval(() => { count++; setVisibleBriefingItems(count); if (count >= 4) clearInterval(interval); }, 600);
+    return () => clearInterval(interval);
+  }, [isDemo, demoPhase]);
+
+  // Demo: script reveal
+  useEffect(() => {
+    if (!isDemo || demoPhase !== "script") return;
+    setVisibleScriptItems(0);
+    let count = 0;
+    const interval = setInterval(() => { count++; setVisibleScriptItems(count); if (count >= 3) clearInterval(interval); }, 800);
+    return () => clearInterval(interval);
+  }, [isDemo, demoPhase]);
+
+  // Demo: carousel reveal
+  useEffect(() => {
+    if (!isDemo || demoPhase !== "carousel") return;
+    setVisibleCarouselItems(0);
+    let count = 0;
+    const interval = setInterval(() => { count++; setVisibleCarouselItems(count); if (count >= 6) clearInterval(interval); }, 400);
+    return () => clearInterval(interval);
+  }, [isDemo, demoPhase]);
+
+  // Default: phase cycling
   useEffect(() => {
     if (isDemo) return;
-    const durations: Record<Phase, number> = {
-      briefing: BRIEFING_DURATION,
-      processing: PROCESSING_DURATION,
-      script: SCRIPT_DURATION,
-    };
-    const next: Record<Phase, Phase> = {
-      briefing: "processing",
-      processing: "script",
-      script: "briefing",
-    };
+    const durations: Record<Phase, number> = { briefing: BRIEFING_DURATION, processing: PROCESSING_DURATION, script: SCRIPT_DURATION };
+    const next: Record<Phase, Phase> = { briefing: "processing", processing: "script", script: "briefing" };
     const timer = setTimeout(() => {
       const nextPhase = next[phase];
       setPhase(nextPhase);
-      if (nextPhase === "briefing") {
-        setTypingField(0);
-        setTypedText("");
-        setVisibleScenes(0);
-      }
+      if (nextPhase === "briefing") { setTypingField(0); setTypedText(""); setVisibleScenes(0); }
     }, durations[phase]);
     return () => clearTimeout(timer);
   }, [phase, isDemo]);
 
-  // Briefing typing effect
+  // Default: briefing typing
   useEffect(() => {
-    if (isDemo) return;
-    if (phase !== "briefing") return;
+    if (isDemo || phase !== "briefing") return;
     const field = briefingFields[typingField];
     if (!field) return;
     let charIdx = 0;
     setTypedText("");
     const interval = setInterval(() => {
-      if (charIdx <= field.value.length) {
-        setTypedText(field.value.slice(0, charIdx));
-        charIdx++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => {
-          if (typingField < briefingFields.length - 1) {
-            setTypingField((p) => p + 1);
-            setTypedText("");
-          }
-        }, 400);
-      }
+      if (charIdx <= field.value.length) { setTypedText(field.value.slice(0, charIdx)); charIdx++; }
+      else { clearInterval(interval); setTimeout(() => { if (typingField < briefingFields.length - 1) { setTypingField(p => p + 1); setTypedText(""); } }, 400); }
     }, 30);
     return () => clearInterval(interval);
   }, [phase, typingField, isDemo]);
 
-  // Script scenes reveal
+  // Default: script reveal
   useEffect(() => {
-    if (isDemo) return;
-    if (phase !== "script") return;
+    if (isDemo || phase !== "script") return;
     setVisibleScenes(0);
     let count = 0;
-    const interval = setInterval(() => {
-      count++;
-      setVisibleScenes(count);
-      if (count >= scriptScenes.length) clearInterval(interval);
-    }, 800);
+    const interval = setInterval(() => { count++; setVisibleScenes(count); if (count >= scriptScenes.length) clearInterval(interval); }, 800);
     return () => clearInterval(interval);
   }, [phase, isDemo]);
 
-  const demo = isDemo ? getDemoData(selectedChip) : null;
-
   return (
-    <div className="w-full h-full relative overflow-hidden select-none" onCopy={(e) => e.preventDefault()}>
+    <div className="w-full h-full relative overflow-hidden select-none" onCopy={e => e.preventDefault()}>
       <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-foreground/[0.04] to-transparent pointer-events-none z-10 rounded-t-2xl" />
-
       <div className="p-4 md:p-6 h-full relative">
         {/* Window chrome */}
         <div className="flex items-center gap-2 mb-3">
@@ -317,119 +352,196 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
 
         <AnimatePresence mode="wait">
           {isDemo && demo ? (
-            /* ── DEMO MODE: Show selected chip's pipeline ── */
             <motion.div
               key="demo-mode"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="space-y-1.5 overflow-y-auto max-h-[calc(100%-3rem)] pr-1 scrollbar-thin"
+              className="overflow-y-auto max-h-[calc(100%-3rem)] pr-1 scrollbar-thin"
             >
-              {/* Header with back button */}
+              {/* Header */}
               <div className="flex items-center gap-2 mb-2">
-                <button
-                  onClick={onReset}
-                  className="flex h-5 w-5 items-center justify-center rounded bg-muted/30 hover:bg-muted/50 transition-colors"
-                >
+                <button onClick={onReset} className="flex h-5 w-5 items-center justify-center rounded bg-muted/30 hover:bg-muted/50 transition-colors">
                   <ArrowLeft className="h-2.5 w-2.5 text-muted-foreground" />
                 </button>
                 <Sparkles className="w-3 h-3 text-primary" />
                 <span className="text-[10px] font-medium text-foreground truncate">{selectedChip}</span>
-                <span className="ml-auto text-[8px] text-primary font-mono bg-primary/10 rounded px-1.5 py-0.5">IA Gerando...</span>
               </div>
 
-              {/* Step cards */}
-              <StepCard icon={ClipboardList} title="Formulário do Cliente" delay={0.1}>
-                <div className="space-y-0.5">
-                  <div><span className="text-foreground/70 font-medium">Nicho:</span> {selectedChip}</div>
-                  <div><span className="text-foreground/70 font-medium">Público:</span> {demo.briefing.publico}</div>
-                  <div><span className="text-foreground/70 font-medium">Objetivo:</span> {demo.briefing.objetivo}</div>
-                </div>
-              </StepCard>
+              {/* Progress stepper */}
+              <div className="flex items-center gap-1 mb-3">
+                {DEMO_PHASES.map((p, i) => {
+                  const currentIdx = DEMO_PHASES.indexOf(demoPhase);
+                  const isActive = i === currentIdx;
+                  const isDone = i < currentIdx;
+                  return (
+                    <div key={p} className="flex items-center gap-1">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold transition-all duration-300 ${
+                        isActive ? "bg-primary text-primary-foreground scale-110" : isDone ? "bg-primary/30 text-primary" : "bg-muted/20 text-muted-foreground/50"
+                      }`}>
+                        {isDone ? "✓" : i + 1}
+                      </div>
+                      {i < DEMO_PHASES.length - 1 && (
+                        <div className={`w-3 md:w-5 h-px transition-colors duration-300 ${isDone ? "bg-primary/40" : "bg-border/20"}`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
-              <StepCard icon={User} title="Persona" delay={0.6}>
-                <p>{demo.persona}</p>
-              </StepCard>
+              <AnimatePresence mode="wait">
+                {/* PHASE 1: Form */}
+                {demoPhase === "form" && (
+                  <motion.div key="demo-form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-1.5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ClipboardList className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-medium text-foreground">Preenchendo formulário estratégico...</span>
+                    </div>
+                    {formFields.map((field, i) => {
+                      const isCompleted = completedFormFields.includes(i);
+                      const isTyping = i === formFieldIdx;
+                      return (
+                        <div key={i} className={`rounded-lg border p-2 transition-all duration-300 ${
+                          isTyping ? "border-primary/40 bg-primary/5" : isCompleted ? "border-border/30 bg-muted/5" : "border-border/15 bg-transparent"
+                        }`}>
+                          <div className="text-[9px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
+                          <div className="text-[10px] text-foreground/80 font-mono min-h-[14px]">
+                            {isCompleted ? (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
+                                <span className="truncate">{field.value}</span>
+                              </span>
+                            ) : isTyping ? (
+                              <>{formTypedText}<span className="inline-block w-[2px] h-3 bg-primary/80 ml-0.5 animate-pulse" /></>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
 
-              <StepCard icon={Target} title="Posicionamento" delay={1.1}>
-                <p>{demo.posicionamento}</p>
-              </StepCard>
-
-              <StepCard icon={Mic2} title="Tom de Voz" delay={1.6}>
-                <div className="flex flex-wrap gap-1">
-                  {demo.tomDeVoz.map((t) => (
-                    <span key={t} className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[8px] text-primary font-medium">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </StepCard>
-
-              <StepCard icon={Filter} title="Funil de Conteúdo" delay={2.1}>
-                <div className="flex flex-wrap gap-1">
-                  {demo.funil.map((f) => (
-                    <span key={f} className="inline-flex items-center rounded-full bg-muted/40 border border-border/30 px-1.5 py-0.5 text-[8px] text-foreground/70">
-                      {f}
-                    </span>
-                  ))}
-                </div>
-              </StepCard>
-
-              <StepCard icon={FileText} title="Briefing Gerado" delay={2.6}>
-                <div className="space-y-0.5">
-                  <div><span className="text-foreground/70 font-medium">Objetivo:</span> {demo.briefing.objetivo}</div>
-                  <div><span className="text-foreground/70 font-medium">Público:</span> {demo.briefing.publico}</div>
-                  <div><span className="text-foreground/70 font-medium">Estilo:</span> {demo.briefing.estilo}</div>
-                </div>
-              </StepCard>
-
-              <StepCard icon={Clapperboard} title="Roteiro Pronto" delay={3.1}>
-                <div className="space-y-1">
-                  <div className="rounded bg-primary/5 border border-primary/15 p-1.5">
-                    <span className="text-[8px] font-bold text-primary uppercase">Gancho</span>
-                    <p className="mt-0.5 text-foreground/80">{demo.roteiro.gancho}</p>
-                  </div>
-                  <div className="rounded bg-muted/20 border border-border/20 p-1.5">
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Desenvolvimento</span>
-                    <p className="mt-0.5 text-foreground/80">{demo.roteiro.desenvolvimento}</p>
-                  </div>
-                  <div className="rounded bg-primary/5 border border-primary/15 p-1.5">
-                    <span className="text-[8px] font-bold text-primary uppercase">CTA</span>
-                    <p className="mt-0.5 text-foreground/80">{demo.roteiro.cta}</p>
-                  </div>
-                </div>
-              </StepCard>
-
-              <StepCard icon={LayoutGrid} title="Carrossel Estratégico" delay={3.6}>
-                <div className="grid grid-cols-3 gap-1">
-                  {demo.carrossel.map((slide, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 3.8 + i * 0.15 }}
-                      className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
-                    >
-                      <span className="text-[7px] font-bold text-primary block mb-0.5">{slide.label}</span>
-                      <p className="text-[8px] text-foreground/70 leading-tight">{slide.text}</p>
+                {/* PHASE 2: Processing */}
+                {demoPhase === "processing" && (
+                  <motion.div key="demo-processing" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }} className="flex flex-col items-center justify-center py-10 gap-4">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+                      <Loader2 className="w-8 h-8 text-primary" />
                     </motion.div>
-                  ))}
-                </div>
-              </StepCard>
+                    <div className="text-center space-y-1.5">
+                      <p className="text-sm font-medium text-foreground">Gerando estratégia completa...</p>
+                      <p className="text-[10px] text-muted-foreground">Analisando contexto, criando briefing, roteiro e carrossel</p>
+                    </div>
+                    <div className="flex gap-1 mt-2">
+                      {[0, 1, 2, 3].map(i => (
+                        <motion.div key={i} className="w-1.5 h-1.5 rounded-full bg-primary" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* PHASE 3: Briefing */}
+                {demoPhase === "briefing" && (
+                  <motion.div key="demo-briefing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-1.5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-medium text-foreground">Briefing Estratégico</span>
+                      <span className="ml-auto text-[8px] text-green-400 font-mono">✓ Gerado</span>
+                    </div>
+                    {[
+                      { icon: User, title: "Persona", content: demo.persona },
+                      { icon: Target, title: "Posicionamento", content: demo.posicionamento },
+                      { icon: Mic2, title: "Tom de Voz", badges: demo.tomDeVoz },
+                      { icon: Filter, title: "Funil de Conteúdo", badges: demo.funil },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={i < visibleBriefingItems ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="rounded-lg border border-border/25 bg-muted/5 p-2 space-y-1"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex h-4 w-4 items-center justify-center rounded bg-primary/10">
+                            <item.icon className="h-2.5 w-2.5 text-primary" />
+                          </div>
+                          <span className="text-[9px] font-medium text-foreground">{item.title}</span>
+                        </div>
+                        {item.content && <p className="text-[9px] text-muted-foreground leading-relaxed">{item.content}</p>}
+                        {item.badges && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.badges.map(b => (
+                              <span key={b} className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[7px] text-primary font-medium">{b}</span>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {/* PHASE 4: Script */}
+                {demoPhase === "script" && (
+                  <motion.div key="demo-script" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-1.5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clapperboard className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-medium text-foreground">Roteiro Gerado</span>
+                      <span className="ml-auto text-[9px] text-green-400 font-mono">Score: 9.2</span>
+                    </div>
+                    {[
+                      { tag: "Gancho", text: demo.roteiro.gancho, accent: true },
+                      { tag: "Desenvolvimento", text: demo.roteiro.desenvolvimento, accent: false },
+                      { tag: "CTA", text: demo.roteiro.cta, accent: true },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={i < visibleScriptItems ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className={`rounded-lg border p-2 ${item.accent ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
+                      >
+                        <span className="text-[8px] font-bold text-primary uppercase">{item.tag}</span>
+                        <p className="mt-0.5 text-[9px] text-foreground/80 leading-relaxed">{item.text}</p>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {/* PHASE 5: Carousel */}
+                {demoPhase === "carousel" && (
+                  <motion.div key="demo-carousel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-1.5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-medium text-foreground">Carrossel Estratégico</span>
+                      <span className="ml-auto text-[8px] text-primary font-mono bg-primary/10 rounded px-1.5 py-0.5">6 slides</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {demo.carrossel.map((slide, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={i < visibleCarouselItems ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.3 }}
+                          className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
+                        >
+                          <span className="text-[7px] font-bold text-primary block mb-0.5">{slide.label}</span>
+                          <p className="text-[8px] text-foreground/70 leading-tight">{slide.text}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ) : (
-            /* ── DEFAULT MODE: Cycling animation ── */
+            /* ── DEFAULT MODE ── */
             <>
-              {/* Phase indicator */}
               <div className="flex items-center gap-3 mb-4">
                 {(["briefing", "processing", "script"] as Phase[]).map((p, i) => (
                   <div key={p} className="flex items-center gap-1.5">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium transition-colors duration-300 ${
-                      phase === p ? "bg-primary text-primary-foreground" : i < (["briefing", "processing", "script"].indexOf(phase)) ? "bg-primary/30 text-primary" : "bg-muted/30 text-muted-foreground"
-                    }`}>
-                      {i + 1}
-                    </div>
+                      phase === p ? "bg-primary text-primary-foreground" : i < ["briefing", "processing", "script"].indexOf(phase) ? "bg-primary/30 text-primary" : "bg-muted/30 text-muted-foreground"
+                    }`}>{i + 1}</div>
                     <span className={`text-[9px] font-mono transition-colors duration-300 ${phase === p ? "text-foreground" : "text-muted-foreground/50"}`}>
                       {p === "briefing" ? "Briefing" : p === "processing" ? "IA" : "Roteiro"}
                     </span>
@@ -437,17 +549,9 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   </div>
                 ))}
               </div>
-
               <AnimatePresence mode="wait">
                 {phase === "briefing" && (
-                  <motion.div
-                    key="briefing"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-2"
-                  >
+                  <motion.div key="briefing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-2">
                     <div className="flex items-center gap-2 mb-3">
                       <FileText className="w-3.5 h-3.5 text-primary" />
                       <span className="text-[11px] font-medium text-foreground">AI Strategic Brief Builder</span>
@@ -459,35 +563,18 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                         <div className="text-[9px] text-muted-foreground mb-1 font-medium">{field.label}</div>
                         <div className="text-[10px] md:text-[11px] text-foreground/80 font-mono min-h-[14px]">
                           {i < typingField ? (
-                            <span className="flex items-center gap-1">
-                              <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
-                              <span className="truncate">{field.value}</span>
-                            </span>
+                            <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" /><span className="truncate">{field.value}</span></span>
                           ) : i === typingField ? (
-                            <>
-                              {typedText}
-                              <span className="inline-block w-[2px] h-3 bg-primary/80 ml-0.5 animate-typing-cursor" />
-                            </>
+                            <>{typedText}<span className="inline-block w-[2px] h-3 bg-primary/80 ml-0.5 animate-pulse" /></>
                           ) : null}
                         </div>
                       </div>
                     ))}
                   </motion.div>
                 )}
-
                 {phase === "processing" && (
-                  <motion.div
-                    key="processing"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col items-center justify-center h-[calc(100%-5rem)] gap-4"
-                  >
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
+                  <motion.div key="processing" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }} className="flex flex-col items-center justify-center h-[calc(100%-5rem)] gap-4">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                       <Loader2 className="w-8 h-8 text-primary" />
                     </motion.div>
                     <div className="text-center space-y-1.5">
@@ -495,47 +582,24 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                       <p className="text-[10px] text-muted-foreground">Analisando contexto e criando roteiro personalizado</p>
                     </div>
                     <div className="flex gap-1 mt-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1.5 h-1.5 rounded-full bg-primary"
-                          animate={{ opacity: [0.3, 1, 0.3] }}
-                          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                        />
+                      {[0, 1, 2, 3].map(i => (
+                        <motion.div key={i} className="w-1.5 h-1.5 rounded-full bg-primary" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
                       ))}
                     </div>
                   </motion.div>
                 )}
-
                 {phase === "script" && (
-                  <motion.div
-                    key="script"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-1.5"
-                  >
+                  <motion.div key="script" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-1.5">
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
                       <span className="text-[11px] font-medium text-foreground">Roteiro Gerado</span>
                       <span className="ml-auto text-[9px] text-green-400 font-mono">Score: 9.2</span>
                     </div>
                     {scriptScenes.map((scene, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={i < visibleScenes ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="rounded-lg border border-border/25 bg-muted/5 p-2.5"
-                      >
+                      <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={i < visibleScenes ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }} transition={{ duration: 0.3 }} className="rounded-lg border border-border/25 bg-muted/5 p-2.5">
                         <div className="flex items-start gap-2">
-                          <span className="shrink-0 text-[8px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5">
-                            {scene.tag}
-                          </span>
-                          <span className="text-[10px] md:text-[11px] text-foreground/75 leading-relaxed">
-                            {scene.text}
-                          </span>
+                          <span className="shrink-0 text-[8px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5">{scene.tag}</span>
+                          <span className="text-[10px] md:text-[11px] text-foreground/75 leading-relaxed">{scene.text}</span>
                         </div>
                       </motion.div>
                     ))}
