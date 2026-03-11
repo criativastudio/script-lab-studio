@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Code2,
-  BarChart3,
-  BrainCircuit,
-  Zap,
-  ShieldCheck,
-} from "lucide-react";
+import { Code2, BarChart3, BrainCircuit, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -17,7 +11,7 @@ const features = [
     desc: "Crie roteiros completos sem escrever uma linha sequer.",
     content: {
       headline: "Arraste, configure, publique.",
-      body: "Monte roteiros profissionais em minutos com uma interface visual. Defina persona, tom de voz e estrutura — sem complicação.",
+      body: "Monte roteiros profissionais em segundos com uma interface visual. Defina persona, tom de voz e estrutura — sem complicação.",
       metrics: ["3x mais rápido", "Zero código", "Templates prontos"],
     },
   },
@@ -101,20 +95,13 @@ export default function FeatureTabs() {
                   "flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition-all duration-200 whitespace-nowrap lg:whitespace-normal min-w-[180px] lg:min-w-0",
                   active === i
                     ? "bg-primary/10 border border-primary/30 border-l-[3px] border-l-primary text-foreground shadow-[0_0_20px_hsl(var(--primary)/0.1)]"
-                    : "border border-transparent text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    : "border border-transparent text-muted-foreground hover:text-foreground hover:bg-card/50",
                 )}
               >
-                <f.icon
-                  className={cn(
-                    "h-5 w-5 flex-shrink-0 transition-colors",
-                    active === i ? "text-primary" : ""
-                  )}
-                />
+                <f.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", active === i ? "text-primary" : "")} />
                 <div>
                   <div className="font-medium">{f.title}</div>
-                  <div className="hidden lg:block text-xs text-muted-foreground mt-0.5">
-                    {f.desc}
-                  </div>
+                  <div className="hidden lg:block text-xs text-muted-foreground mt-0.5">{f.desc}</div>
                 </div>
               </button>
             ))}
