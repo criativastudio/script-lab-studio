@@ -57,6 +57,14 @@ const defaultDemo: DemoStepData = {
     desenvolvimento: "A maioria dos empreendedores cria conteúdo sem estratégia. O resultado? Likes, mas zero vendas. O segredo está em alinhar cada vídeo ao funil de conversão.",
     cta: "Comece agora: link na bio para sua análise gratuita.",
   },
+  carrossel: [
+    { label: "S1 — Hook", text: "Você posta todo dia e não vende nada?" },
+    { label: "S2 — Problema", text: "O erro: conteúdo sem estratégia de funil." },
+    { label: "S3 — Solução", text: "Alinhe cada post a uma etapa do funil." },
+    { label: "S4 — Prova", text: "+300% de leads em 30 dias com este método." },
+    { label: "S5 — Método", text: "Topo: awareness. Meio: educação. Fundo: oferta." },
+    { label: "S6 — CTA", text: "Link na bio → Análise gratuita do seu conteúdo." },
+  ],
 };
 
 const demoDataMap: Record<string, Partial<DemoStepData>> = {
