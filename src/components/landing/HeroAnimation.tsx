@@ -27,6 +27,11 @@ const SCRIPT_DURATION = 6000;
 
 // ── Demo data for chip-selected mode ──
 
+interface CarouselSlide {
+  label: string;
+  text: string;
+}
+
 interface DemoStepData {
   persona: string;
   posicionamento: string;
@@ -34,6 +39,7 @@ interface DemoStepData {
   funil: string[];
   briefing: { objetivo: string; publico: string; estilo: string };
   roteiro: { gancho: string; desenvolvimento: string; cta: string };
+  carrossel: CarouselSlide[];
 }
 
 const defaultDemo: DemoStepData = {
