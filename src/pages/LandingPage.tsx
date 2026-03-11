@@ -251,8 +251,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
-            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação. Sem escrever uma linha
-            sequer.
+            Responda 4 perguntas rápidas e receba automaticamente briefing estratégico, roteiro e carrossel prontos para
+            gravação, com conteúdo estratégico alinhado ao posicionamento do seu negócio.
           </motion.p>
 
           {/* CTA */}
