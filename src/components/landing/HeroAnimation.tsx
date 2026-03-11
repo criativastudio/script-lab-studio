@@ -177,7 +177,6 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
     ],
   },
 };
-};
 
 function getDemoData(chip: string): DemoStepData {
   const override = demoDataMap[chip] || {};
@@ -186,6 +185,7 @@ function getDemoData(chip: string): DemoStepData {
     ...override,
     roteiro: { ...defaultDemo.roteiro, ...override.roteiro },
     briefing: { ...defaultDemo.briefing, ...override.briefing },
+    carrossel: override.carrossel || defaultDemo.carrossel,
   };
 }
 
