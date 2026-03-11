@@ -135,6 +135,15 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedChip, setSelectedChip] = useState<string | undefined>();
+  const section3Ref = useRef<HTMLDivElement>(null);
+
+  const handleChipSelected = (chip: string) => {
+    setSelectedChip(chip);
+    setTimeout(() => {
+      section3Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
 
   const navLinks = [
     { label: "Problema", href: "#problema" },
