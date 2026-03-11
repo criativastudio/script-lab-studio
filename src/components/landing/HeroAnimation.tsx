@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Sparkles, CheckCircle2, Loader2, ArrowLeft, User, Target, Mic2, Filter, ClipboardList, Clapperboard } from "lucide-react";
+import { FileText, Sparkles, CheckCircle2, Loader2, ArrowLeft, User, Target, Mic2, Filter, ClipboardList, Clapperboard, LayoutGrid } from "lucide-react";
 
 // ── Default animation data ──
 
@@ -27,6 +27,11 @@ const SCRIPT_DURATION = 6000;
 
 // ── Demo data for chip-selected mode ──
 
+interface CarouselSlide {
+  label: string;
+  text: string;
+}
+
 interface DemoStepData {
   persona: string;
   posicionamento: string;
@@ -34,6 +39,7 @@ interface DemoStepData {
   funil: string[];
   briefing: { objetivo: string; publico: string; estilo: string };
   roteiro: { gancho: string; desenvolvimento: string; cta: string };
+  carrossel: CarouselSlide[];
 }
 
 const defaultDemo: DemoStepData = {
@@ -51,6 +57,14 @@ const defaultDemo: DemoStepData = {
     desenvolvimento: "A maioria dos empreendedores cria conteúdo sem estratégia. O resultado? Likes, mas zero vendas. O segredo está em alinhar cada vídeo ao funil de conversão.",
     cta: "Comece agora: link na bio para sua análise gratuita.",
   },
+  carrossel: [
+    { label: "S1 — Hook", text: "Você posta todo dia e não vende nada?" },
+    { label: "S2 — Problema", text: "O erro: conteúdo sem estratégia de funil." },
+    { label: "S3 — Solução", text: "Alinhe cada post a uma etapa do funil." },
+    { label: "S4 — Prova", text: "+300% de leads em 30 dias com este método." },
+    { label: "S5 — Método", text: "Topo: awareness. Meio: educação. Fundo: oferta." },
+    { label: "S6 — CTA", text: "Link na bio → Análise gratuita do seu conteúdo." },
+  ],
 };
 
 const demoDataMap: Record<string, Partial<DemoStepData>> = {
@@ -63,6 +77,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "O algoritmo prioriza retenção. Use ganchos nos primeiros 0,5s, entregue valor no meio e feche com CTA claro.",
       cta: "Salva esse vídeo e aplica no seu próximo Reel.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Seus Reels são bonitos mas não vendem?" },
+      { label: "S2 — Erro", text: "Estética sem estratégia = vaidade métrica." },
+      { label: "S3 — Solução", text: "Gancho em 0,5s + valor + CTA claro." },
+      { label: "S4 — Prova", text: "3x mais saves com essa estrutura." },
+      { label: "S5 — Passo a passo", text: "1. Hook visual 2. Dor 3. Solução 4. CTA" },
+      { label: "S6 — CTA", text: "Salva e aplica no seu próximo Reel →" },
+    ],
   },
   "TikTok virais": {
     persona: "Jovem criador(a), 20-35, quer viralizar com conteúdo autêntico e monetizar a audiência.",
@@ -73,6 +95,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "TikTok recompensa originalidade e ritmo. Pattern interrupt nos primeiros 2s, loop visual, e texto que complementa o áudio.",
       cta: "Segue pra mais formatos que viralizam.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "2M de views em 48h com esse formato." },
+      { label: "S2 — Segredo", text: "Pattern interrupt nos primeiros 2 segundos." },
+      { label: "S3 — Formato", text: "Loop visual + texto que complementa o áudio." },
+      { label: "S4 — Dados", text: "78% dos virais usam essa estrutura." },
+      { label: "S5 — Template", text: "Hook → Tensão → Reveal → Loop." },
+      { label: "S6 — CTA", text: "Segue pra mais formatos que viralizam →" },
+    ],
   },
   "Storytelling de marca": {
     persona: "Fundador(a) de marca, 30-50, quer construir conexão emocional com a audiência.",
@@ -83,6 +113,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "As marcas que as pessoas amam não vendem produtos — elas contam histórias. Vulnerabilidade gera conexão.",
       cta: "Conta nos comentários: qual foi o 'não' que te transformou?",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Tudo começou com um 'não'." },
+      { label: "S2 — Origem", text: "A história por trás da marca." },
+      { label: "S3 — Virada", text: "O momento que mudou tudo." },
+      { label: "S4 — Propósito", text: "Por que fazemos o que fazemos." },
+      { label: "S5 — Impacto", text: "As vidas que transformamos." },
+      { label: "S6 — CTA", text: "Qual foi o 'não' que te transformou? →" },
+    ],
   },
   "Vídeos para YouTube": {
     persona: "Criador(a) de conteúdo, 25-45, quer construir canal com autoridade e monetização.",
@@ -93,6 +131,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "YouTube é um mecanismo de busca. Títulos com curiosidade, thumbnails com contraste, e os primeiros 30s decidem tudo.",
       cta: "Se inscreve e ativa o sino pra não perder o próximo vídeo.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "O maior erro dos canais pequenos." },
+      { label: "S2 — Dado", text: "70% da decisão está na thumbnail." },
+      { label: "S3 — Título", text: "Curiosidade > Clickbait. Sempre." },
+      { label: "S4 — Retenção", text: "Os primeiros 30s decidem tudo." },
+      { label: "S5 — Método", text: "SEO + Thumbnail + Hook = Crescimento." },
+      { label: "S6 — CTA", text: "Se inscreve e ativa o sino →" },
+    ],
   },
   "Ads para Meta": {
     persona: "Gestor(a) de tráfego, 28-50, quer ROAS positivo e escala previsível.",
@@ -103,6 +149,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "80% da performance de um ad está no criativo. Hook visual em 1s, proposta de valor clara, prova social, e urgência real.",
       cta: "Clique no link e receba o template de criativo que mais converte.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Seu ad não vende? O problema é o criativo." },
+      { label: "S2 — Dado", text: "80% da performance está no criativo." },
+      { label: "S3 — Estrutura", text: "Hook 1s + Valor + Prova + Urgência." },
+      { label: "S4 — Exemplo", text: "ROAS 4.2x com essa estrutura." },
+      { label: "S5 — Template", text: "Dor → Solução → Prova → Oferta → CTA." },
+      { label: "S6 — CTA", text: "Baixe o template que mais converte →" },
+    ],
   },
   "Conteúdo educacional": {
     persona: "Professor(a) ou mentor(a), 30-55, quer transformar conhecimento em autoridade digital.",
@@ -113,6 +167,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "Conteúdo educacional que engaja usa a regra dos 3: conceito, exemplo prático, e aplicação imediata.",
       cta: "Salva pra aplicar na sua próxima aula ou conteúdo.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Ensina assim? Está perdendo alunos." },
+      { label: "S2 — Problema", text: "Conteúdo denso demais afasta." },
+      { label: "S3 — Regra", text: "A regra dos 3: conceito + exemplo + ação." },
+      { label: "S4 — Exemplo", text: "Antes vs Depois dessa estrutura." },
+      { label: "S5 — Aplicação", text: "Use em aulas, posts e mentorias." },
+      { label: "S6 — CTA", text: "Salva e aplica na próxima aula →" },
+    ],
   },
 };
 
@@ -123,6 +185,7 @@ function getDemoData(chip: string): DemoStepData {
     ...override,
     roteiro: { ...defaultDemo.roteiro, ...override.roteiro },
     briefing: { ...defaultDemo.briefing, ...override.briefing },
+    carrossel: override.carrossel || defaultDemo.carrossel,
   };
 }
 
@@ -324,6 +387,23 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                     <span className="text-[8px] font-bold text-primary uppercase">CTA</span>
                     <p className="mt-0.5 text-foreground/80">{demo.roteiro.cta}</p>
                   </div>
+                </div>
+              </StepCard>
+
+              <StepCard icon={LayoutGrid} title="Carrossel Estratégico" delay={3.6}>
+                <div className="grid grid-cols-3 gap-1">
+                  {demo.carrossel.map((slide, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 3.8 + i * 0.15 }}
+                      className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
+                    >
+                      <span className="text-[7px] font-bold text-primary block mb-0.5">{slide.label}</span>
+                      <p className="text-[8px] text-foreground/70 leading-tight">{slide.text}</p>
+                    </motion.div>
+                  ))}
                 </div>
               </StepCard>
             </motion.div>
