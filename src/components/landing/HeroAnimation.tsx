@@ -77,6 +77,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "O algoritmo prioriza retenção. Use ganchos nos primeiros 0,5s, entregue valor no meio e feche com CTA claro.",
       cta: "Salva esse vídeo e aplica no seu próximo Reel.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Seus Reels são bonitos mas não vendem?" },
+      { label: "S2 — Erro", text: "Estética sem estratégia = vaidade métrica." },
+      { label: "S3 — Solução", text: "Gancho em 0,5s + valor + CTA claro." },
+      { label: "S4 — Prova", text: "3x mais saves com essa estrutura." },
+      { label: "S5 — Passo a passo", text: "1. Hook visual 2. Dor 3. Solução 4. CTA" },
+      { label: "S6 — CTA", text: "Salva e aplica no seu próximo Reel →" },
+    ],
   },
   "TikTok virais": {
     persona: "Jovem criador(a), 20-35, quer viralizar com conteúdo autêntico e monetizar a audiência.",
@@ -87,6 +95,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "TikTok recompensa originalidade e ritmo. Pattern interrupt nos primeiros 2s, loop visual, e texto que complementa o áudio.",
       cta: "Segue pra mais formatos que viralizam.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "2M de views em 48h com esse formato." },
+      { label: "S2 — Segredo", text: "Pattern interrupt nos primeiros 2 segundos." },
+      { label: "S3 — Formato", text: "Loop visual + texto que complementa o áudio." },
+      { label: "S4 — Dados", text: "78% dos virais usam essa estrutura." },
+      { label: "S5 — Template", text: "Hook → Tensão → Reveal → Loop." },
+      { label: "S6 — CTA", text: "Segue pra mais formatos que viralizam →" },
+    ],
   },
   "Storytelling de marca": {
     persona: "Fundador(a) de marca, 30-50, quer construir conexão emocional com a audiência.",
@@ -97,6 +113,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "As marcas que as pessoas amam não vendem produtos — elas contam histórias. Vulnerabilidade gera conexão.",
       cta: "Conta nos comentários: qual foi o 'não' que te transformou?",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Tudo começou com um 'não'." },
+      { label: "S2 — Origem", text: "A história por trás da marca." },
+      { label: "S3 — Virada", text: "O momento que mudou tudo." },
+      { label: "S4 — Propósito", text: "Por que fazemos o que fazemos." },
+      { label: "S5 — Impacto", text: "As vidas que transformamos." },
+      { label: "S6 — CTA", text: "Qual foi o 'não' que te transformou? →" },
+    ],
   },
   "Vídeos para YouTube": {
     persona: "Criador(a) de conteúdo, 25-45, quer construir canal com autoridade e monetização.",
@@ -107,6 +131,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "YouTube é um mecanismo de busca. Títulos com curiosidade, thumbnails com contraste, e os primeiros 30s decidem tudo.",
       cta: "Se inscreve e ativa o sino pra não perder o próximo vídeo.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "O maior erro dos canais pequenos." },
+      { label: "S2 — Dado", text: "70% da decisão está na thumbnail." },
+      { label: "S3 — Título", text: "Curiosidade > Clickbait. Sempre." },
+      { label: "S4 — Retenção", text: "Os primeiros 30s decidem tudo." },
+      { label: "S5 — Método", text: "SEO + Thumbnail + Hook = Crescimento." },
+      { label: "S6 — CTA", text: "Se inscreve e ativa o sino →" },
+    ],
   },
   "Ads para Meta": {
     persona: "Gestor(a) de tráfego, 28-50, quer ROAS positivo e escala previsível.",
@@ -117,6 +149,14 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "80% da performance de um ad está no criativo. Hook visual em 1s, proposta de valor clara, prova social, e urgência real.",
       cta: "Clique no link e receba o template de criativo que mais converte.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Seu ad não vende? O problema é o criativo." },
+      { label: "S2 — Dado", text: "80% da performance está no criativo." },
+      { label: "S3 — Estrutura", text: "Hook 1s + Valor + Prova + Urgência." },
+      { label: "S4 — Exemplo", text: "ROAS 4.2x com essa estrutura." },
+      { label: "S5 — Template", text: "Dor → Solução → Prova → Oferta → CTA." },
+      { label: "S6 — CTA", text: "Baixe o template que mais converte →" },
+    ],
   },
   "Conteúdo educacional": {
     persona: "Professor(a) ou mentor(a), 30-55, quer transformar conhecimento em autoridade digital.",
@@ -127,7 +167,16 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
       desenvolvimento: "Conteúdo educacional que engaja usa a regra dos 3: conceito, exemplo prático, e aplicação imediata.",
       cta: "Salva pra aplicar na sua próxima aula ou conteúdo.",
     },
+    carrossel: [
+      { label: "S1 — Hook", text: "Ensina assim? Está perdendo alunos." },
+      { label: "S2 — Problema", text: "Conteúdo denso demais afasta." },
+      { label: "S3 — Regra", text: "A regra dos 3: conceito + exemplo + ação." },
+      { label: "S4 — Exemplo", text: "Antes vs Depois dessa estrutura." },
+      { label: "S5 — Aplicação", text: "Use em aulas, posts e mentorias." },
+      { label: "S6 — CTA", text: "Salva e aplica na próxima aula →" },
+    ],
   },
+};
 };
 
 function getDemoData(chip: string): DemoStepData {
