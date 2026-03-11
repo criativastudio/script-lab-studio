@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Sparkles, CheckCircle2, Loader2, ArrowLeft, User, Target, Mic2, Filter, ClipboardList, Clapperboard } from "lucide-react";
+import { FileText, Sparkles, CheckCircle2, Loader2, ArrowLeft, User, Target, Mic2, Filter, ClipboardList, Clapperboard, LayoutGrid } from "lucide-react";
 
 // ── Default animation data ──
 
