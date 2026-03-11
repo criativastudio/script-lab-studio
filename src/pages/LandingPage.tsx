@@ -251,8 +251,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
-            Responda 4 perguntas rápidas e receba automaticamente briefing estratégico, roteiro e carrossel prontos para
-            gravação, com conteúdo estratégico alinhado ao posicionamento do seu negócio.
+            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação. Sem escrever uma linha
+            sequer.
           </motion.p>
 
           {/* CTA */}
@@ -625,7 +625,7 @@ export default function LandingPage() {
             Comece a Criar Roteiros Estratégicos <span className="text-gradient-primary">Hoje</span>
           </h2>
           <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base md:text-lg font-light">
-            Roteiros profissionais prontos para gravação em minutos.
+            Roteiros profissionais prontos para gravação em segundos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
             <RainbowButton className="gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
