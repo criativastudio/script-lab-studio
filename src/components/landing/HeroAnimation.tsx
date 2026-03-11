@@ -42,33 +42,33 @@ interface DemoStepData {
 }
 
 const defaultDemo: DemoStepData = {
-  persona: "Empreendedor(a) digital, 25-45 anos, busca crescimento orgânico e autoridade no nicho.",
-  posicionamento: "Referência em conteúdo estratégico que gera resultados reais e mensuráveis.",
-  tomDeVoz: ["Educativo", "Próximo", "Autoridade"],
-  funil: ["Topo — Awareness", "Meio — Consideração", "Fundo — Conversão"],
+  persona: "Empreendedor(a) digital, 25-45 anos, que busca informação, inspiração e soluções práticas nas redes sociais.",
+  posicionamento: "Autoridade no nicho que educa e inspira através de conteúdo estratégico.",
+  tomDeVoz: ["Educativo", "Inspirador", "Autoridade"],
+  funil: ["Topo — Atração", "Meio — Educação", "Fundo — Engajamento"],
   briefing: {
-    objetivo: "Gerar leads qualificados via conteúdo orgânico",
-    publico: "Empreendedores digitais em fase de crescimento",
+    objetivo: "Criar conteúdo que atraia, eduque e engaje o público do nicho",
+    publico: "Pessoas interessadas no nicho, buscam conteúdo útil e inspirador",
     estilo: "Direto, com dados e storytelling",
   },
   roteiro: {
-    gancho: "Você está perdendo clientes todos os dias sem saber…",
-    desenvolvimento: "A maioria dos empreendedores cria conteúdo sem estratégia. O resultado? Likes, mas zero vendas. O segredo está em alinhar cada vídeo ao funil de conversão.",
-    cta: "Comece agora: link na bio para sua análise gratuita.",
+    gancho: "Seu conteúdo não alcança as pessoas certas…",
+    desenvolvimento: "A maioria cria conteúdo genérico sem estratégia. O resultado? Alcance baixo e zero engajamento. O segredo está em alinhar cada publicação ao funil de conteúdo: atrair com relevância, educar com profundidade e engajar com valor real.",
+    cta: "Comece agora: crie conteúdo estratégico para seu nicho.",
   },
   carrossel: [
-    { label: "S1 — Hook", text: "Você posta todo dia e não vende nada?" },
-    { label: "S2 — Problema", text: "O erro: conteúdo sem estratégia de funil." },
-    { label: "S3 — Solução", text: "Alinhe cada post a uma etapa do funil." },
-    { label: "S4 — Prova", text: "+300% de leads em 30 dias com este método." },
-    { label: "S5 — Método", text: "Topo: awareness. Meio: educação. Fundo: oferta." },
-    { label: "S6 — CTA", text: "Link na bio → Análise gratuita do seu conteúdo." },
+    { label: "S1 — Hook", text: "Seu conteúdo não engaja? O problema é a estratégia." },
+    { label: "S2 — Problema", text: "Conteúdo genérico não atrai o público certo." },
+    { label: "S3 — Solução", text: "Alinhe cada post ao funil de conteúdo estratégico." },
+    { label: "S4 — Prova", text: "+300% de engajamento com conteúdo alinhado ao funil." },
+    { label: "S5 — Método", text: "Topo: atrair. Meio: educar. Fundo: engajar e gerar valor." },
+    { label: "S6 — CTA", text: "Crie conteúdo estratégico para o seu nicho →" },
   ],
   formAnswers: {
-    contexto: "Negócio digital focado em crescimento orgânico e autoridade no mercado.",
-    publico: "Empreendedores digitais, 25-45 anos, em fase de crescimento.",
-    resultado: "Gerar leads qualificados via conteúdo orgânico",
-    voz: "Educativo, próximo e com autoridade",
+    contexto: "Criação de conteúdo estratégico para atrair e engajar o público ideal.",
+    publico: "Pessoas interessadas no nicho que consomem conteúdo educativo e inspirador.",
+    resultado: "Atrair seguidores qualificados e gerar valor com conteúdo estratégico",
+    voz: "Educativo, inspirador e com autoridade",
   },
 };
 
@@ -176,14 +176,27 @@ function getDemoData(chip: string): DemoStepData {
     formAnswers: override.formAnswers || defaultDemo.formAnswers,
   };
   if (!demoDataMap[chip]) {
-    base.persona = `Profissional de ${chip}, 25-50 anos, busca autoridade digital e captação de clientes no segmento.`;
-    base.posicionamento = `Referência em ${chip} com conteúdo estratégico que gera resultados reais.`;
-    base.briefing = { objetivo: `Gerar leads qualificados para ${chip} via conteúdo orgânico`, publico: `Público-alvo de ${chip} em fase de decisão`, estilo: "Direto, com dados e storytelling" };
+    base.persona = `Público de ${chip} que busca informação, inspiração e soluções práticas nas redes sociais.`;
+    base.posicionamento = `Autoridade em ${chip} que educa e inspira através de conteúdo estratégico.`;
+    base.briefing = { objetivo: `Criar conteúdo que atraia, eduque e engaje o público de ${chip}`, publico: `Público interessado em ${chip}, busca conteúdo útil e inspirador`, estilo: "Direto, com dados e storytelling" };
+    base.roteiro = {
+      gancho: `Seu conteúdo sobre ${chip} não alcança as pessoas certas…`,
+      desenvolvimento: `A maioria cria conteúdo genérico sobre ${chip} sem estratégia. O resultado? Alcance baixo e zero engajamento. O segredo está em alinhar cada publicação ao funil de conteúdo: atrair com relevância, educar com profundidade e engajar com valor real.`,
+      cta: `Comece agora: crie conteúdo estratégico para ${chip}.`,
+    };
+    base.carrossel = [
+      { label: "S1 — Hook", text: `Seu conteúdo sobre ${chip} não engaja?` },
+      { label: "S2 — Problema", text: `Conteúdo genérico sobre ${chip} não atrai o público certo.` },
+      { label: "S3 — Solução", text: `Alinhe cada post de ${chip} ao funil de conteúdo.` },
+      { label: "S4 — Prova", text: `+300% de engajamento com conteúdo estratégico de ${chip}.` },
+      { label: "S5 — Método", text: "Topo: atrair. Meio: educar. Fundo: engajar e gerar valor." },
+      { label: "S6 — CTA", text: `Crie conteúdo estratégico para ${chip} →` },
+    ];
     base.formAnswers = {
-      contexto: `${chip} — negócio focado em crescimento orgânico e autoridade no mercado.`,
-      publico: `Público-alvo de ${chip}, 25-50 anos, em fase de decisão de compra.`,
-      resultado: `Gerar leads qualificados para ${chip} via conteúdo orgânico`,
-      voz: "Educativo, próximo e com autoridade",
+      contexto: `${chip} — criação de conteúdo estratégico para atrair e engajar o público ideal.`,
+      publico: `Pessoas interessadas em ${chip} que consomem conteúdo educativo e inspirador.`,
+      resultado: `Atrair seguidores qualificados e gerar valor com conteúdo estratégico`,
+      voz: "Educativo, inspirador e com autoridade",
     };
   }
   return base;
