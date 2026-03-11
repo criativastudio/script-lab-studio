@@ -389,6 +389,23 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   </div>
                 </div>
               </StepCard>
+
+              <StepCard icon={LayoutGrid} title="Carrossel Estratégico" delay={3.6}>
+                <div className="grid grid-cols-3 gap-1">
+                  {demo.carrossel.map((slide, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 3.8 + i * 0.15 }}
+                      className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
+                    >
+                      <span className="text-[7px] font-bold text-primary block mb-0.5">{slide.label}</span>
+                      <p className="text-[8px] text-foreground/70 leading-tight">{slide.text}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </StepCard>
             </motion.div>
           ) : (
             /* ── DEFAULT MODE: Cycling animation ── */
