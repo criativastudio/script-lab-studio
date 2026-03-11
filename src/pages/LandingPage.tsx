@@ -312,7 +312,7 @@ export default function LandingPage() {
       <AIInputDemo onChipSelected={handleChipSelected} />
 
       {/* ── 3. 3D PRODUCT SCROLL ── */}
-      <section className="relative overflow-hidden">
+      <section ref={section3Ref} className="relative overflow-hidden">
         <div className="glow-orb w-[500px] h-[500px] bg-primary/10 -top-20 -left-40" />
         <div className="glow-orb w-[400px] h-[400px] bg-[hsl(var(--hero-pink)/0.08)] -bottom-20 right-0" />
 
@@ -335,7 +335,7 @@ export default function LandingPage() {
               </motion.div>
             }
           >
-            <HeroAnimation />
+            <HeroAnimation selectedChip={selectedChip} onReset={() => setSelectedChip(undefined)} />
           </ContainerScroll>
         </div>
 
