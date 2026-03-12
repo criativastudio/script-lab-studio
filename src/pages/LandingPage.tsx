@@ -66,7 +66,7 @@ const steps = [
     icon: Mic,
     num: "03",
     title: "Gere roteiros prontos",
-    desc: "Receba roteiros cena a cena, prontos para gravar em minutos.",
+    desc: "Receba roteiros cena a cena, prontos para gravar em segundos.",
   },
 ];
 
@@ -241,7 +241,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
-            Roteiros Estratégicos <span className="text-gradient-primary">em Minutos</span>
+            Briefing, Roteiros e Carrossel Estratégicos <span className="text-gradient-primary">em Segundos</span>
           </motion.h1>
 
           {/* Description */}
@@ -251,8 +251,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
-            Descreva sua ideia, defina sua persona e receba roteiros prontos para gravação. Sem escrever uma linha
-            sequer.
+            Responda 4 perguntas rápidas e receba briefing, roteiro e carrossel estratégicos prontos para gravação,
+            alinhados ao posicionamento do seu negócio.
           </motion.p>
 
           {/* CTA */}
