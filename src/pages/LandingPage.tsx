@@ -403,7 +403,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               O problema
             </Badge>
-            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
             <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
