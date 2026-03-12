@@ -537,7 +537,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" className="relative py-16 md:py-24 px-4">
+      <section id="planos" className="relative py-16 md:py-24 px-4 overflow-hidden">
         <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
