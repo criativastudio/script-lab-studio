@@ -36,9 +36,9 @@ interface CarouselIdea {
 interface SlideData {
   slide_number: number;
   slide_label: string;
-  text: string;
+  headline: string;
+  connector: string;
   visual_suggestion: string;
-  art_text: string;
   alt_text: string;
 }
 
@@ -127,7 +127,7 @@ const CarouselGenerator = () => {
 
   const handleSaveScript = async () => {
     if (!user || !script) return;
-    const fullText = script.slides.map((s) => `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
+    const fullText = script.slides.map((s) => `## ${s.slide_label}\n**${s.headline}**\n${s.connector}\n\n**Visual:** ${s.visual_suggestion}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
       + `\n\n---\n\n## Legenda\n${script.caption}`;
 
     const { error } = await supabase.from("scripts").insert({
@@ -164,10 +164,10 @@ const CarouselGenerator = () => {
           <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:#6b7280;">S${s.slide_number}</span>
           <span style="font-size:13px;font-weight:600;color:#374151;">${getSlideTypeLabel(s.slide_number)}</span>
         </div>
-        <p style="font-size:16px;font-weight:500;color:#111827;margin:0 0 16px 0;line-height:1.5;">${s.text}</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
+        <p style="font-size:20px;font-weight:700;color:#111827;margin:0 0 4px 0;line-height:1.3;">${s.headline}</p>
+        <p style="font-size:14px;font-weight:400;color:#6b7280;margin:0 0 16px 0;">${s.connector}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
           <div><strong>Visual:</strong> ${s.visual_suggestion}</div>
-          <div><strong>Arte:</strong> ${s.art_text}</div>
           <div><strong>Alt:</strong> ${s.alt_text}</div>
         </div>
       </div>
@@ -348,10 +348,10 @@ const CarouselGenerator = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2 text-sm">
-                        <p className="font-medium">{slide.text}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-muted-foreground">
+                        <p className="text-lg font-bold text-foreground">{slide.headline}</p>
+                        <p className="text-muted-foreground">{slide.connector}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-muted-foreground text-xs mt-2">
                           <div><strong>Visual:</strong> {slide.visual_suggestion}</div>
-                          <div><strong>Arte:</strong> {slide.art_text}</div>
                           <div><strong>Alt:</strong> {slide.alt_text}</div>
                         </div>
                       </CardContent>

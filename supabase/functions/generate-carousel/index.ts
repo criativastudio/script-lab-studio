@@ -82,15 +82,13 @@ Sua missão é criar conteúdo que maximize descoberta, salvamentos e compartilh
 ${contextBlock}
 
 REGRAS OBRIGATÓRIAS:
-- Texto CURTO por slide — máximo 12 palavras por frase.
-- Linguagem SIMPLES e DIRETA — como se falasse com um amigo.
-- Conteúdo focado em DESCOBERTA: curiosidade, utilidade ou quebra de crença.
+- Cada slide tem APENAS: uma HEADLINE/HOOK forte (máx 6-8 palavras) + um TEXTO CONECTOR curto (máx 4-6 palavras).
+- PROIBIDO parágrafos, explicações ou frases longas.
+- Headline = frase de impacto que gera curiosidade ou quebra de crença.
+- Conector = frase curta que liga ao próximo slide ou complementa a headline.
 - Nunca genérico. Tudo adaptado ao nicho, persona e dores do cliente.
-- O hook (S1) deve INTERROMPER o scroll e gerar curiosidade irresistível.
-- Cada slide de desenvolvimento (S2-S5) apresenta 1 IDEIA CLARA, sem enrolação.
-- O CTA (S6) fecha com chamada estratégica (seguir, salvar ou compartilhar).
 - Priorizar: números específicos, contrastes, listas, revelações inesperadas.
-- Otimizado para mobile — fácil de ler em 2 segundos por slide.
+- Otimizado para mobile — leitura instantânea em 2 segundos por slide.
 
 MÉTRICAS-ALVO:
 - Salvamentos ≥ 8%
@@ -139,14 +137,14 @@ Cada ideia deve conter: headline poderoso, ângulo estratégico, objetivo no fun
       userPrompt = `Crie um roteiro de carrossel para Instagram com 6 slides otimizado para ALCANCE DE NÃO SEGUIDORES.${idea_title ? ` Tema: ${idea_title}` : ""}${topic ? ` Palavras-chave: ${topic}` : ""}
 
 ESTRUTURA OBRIGATÓRIA (6 slides):
-S1 – HOOK: Gancho forte que interrompa o scroll e gere curiosidade. Máximo 9 palavras.
-S2 – DESENVOLVIMENTO 1: Primeira ideia clara, texto curto e direto.
-S3 – DESENVOLVIMENTO 2: Segunda ideia clara, texto curto e direto.
-S4 – DESENVOLVIMENTO 3: Terceira ideia clara, texto curto e direto.
-S5 – DESENVOLVIMENTO 4: Quarta ideia clara, texto curto e direto.
-S6 – CTA: Conclusão da ideia com chamada para ação (seguir, salvar ou compartilhar).
+S1 – HOOK: Gancho que interrompe o scroll. Máx 8 palavras headline.
+S2 – PROBLEMA: Dor específica do público. Máx 8 palavras headline + 6 palavras conector.
+S3 – SOLUÇÃO: Promessa clara. Máx 8 palavras headline + 6 palavras conector.
+S4 – PROVA: Resultado ou dado concreto. Máx 8 palavras headline + 6 palavras conector.
+S5 – MÉTODO: Passo simples e direto. Máx 8 palavras headline + 6 palavras conector.
+S6 – CTA: Chamada para ação direta. Máx 8 palavras headline + 6 palavras conector.
 
-Para cada slide gere: texto do slide, sugestão visual, texto da arte, e alt text para SEO.
+Para cada slide gere: headline (máx 8 palavras), conector (máx 6 palavras), sugestão visual e alt text.
 Gere também: legenda do post (120-180 palavras).`;
 
       toolSchema = {
@@ -161,15 +159,15 @@ Gere também: legenda do post (120-180 palavras).`;
                 type: "array",
                 items: {
                   type: "object",
-                  properties: {
+              properties: {
                     slide_number: { type: "number" },
                     slide_label: { type: "string" },
-                    text: { type: "string" },
+                    headline: { type: "string", description: "Frase de impacto do slide (máx 8 palavras)" },
+                    connector: { type: "string", description: "Texto conector curto (máx 6 palavras)" },
                     visual_suggestion: { type: "string" },
-                    art_text: { type: "string" },
                     alt_text: { type: "string" },
                   },
-                  required: ["slide_number", "slide_label", "text", "visual_suggestion", "art_text", "alt_text"],
+                  required: ["slide_number", "slide_label", "headline", "connector", "visual_suggestion", "alt_text"],
                 },
               },
               caption: { type: "string", description: "Legenda do post (120-180 palavras)" },

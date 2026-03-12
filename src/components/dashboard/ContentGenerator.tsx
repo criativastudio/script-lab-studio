@@ -44,7 +44,7 @@ interface GeneratedResult {
   content_funnel?: string;
   scripts?: { title: string; script: string }[];
   // Carousel fields
-  slides?: { slide_number: number; slide_label: string; text: string; visual_suggestion: string; art_text: string; alt_text: string }[];
+  slides?: { slide_number: number; slide_label: string; headline: string; connector: string; visual_suggestion: string; alt_text: string }[];
   caption?: string;
 }
 
@@ -205,7 +205,7 @@ export function ContentGenerator() {
   const buildScriptText = (data: any, type: string): string => {
     if (type === "carrossel") {
       const slides = (data.slides || []).map((s: any) =>
-        `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`
+        `## ${s.slide_label}\n**${s.headline}**\n${s.connector}\n\n**Visual:** ${s.visual_suggestion}\n**Alt:** ${s.alt_text}`
       ).join("\n\n---\n\n");
       return slides + `\n\n---\n\n## Legenda\n${data.caption || ""}`;
     }
@@ -238,10 +238,10 @@ export function ContentGenerator() {
             <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:#6b7280;">S${s.slide_number}</span>
             <span style="font-size:13px;font-weight:600;color:#374151;">${getSlideTypeLabel(s.slide_number)}</span>
           </div>
-          <p style="font-size:16px;font-weight:500;color:#111827;margin:0 0 16px 0;line-height:1.5;">${s.text}</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
+          <p style="font-size:20px;font-weight:700;color:#111827;margin:0 0 4px 0;line-height:1.3;">${s.headline}</p>
+          <p style="font-size:14px;font-weight:400;color:#6b7280;margin:0 0 16px 0;">${s.connector}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
             <div><strong>Visual:</strong> ${s.visual_suggestion}</div>
-            <div><strong>Arte:</strong> ${s.art_text}</div>
             <div><strong>Alt:</strong> ${s.alt_text}</div>
           </div>
         </div>
@@ -341,10 +341,10 @@ export function ContentGenerator() {
             <span className="text-xs text-muted-foreground">{getSlideTypeLabel(slide.slide_number)}</span>
             <span className="text-sm font-semibold text-foreground">{slide.slide_label}</span>
           </div>
-          <p className="text-sm font-medium text-foreground mb-2">{slide.text}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-muted-foreground">
+          <p className="text-base font-bold text-foreground">{slide.headline}</p>
+          <p className="text-sm text-muted-foreground mb-2">{slide.connector}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-muted-foreground">
             <span><strong>Visual:</strong> {slide.visual_suggestion}</span>
-            <span><strong>Arte:</strong> {slide.art_text}</span>
             <span><strong>Alt:</strong> {slide.alt_text}</span>
           </div>
         </div>
