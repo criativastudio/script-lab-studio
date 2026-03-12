@@ -37,7 +37,7 @@ export const ContainerScroll = ({
       <div
         className="py-10 md:py-40 w-full relative"
         style={{
-          perspective: "500px",
+          perspective: "3000px",
         }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
