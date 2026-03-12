@@ -17,15 +17,13 @@ const testimonials = [
   {
     name: "Roberto Silva",
     role: "Agência de marketing",
-    quote:
-      "Nossa agência produz 3x mais conteúdo desde que adotamos a plataforma. A geração em lote é game-changer.",
+    quote: "Nossa agência produz 3x mais conteúdo desde que adotamos a plataforma. A geração em lote é game-changer.",
     avatar: "RS",
   },
   {
     name: "Juliana Mendes",
     role: "Advogada e influencer",
-    quote:
-      "Finalmente consigo criar conteúdo estratégico para meu nicho jurídico sem depender de copywriter externo.",
+    quote: "Finalmente consigo criar conteúdo estratégico para meu nicho jurídico sem depender de copywriter externo.",
     avatar: "JM",
   },
 ];
@@ -41,7 +39,7 @@ export default function SocialProof() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="font-display text-2xl md:text-4xl font-light tracking-tight mb-6">
+          <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight mb-6">
             Quem usa, <span className="text-gradient-primary">recomenda</span>
           </h2>
           <p className="text-muted-foreground text-base md:text-lg font-light max-w-2xl mx-auto">
@@ -87,9 +85,7 @@ export default function SocialProof() {
                   <div className="text-xs text-muted-foreground">{t.role}</div>
                 </div>
               </div>
-              <p className="text-xs font-light text-muted-foreground leading-relaxed">
-                "{t.quote}"
-              </p>
+              <p className="text-xs font-light text-muted-foreground leading-relaxed">"{t.quote}"</p>
             </motion.div>
           ))}
         </div>
