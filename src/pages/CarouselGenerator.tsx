@@ -36,9 +36,9 @@ interface CarouselIdea {
 interface SlideData {
   slide_number: number;
   slide_label: string;
-  text: string;
+  headline: string;
+  connector: string;
   visual_suggestion: string;
-  art_text: string;
   alt_text: string;
 }
 
