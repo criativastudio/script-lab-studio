@@ -11,7 +11,7 @@ export const ContainerScroll = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-   offset: ["start 90%", "center center"],
+    offset: ["start 90%", "center center"],
   });
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -26,30 +26,20 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const scale = useTransform(
-  scrollYProgress,
-  [0, 0.5, 1],
-  isMobile ? [0.75, 0.92, 0.85] : [0.9, 1, 0.95]
-);
+  const scaleDimensions = () => {
+    const scale = useTransform(scrollYProgress, [0, 0.5, 1], isMobile ? [0.75, 0.92, 0.85] : [0.9, 1, 0.95]);
   };
 
- const rotate = useTransform(
-  scrollYProgress,
-  [0, 0.5, 1],
-  [28, 0, -10]
-);
+  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], [28, 0, -10]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  const translate = useTransform(scrollYProgress, [0, 0.5, 1], [80, 0, -80]);
 
   return (
-    <div
-      className="h-[40rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20"
-      ref={containerRef}
-    >
+    <div className="h-[40rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20" ref={containerRef}>
       <div
         className="py-10 md:py-40 w-full relative"
         style={{
-          perspective: "1600px",
+          perspective: "1100px",
         }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
@@ -95,8 +85,7 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
-        boxShadow:
-          "0 40px 80px rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1)",
+        boxShadow: "0 40px 80px rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1)",
       }}
       className="max-w-5xl mt-8 mx-auto h-[30rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
     >
