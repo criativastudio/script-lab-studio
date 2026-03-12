@@ -572,8 +572,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                                 : "border-border/15 bg-transparent"
                           }`}
                         >
-                          <div className="text-[11px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
-                          <div className="text-[12px] text-foreground/80 font-mono min-h-[14px]">
+                          <div className="text-[13px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
+                          <div className="text-[14px] text-foreground/80 font-mono min-h-[16px]">
                             {isCompleted ? (
                               <span className="flex items-center gap-1">
                                 <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
