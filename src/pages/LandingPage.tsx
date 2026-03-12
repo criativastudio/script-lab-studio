@@ -241,7 +241,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
-            Crie Briefings, Roteiros, e ideias de Carrosséis Estratégicos{" "}
+            Crie, Roteiros, e ideias de Carrosséis{" "}
             <span className="text-gradient-primary">Para as Redes Sociais em Segundos</span>
           </motion.h1>
 
