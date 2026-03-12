@@ -209,7 +209,7 @@ export default function LandingPage() {
               </a>
             ))}
             <RainbowButton className="w-full rounded-full h-9 text-sm" onClick={() => navigate("/auth")}>
-              Começar grátis 2
+              Logar
             </RainbowButton>
           </div>
         )}
