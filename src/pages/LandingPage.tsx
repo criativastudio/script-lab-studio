@@ -268,7 +268,10 @@ export default function LandingPage() {
             </RainbowButton>
             <button
               onClick={() => {
-                document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
+                section3Ref.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
               }}
               className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-xs font-light text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
             >
