@@ -127,7 +127,7 @@ const CarouselGenerator = () => {
 
   const handleSaveScript = async () => {
     if (!user || !script) return;
-    const fullText = script.slides.map((s) => `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
+    const fullText = script.slides.map((s) => `## ${s.slide_label}\n**${s.headline}**\n${s.connector}\n\n**Visual:** ${s.visual_suggestion}\n**Alt:** ${s.alt_text}`).join("\n\n---\n\n")
       + `\n\n---\n\n## Legenda\n${script.caption}`;
 
     const { error } = await supabase.from("scripts").insert({
