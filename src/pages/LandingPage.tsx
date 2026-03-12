@@ -537,7 +537,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" className="relative py-16 md:py-24 px-4">
+      <section id="planos" className="relative py-16 md:py-24 px-4 overflow-hidden">
         <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
@@ -567,7 +567,7 @@ export default function LandingPage() {
                 whileHover={{ y: -4 }}
                 className={`relative rounded-2xl p-8 text-left transition-all duration-300 ${
                   p.highlight
-                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] scale-[1.03]"
+                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] md:scale-[1.03]"
                     : "glass-card"
                 }`}
               >
