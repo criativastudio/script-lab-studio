@@ -549,7 +549,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Planos
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-5xl font-light md:text-4xl mb-6 tracking-tight">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
             <p className="mx-auto mb-16 max-w-xl text-muted-foreground text-base md:text-lg font-light">
