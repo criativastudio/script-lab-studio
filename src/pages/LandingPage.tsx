@@ -209,7 +209,7 @@ export default function LandingPage() {
               </a>
             ))}
             <RainbowButton className="w-full rounded-full h-9 text-sm" onClick={() => navigate("/auth")}>
-              Começar grátis
+              Começar grátis 2
             </RainbowButton>
           </div>
         )}
@@ -262,7 +262,7 @@ export default function LandingPage() {
             className="flex justify-center gap-4"
           >
             <RainbowButton onClick={() => navigate("/auth")}>
-              Começar grátis
+              Começar grátis 3
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </RainbowButton>
             <button
@@ -631,7 +631,7 @@ export default function LandingPage() {
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
             <RainbowButton className="gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
-              Começar grátis <ArrowRight className="h-4 w-4" />
+              Começar grátis 4 <ArrowRight className="h-4 w-4" />
             </RainbowButton>
             <Button
               size="lg"
