@@ -164,10 +164,10 @@ const CarouselGenerator = () => {
           <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:#6b7280;">S${s.slide_number}</span>
           <span style="font-size:13px;font-weight:600;color:#374151;">${getSlideTypeLabel(s.slide_number)}</span>
         </div>
-        <p style="font-size:16px;font-weight:500;color:#111827;margin:0 0 16px 0;line-height:1.5;">${s.text}</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
+        <p style="font-size:20px;font-weight:700;color:#111827;margin:0 0 4px 0;line-height:1.3;">${s.headline}</p>
+        <p style="font-size:14px;font-weight:400;color:#6b7280;margin:0 0 16px 0;">${s.connector}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:#6b7280;">
           <div><strong>Visual:</strong> ${s.visual_suggestion}</div>
-          <div><strong>Arte:</strong> ${s.art_text}</div>
           <div><strong>Alt:</strong> ${s.alt_text}</div>
         </div>
       </div>
