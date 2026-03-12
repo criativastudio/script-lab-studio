@@ -187,7 +187,7 @@ export default function LandingPage() {
               className="hidden md:inline-flex gap-1.5 h-9 px-4 text-sm rounded-full"
               onClick={() => navigate("/auth")}
             >
-              Começar grátis <ArrowRight className="h-3.5 w-3.5" />
+              Começar grátis 1 <ArrowRight className="h-3.5 w-3.5" />
             </RainbowButton>
 
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
