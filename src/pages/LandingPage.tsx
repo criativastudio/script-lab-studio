@@ -364,7 +364,7 @@ export default function LandingPage() {
             <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
+            <p className="mx-auto mb-11 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
               Em três passos simples, você sai da ideia ao roteiro pronto.
             </p>
           </motion.div>
