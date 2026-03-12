@@ -694,7 +694,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                     <div className="flex items-center gap-2 mb-2">
                       <Clapperboard className="w-3.5 h-3.5 text-primary" />
                       <span className="text-[13px] font-medium text-foreground">Roteiro Gerado</span>
-                      <span className="ml-auto text-[9px] text-green-400 font-mono">Score: 9.2</span>
+                      <span className="ml-auto text-[12px] text-green-400 font-mono">Score: 9.2</span>
                     </div>
                     {[
                       { tag: "Gancho", text: demo.roteiro.gancho, accent: true },
