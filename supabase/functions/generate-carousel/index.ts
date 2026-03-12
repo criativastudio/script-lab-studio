@@ -137,14 +137,14 @@ Cada ideia deve conter: headline poderoso, ângulo estratégico, objetivo no fun
       userPrompt = `Crie um roteiro de carrossel para Instagram com 6 slides otimizado para ALCANCE DE NÃO SEGUIDORES.${idea_title ? ` Tema: ${idea_title}` : ""}${topic ? ` Palavras-chave: ${topic}` : ""}
 
 ESTRUTURA OBRIGATÓRIA (6 slides):
-S1 – HOOK: Gancho forte que interrompa o scroll e gere curiosidade. Máximo 9 palavras.
-S2 – DESENVOLVIMENTO 1: Primeira ideia clara, texto curto e direto.
-S3 – DESENVOLVIMENTO 2: Segunda ideia clara, texto curto e direto.
-S4 – DESENVOLVIMENTO 3: Terceira ideia clara, texto curto e direto.
-S5 – DESENVOLVIMENTO 4: Quarta ideia clara, texto curto e direto.
-S6 – CTA: Conclusão da ideia com chamada para ação (seguir, salvar ou compartilhar).
+S1 – HOOK: Gancho que interrompe o scroll. Máx 8 palavras headline.
+S2 – PROBLEMA: Dor específica do público. Máx 8 palavras headline + 6 palavras conector.
+S3 – SOLUÇÃO: Promessa clara. Máx 8 palavras headline + 6 palavras conector.
+S4 – PROVA: Resultado ou dado concreto. Máx 8 palavras headline + 6 palavras conector.
+S5 – MÉTODO: Passo simples e direto. Máx 8 palavras headline + 6 palavras conector.
+S6 – CTA: Chamada para ação direta. Máx 8 palavras headline + 6 palavras conector.
 
-Para cada slide gere: texto do slide, sugestão visual, texto da arte, e alt text para SEO.
+Para cada slide gere: headline (máx 8 palavras), conector (máx 6 palavras), sugestão visual e alt text.
 Gere também: legenda do post (120-180 palavras).`;
 
       toolSchema = {
