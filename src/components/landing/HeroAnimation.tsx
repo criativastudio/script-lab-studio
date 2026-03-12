@@ -509,7 +509,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   <ArrowLeft className="h-2.5 w-2.5 text-muted-foreground" />
                 </button>
                 <Sparkles className="w-3 h-3 text-primary" />
-                <span className="text-[10px] font-medium text-foreground truncate">{selectedChip}</span>
+                <span className="text-[12px] font-medium text-foreground truncate">{selectedChip}</span>
               </div>
 
               {/* Progress stepper */}
@@ -554,7 +554,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <ClipboardList className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">
+                      <span className="text-[13px] font-medium text-foreground">
                         Preenchendo formulário estratégico...
                       </span>
                     </div>
@@ -572,8 +572,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                                 : "border-border/15 bg-transparent"
                           }`}
                         >
-                          <div className="text-[9px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
-                          <div className="text-[10px] text-foreground/80 font-mono min-h-[14px]">
+                          <div className="text-[11px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
+                          <div className="text-[12px] text-foreground/80 font-mono min-h-[14px]">
                             {isCompleted ? (
                               <span className="flex items-center gap-1">
                                 <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
@@ -659,10 +659,10 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                           <div className="flex h-4 w-4 items-center justify-center rounded bg-primary/10">
                             <item.icon className="h-2.5 w-2.5 text-primary" />
                           </div>
-                          <span className="text-[9px] font-medium text-foreground">{item.title}</span>
+                          <span className="text-[11px] font-medium text-foreground">{item.title}</span>
                         </div>
                         {item.content && (
-                          <p className="text-[9px] text-muted-foreground leading-relaxed">{item.content}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{item.content}</p>
                         )}
                         {item.badges && (
                           <div className="flex flex-wrap gap-1">
@@ -708,7 +708,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                         transition={{ duration: 0.3 }}
                         className={`rounded-lg border p-2 ${item.accent ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                       >
-                        <span className="text-[8px] font-bold text-primary uppercase">{item.tag}</span>
+                        <span className="text-[10px] font-bold text-primary uppercase">{item.tag}</span>
                         <p className="mt-0.5 text-[9px] text-foreground/80 leading-relaxed">{item.text}</p>
                       </motion.div>
                     ))}
@@ -741,8 +741,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                           transition={{ duration: 0.3 }}
                           className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                         >
-                          <span className="text-[7px] font-bold text-primary block mb-0.5">{slide.label}</span>
-                          <p className="text-[8px] text-foreground/70 leading-tight">{slide.text}</p>
+                          <span className="text-[9px] font-bold text-primary block mb-0.5">{slide.label}</span>
+                          <p className="text-[10px] text-foreground/70 leading-tight">{slide.text}</p>
                         </motion.div>
                       ))}
                     </div>
@@ -801,8 +801,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                               : "border-border/15 bg-transparent"
                         }`}
                       >
-                        <div className="text-[9px] text-muted-foreground mb-1 font-medium">{field.label}</div>
-                        <div className="text-[10px] md:text-[11px] text-foreground/80 font-mono min-h-[14px]">
+                        <div className="text-[11px] text-muted-foreground mb-1 font-medium">{field.label}</div>
+                        <div className="text-[12px] md:text-[11px] text-foreground/80 font-mono min-h-[14px]">
                           {i < typingField ? (
                             <span className="flex items-center gap-1">
                               <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
