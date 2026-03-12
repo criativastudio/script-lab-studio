@@ -501,7 +501,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Benefícios
             </Badge>
-            <h2 className="font-display text-2xl font-light md:text-4xl mb-14 tracking-tight max-w-xl mx-auto">
+            <h2 className="font-display text-3xl font-light md:text-4xl mb-14 tracking-tight max-w-xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
