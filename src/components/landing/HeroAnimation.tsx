@@ -693,7 +693,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Clapperboard className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">Roteiro Gerado</span>
+                      <span className="text-[13px] font-medium text-foreground">Roteiro Gerado</span>
                       <span className="ml-auto text-[9px] text-green-400 font-mono">Score: 9.2</span>
                     </div>
                     {[
@@ -709,7 +709,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                         className={`rounded-lg border p-2 ${item.accent ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                       >
                         <span className="text-[10px] font-bold text-primary uppercase">{item.tag}</span>
-                        <p className="mt-0.5 text-[9px] text-foreground/80 leading-relaxed">{item.text}</p>
+                        <p className="mt-0.5 text-[12px] text-foreground/80 leading-relaxed">{item.text}</p>
                       </motion.div>
                     ))}
                   </motion.div>
@@ -728,7 +728,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                     <div className="flex items-center gap-2 mb-2">
                       <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                       <span className="text-[11px] font-medium text-foreground">Carrossel Estratégico</span>
-                      <span className="ml-auto text-[8px] text-primary font-mono bg-primary/10 rounded px-1.5 py-0.5">
+                      <span className="ml-auto text-[12px] text-primary font-mono bg-primary/10 rounded px-1.5 py-0.5">
                         6 slides
                       </span>
                     </div>
@@ -741,8 +741,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                           transition={{ duration: 0.3 }}
                           className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                         >
-                          <span className="text-[9px] font-bold text-primary block mb-0.5">{slide.label}</span>
-                          <p className="text-[10px] text-foreground/70 leading-tight">{slide.text}</p>
+                          <span className="text-[12px] font-bold text-primary block mb-0.5">{slide.label}</span>
+                          <p className="text-[13px] text-foreground/70 leading-tight">{slide.text}</p>
                         </motion.div>
                       ))}
                     </div>
