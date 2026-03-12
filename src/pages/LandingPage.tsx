@@ -262,7 +262,7 @@ export default function LandingPage() {
             className="flex justify-center gap-4"
           >
             <RainbowButton onClick={() => navigate("/auth")}>
-              Começar grátis agora
+              Começar grátis
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </RainbowButton>
             <button
