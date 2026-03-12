@@ -487,7 +487,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
           <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
           <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
-          <span className="ml-3 text-[10px] text-muted-foreground/50 font-mono">scriptlab.studio</span>
+          <span className="ml-3 text-[14px] text-muted-foreground/50 font-mono">scriptlab.studio</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -509,7 +509,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   <ArrowLeft className="h-2.5 w-2.5 text-muted-foreground" />
                 </button>
                 <Sparkles className="w-3 h-3 text-primary" />
-                <span className="text-[12px] font-medium text-foreground truncate">{selectedChip}</span>
+                <span className="text-[14px] font-medium text-foreground truncate">{selectedChip}</span>
               </div>
 
               {/* Progress stepper */}
@@ -554,7 +554,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <ClipboardList className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[13px] font-medium text-foreground">
+                      <span className="text-[14px] font-medium text-foreground">
                         Preenchendo formulário estratégico...
                       </span>
                     </div>
@@ -572,8 +572,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                                 : "border-border/15 bg-transparent"
                           }`}
                         >
-                          <div className="text-[13px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
-                          <div className="text-[14px] text-foreground/80 font-mono min-h-[16px]">
+                          <div className="text-[14px] text-muted-foreground mb-0.5 font-medium">{field.label}</div>
+                          <div className="text-[14px] text-foreground/80 font-mono min-h-[14px]">
                             {isCompleted ? (
                               <span className="flex items-center gap-1">
                                 <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
@@ -610,7 +610,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                     </motion.div>
                     <div className="text-center space-y-1.5">
                       <p className="text-sm font-medium text-foreground">Gerando estratégia completa...</p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[14px] text-muted-foreground">
                         Analisando contexto, criando briefing, roteiro e carrossel
                       </p>
                     </div>
@@ -639,8 +639,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <FileText className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">Briefing Estratégico</span>
-                      <span className="ml-auto text-[8px] text-green-400 font-mono">✓ Gerado</span>
+                      <span className="text-[14px] font-medium text-foreground">Briefing Estratégico</span>
+                      <span className="ml-auto text-[14px] text-green-400 font-mono">✓ Gerado</span>
                     </div>
                     {[
                       { icon: User, title: "Persona", content: demo.persona },
@@ -659,17 +659,17 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                           <div className="flex h-4 w-4 items-center justify-center rounded bg-primary/10">
                             <item.icon className="h-2.5 w-2.5 text-primary" />
                           </div>
-                          <span className="text-[11px] font-medium text-foreground">{item.title}</span>
+                          <span className="text-[14px] font-medium text-foreground">{item.title}</span>
                         </div>
                         {item.content && (
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">{item.content}</p>
+                          <p className="text-[14px] text-muted-foreground leading-relaxed">{item.content}</p>
                         )}
                         {item.badges && (
                           <div className="flex flex-wrap gap-1">
                             {item.badges.map((b) => (
                               <span
                                 key={b}
-                                className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[7px] text-primary font-medium"
+                                className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[14px] text-primary font-medium"
                               >
                                 {b}
                               </span>
@@ -693,7 +693,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Clapperboard className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[13px] font-medium text-foreground">Roteiro Gerado</span>
+                      <span className="text-[14px] font-medium text-foreground">Roteiro Gerado</span>
                       <span className="ml-auto text-[12px] text-green-400 font-mono">Score: 9.2</span>
                     </div>
                     {[
@@ -708,8 +708,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                         transition={{ duration: 0.3 }}
                         className={`rounded-lg border p-2 ${item.accent ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                       >
-                        <span className="text-[10px] font-bold text-primary uppercase">{item.tag}</span>
-                        <p className="mt-0.5 text-[12px] text-foreground/80 leading-relaxed">{item.text}</p>
+                        <span className="text-[12px] font-bold text-primary uppercase">{item.tag}</span>
+                        <p className="mt-0.5 text-[14px] text-foreground/80 leading-relaxed">{item.text}</p>
                       </motion.div>
                     ))}
                   </motion.div>
@@ -727,7 +727,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <LayoutGrid className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">Carrossel Estratégico</span>
+                      <span className="text-[12px] font-medium text-foreground">Carrossel Estratégico</span>
                       <span className="ml-auto text-[12px] text-primary font-mono bg-primary/10 rounded px-1.5 py-0.5">
                         6 slides
                       </span>
@@ -742,7 +742,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                           className={`rounded border p-1.5 ${i === 0 || i === 5 ? "border-primary/25 bg-primary/5" : "border-border/20 bg-muted/10"}`}
                         >
                           <span className="text-[12px] font-bold text-primary block mb-0.5">{slide.label}</span>
-                          <p className="text-[13px] text-foreground/70 leading-tight">{slide.text}</p>
+                          <p className="text-[14px] text-foreground/70 leading-tight">{slide.text}</p>
                         </motion.div>
                       ))}
                     </div>
@@ -757,7 +757,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                 {(["briefing", "processing", "script"] as Phase[]).map((p, i) => (
                   <div key={p} className="flex items-center gap-1.5">
                     <div
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium transition-colors duration-300 ${
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-medium transition-colors duration-300 ${
                         phase === p
                           ? "bg-primary text-primary-foreground"
                           : i < ["briefing", "processing", "script"].indexOf(phase)
@@ -768,7 +768,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                       {i + 1}
                     </div>
                     <span
-                      className={`text-[9px] font-mono transition-colors duration-300 ${phase === p ? "text-foreground" : "text-muted-foreground/50"}`}
+                      className={`text-[12px] font-mono transition-colors duration-300 ${phase === p ? "text-foreground" : "text-muted-foreground/50"}`}
                     >
                       {p === "briefing" ? "Briefing" : p === "processing" ? "IA" : "Roteiro"}
                     </span>
@@ -788,7 +788,7 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <FileText className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">AI Strategic Brief Builder</span>
+                      <span className="text-[12px] font-medium text-foreground">AI Strategic Brief Builder</span>
                     </div>
                     {briefingFields.map((field, i) => (
                       <div
@@ -801,8 +801,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                               : "border-border/15 bg-transparent"
                         }`}
                       >
-                        <div className="text-[13px] text-muted-foreground mb-1 font-medium">{field.label}</div>
-                        <div className="text-[14px] md:text-[11px] text-foreground/80 font-mono min-h-[14px]">
+                        <div className="text-[12px] text-muted-foreground mb-1 font-medium">{field.label}</div>
+                        <div className="text-[14px] md:text-[12px] text-foreground/80 font-mono min-h-[14px]">
                           {i < typingField ? (
                             <span className="flex items-center gap-1">
                               <CheckCircle2 className="w-2.5 h-2.5 text-green-400 shrink-0" />
@@ -863,8 +863,8 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-medium text-foreground">Roteiro Gerado</span>
-                      <span className="ml-auto text-[9px] text-green-400 font-mono">Score: 9.2</span>
+                      <span className="text-[12px] font-medium text-foreground">Roteiro Gerado</span>
+                      <span className="ml-auto text-[12px] text-green-400 font-mono">Score: 9.2</span>
                     </div>
                     {scriptScenes.map((scene, i) => (
                       <motion.div
@@ -875,10 +875,10 @@ const HeroAnimation = ({ selectedChip, onReset }: HeroAnimationProps) => {
                         className="rounded-lg border border-border/25 bg-muted/5 p-2.5"
                       >
                         <div className="flex items-start gap-2">
-                          <span className="shrink-0 text-[8px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5">
+                          <span className="shrink-0 text-[12px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5">
                             {scene.tag}
                           </span>
-                          <span className="text-[10px] md:text-[11px] text-foreground/75 leading-relaxed">
+                          <span className="text-[10px] md:text-[12px] text-foreground/75 leading-relaxed">
                             {scene.text}
                           </span>
                         </div>
