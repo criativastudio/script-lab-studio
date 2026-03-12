@@ -286,7 +286,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-xs font-light text-muted-foreground mt-6"
           >
-            Sem cartão de crédito • Setup em 30 segundos
+            Cadastro rápido • Setup em 30 segundos
           </motion.p>
 
           {/* Trust platform icons */}
