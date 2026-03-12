@@ -12,7 +12,7 @@ const features = [
     content: {
       headline: "Arraste, configure, publique.",
       body: "Monte roteiros profissionais em segundos com uma interface visual. Defina persona, tom de voz e estrutura — sem complicação.",
-      metrics: ["3x mais rápido", "Zero código", "Templates prontos"],
+      metrics: ["5x mais rápido", "Zero código", "Templates prontos"],
     },
   },
   {
