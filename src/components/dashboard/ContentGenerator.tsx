@@ -44,7 +44,7 @@ interface GeneratedResult {
   content_funnel?: string;
   scripts?: { title: string; script: string }[];
   // Carousel fields
-  slides?: { slide_number: number; slide_label: string; text: string; visual_suggestion: string; art_text: string; alt_text: string }[];
+  slides?: { slide_number: number; slide_label: string; headline: string; connector: string; visual_suggestion: string; alt_text: string }[];
   caption?: string;
 }
 
