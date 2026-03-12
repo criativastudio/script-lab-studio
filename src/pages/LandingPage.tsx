@@ -452,7 +452,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Exemplo
             </Badge>
-            <h2 className="font-display text-2xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
             <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base md:text-lg font-light">
