@@ -567,7 +567,7 @@ export default function LandingPage() {
                 whileHover={{ y: -4 }}
                 className={`relative rounded-2xl p-8 text-left transition-all duration-300 ${
                   p.highlight
-                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] scale-[1.03]"
+                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] md:scale-[1.03]"
                     : "glass-card"
                 }`}
               >
