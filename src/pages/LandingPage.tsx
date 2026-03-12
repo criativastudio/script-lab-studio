@@ -631,7 +631,7 @@ export default function LandingPage() {
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
             <RainbowButton className="gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
-              Garantir meu acesso grátis <ArrowRight className="h-4 w-4" />
+              Começar grátis <ArrowRight className="h-4 w-4" />
             </RainbowButton>
             <Button
               size="lg"
