@@ -348,10 +348,10 @@ const CarouselGenerator = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2 text-sm">
-                        <p className="font-medium">{slide.text}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-muted-foreground">
+                        <p className="text-lg font-bold text-foreground">{slide.headline}</p>
+                        <p className="text-muted-foreground">{slide.connector}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-muted-foreground text-xs mt-2">
                           <div><strong>Visual:</strong> {slide.visual_suggestion}</div>
-                          <div><strong>Arte:</strong> {slide.art_text}</div>
                           <div><strong>Alt:</strong> {slide.alt_text}</div>
                         </div>
                       </CardContent>

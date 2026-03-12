@@ -159,15 +159,15 @@ Gere também: legenda do post (120-180 palavras).`;
                 type: "array",
                 items: {
                   type: "object",
-                  properties: {
+              properties: {
                     slide_number: { type: "number" },
                     slide_label: { type: "string" },
-                    text: { type: "string" },
+                    headline: { type: "string", description: "Frase de impacto do slide (máx 8 palavras)" },
+                    connector: { type: "string", description: "Texto conector curto (máx 6 palavras)" },
                     visual_suggestion: { type: "string" },
-                    art_text: { type: "string" },
                     alt_text: { type: "string" },
                   },
-                  required: ["slide_number", "slide_label", "text", "visual_suggestion", "art_text", "alt_text"],
+                  required: ["slide_number", "slide_label", "headline", "connector", "visual_suggestion", "alt_text"],
                 },
               },
               caption: { type: "string", description: "Legenda do post (120-180 palavras)" },

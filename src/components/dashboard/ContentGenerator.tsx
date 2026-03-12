@@ -341,10 +341,10 @@ export function ContentGenerator() {
             <span className="text-xs text-muted-foreground">{getSlideTypeLabel(slide.slide_number)}</span>
             <span className="text-sm font-semibold text-foreground">{slide.slide_label}</span>
           </div>
-          <p className="text-sm font-medium text-foreground mb-2">{slide.text}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-muted-foreground">
+          <p className="text-base font-bold text-foreground">{slide.headline}</p>
+          <p className="text-sm text-muted-foreground mb-2">{slide.connector}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-muted-foreground">
             <span><strong>Visual:</strong> {slide.visual_suggestion}</span>
-            <span><strong>Arte:</strong> {slide.art_text}</span>
             <span><strong>Alt:</strong> {slide.alt_text}</span>
           </div>
         </div>
