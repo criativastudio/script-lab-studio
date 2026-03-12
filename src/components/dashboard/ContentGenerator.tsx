@@ -205,7 +205,7 @@ export function ContentGenerator() {
   const buildScriptText = (data: any, type: string): string => {
     if (type === "carrossel") {
       const slides = (data.slides || []).map((s: any) =>
-        `## ${s.slide_label}\n${s.text}\n\n**Visual:** ${s.visual_suggestion}\n**Arte:** ${s.art_text}\n**Alt:** ${s.alt_text}`
+        `## ${s.slide_label}\n**${s.headline}**\n${s.connector}\n\n**Visual:** ${s.visual_suggestion}\n**Alt:** ${s.alt_text}`
       ).join("\n\n---\n\n");
       return slides + `\n\n---\n\n## Legenda\n${data.caption || ""}`;
     }
