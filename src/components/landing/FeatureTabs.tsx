@@ -79,7 +79,7 @@ export default function FeatureTabs() {
           <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight mb-6">
             Tudo em <span className="text-gradient-primary">uma plataforma</span>
           </h2>
-          <p className="text-muted-foreground text-base md:text-lg font-light max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base md:text-lg font-light max-w-1xl mx-auto">
             Ferramentas profissionais para criadores que levam conteúdo a sério.
           </p>
         </motion.div>
