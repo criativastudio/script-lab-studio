@@ -251,8 +251,8 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-2xl text-sm md:text-base font-light text-muted-foreground mb-12"
           >
-            Responda 4 perguntas rápidas e receba briefing, roteiro e carrossel estratégicos prontos para gravação,
-            alinhados ao posicionamento do seu negócio.
+            Responda 4 perguntas rápidas e receba conteudo estratégico pronto para gravação, alinhados ao posicionamento
+            do seu negócio.
           </motion.p>
 
           {/* CTA */}
