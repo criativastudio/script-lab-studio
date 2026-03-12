@@ -82,15 +82,13 @@ Sua missão é criar conteúdo que maximize descoberta, salvamentos e compartilh
 ${contextBlock}
 
 REGRAS OBRIGATÓRIAS:
-- Texto CURTO por slide — máximo 12 palavras por frase.
-- Linguagem SIMPLES e DIRETA — como se falasse com um amigo.
-- Conteúdo focado em DESCOBERTA: curiosidade, utilidade ou quebra de crença.
+- Cada slide tem APENAS: uma HEADLINE/HOOK forte (máx 6-8 palavras) + um TEXTO CONECTOR curto (máx 4-6 palavras).
+- PROIBIDO parágrafos, explicações ou frases longas.
+- Headline = frase de impacto que gera curiosidade ou quebra de crença.
+- Conector = frase curta que liga ao próximo slide ou complementa a headline.
 - Nunca genérico. Tudo adaptado ao nicho, persona e dores do cliente.
-- O hook (S1) deve INTERROMPER o scroll e gerar curiosidade irresistível.
-- Cada slide de desenvolvimento (S2-S5) apresenta 1 IDEIA CLARA, sem enrolação.
-- O CTA (S6) fecha com chamada estratégica (seguir, salvar ou compartilhar).
 - Priorizar: números específicos, contrastes, listas, revelações inesperadas.
-- Otimizado para mobile — fácil de ler em 2 segundos por slide.
+- Otimizado para mobile — leitura instantânea em 2 segundos por slide.
 
 MÉTRICAS-ALVO:
 - Salvamentos ≥ 8%
