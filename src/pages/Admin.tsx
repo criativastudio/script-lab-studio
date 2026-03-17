@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { ChangePlanDialog } from "@/components/admin/ChangePlanDialog";
 import { Users, FolderOpen, FileText, Search } from "lucide-react";
 
 interface Sub { id: string; user_id: string | null; plan: string | null; status: string | null; created_at: string | null; }
@@ -190,7 +191,10 @@ const Admin = () => {
                             {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary" className="capitalize">{u.plan || "starter"}</Badge>
+                            <div className="flex items-center gap-1">
+                              <Badge variant="secondary" className="capitalize">{u.plan || "starter"}</Badge>
+                              <ChangePlanDialog userId={u.user_id} email={u.email} currentPlan={u.plan || "starter"} onPlanChanged={fetchData} />
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm">
                             <span>{u.briefings_used}/{limits.briefings} briefings</span>
