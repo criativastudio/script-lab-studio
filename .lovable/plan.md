@@ -1,18 +1,20 @@
 
 
-# Redirect to Login After Signup
+# Ativar acesso total para criativastudiobr@gmail.com
 
-## Problem
-After creating an account, the user stays on the signup form. They should be switched to the login view while the toast confirmation message appears in the bottom-right corner.
+## Estado atual
 
-## Change
+- **User ID**: `4e52decb-5c7f-4591-a415-d7b42b0dcda3`
+- **Role admin**: Já existe
+- **Tabela `users`**: Sem registro (precisa criar)
+- **Tabela `subscriptions`**: Sem registro (precisa criar)
+- **Profile**: Existe, mas sem `full_name`
 
-**File: `src/pages/Auth.tsx`**
+## Ações necessárias
 
-After successful signup (line 37), add:
-- `setIsSignUp(false)` to switch the form back to login mode
-- Clear the form fields (`setEmail("")`, `setPassword("")`, `setFullName("")`)
-- The toast already appears in the bottom-right (default Toaster position), so no change needed there
+1. **Inserir registro na tabela `users`** com `email`, `plano_ativo = 'scale_studio'`, `status_assinatura = 'active'`
+2. **Inserir assinatura na tabela `subscriptions`** com `plan = 'scale_studio'`, `status = 'active'`
+3. **Atualizar profile** com `full_name = 'Criativa Studio'`
 
-This is a 3-line addition inside the existing `if (isSignUp)` success block. No other files need changes.
+Nenhuma alteração de schema é necessária — apenas inserção/atualização de dados via SQL.
 
