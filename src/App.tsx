@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import Checkout from "./pages/Checkout";
 import CarouselGenerator from "./pages/CarouselGenerator";
+import PdfSettings from "./pages/PdfSettings";
 
 const queryClient = new QueryClient();
 
