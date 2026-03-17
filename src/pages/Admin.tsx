@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { ChangePlanDialog } from "@/components/admin/ChangePlanDialog";
 import { Users, FolderOpen, FileText, Search } from "lucide-react";
 
 interface Sub { id: string; user_id: string | null; plan: string | null; status: string | null; created_at: string | null; }
