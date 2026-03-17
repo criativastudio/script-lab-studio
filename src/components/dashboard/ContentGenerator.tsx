@@ -67,6 +67,7 @@ export function ContentGenerator() {
   const { user } = useAuth();
   const { limits, getMonthlyScriptCount } = usePlanLimits();
   const { toast } = useToast();
+  const { settings: pdfSettings } = usePdfSettings();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = useState(true);
