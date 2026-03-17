@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import Checkout from "./pages/Checkout";
 import CarouselGenerator from "./pages/CarouselGenerator";
+import PdfSettings from "./pages/PdfSettings";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/analise-estrategica" element={<ProtectedRoute><StrategicAnalysis /></ProtectedRoute>} />
             <Route path="/carrossel" element={<ProtectedRoute><CarouselGenerator /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+            <Route path="/pdf-settings" element={<ProtectedRoute><PdfSettings /></ProtectedRoute>} />
             <Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/briefing/:token" element={<ClientBriefingForm />} />
             <Route path="*" element={<NotFound />} />

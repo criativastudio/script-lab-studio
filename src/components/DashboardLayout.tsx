@@ -3,10 +3,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target, Sun, Moon, Menu, LayoutList } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Target, Sun, Moon, Menu, LayoutList, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -29,13 +30,15 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { plan } = usePlanLimits();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
 
-  const allItems = [...navItems, ...(isAdmin ? adminItems : [])];
+  const scaleItems = plan === "scale_studio" ? [{ href: "/pdf-settings", label: "Personalizar PDF", icon: FileText }] : [];
+  const allItems = [...navItems, ...scaleItems, ...(isAdmin ? adminItems : [])];
 
   const sidebarContent = (
     <>

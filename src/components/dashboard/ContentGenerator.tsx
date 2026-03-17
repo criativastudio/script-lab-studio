@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { usePdfSettings } from "@/hooks/usePdfSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -66,6 +67,7 @@ export function ContentGenerator() {
   const { user } = useAuth();
   const { limits, getMonthlyScriptCount } = usePlanLimits();
   const { toast } = useToast();
+  const { settings: pdfSettings } = usePdfSettings();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = useState(true);
@@ -249,24 +251,30 @@ export function ContentGenerator() {
 
       const win = window.open("", "_blank");
       if (!win) return;
+      const ps = pdfSettings;
+      const logoHtml = ps.logo_url ? `<img src="${ps.logo_url}" style="max-height:60px;margin-bottom:12px;" />` : "";
+      const logoJustify = ps.logo_position === "left" ? "flex-start" : ps.logo_position === "right" ? "flex-end" : "center";
       win.document.write(`<html><head><title>Carrossel — ${selectedBusiness}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: #fff; }
-          .cover { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; page-break-after: always; padding: 60px; }
-          .cover h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-          .cover .meta { font-size: 14px; color: #6b7280; margin-top: 16px; }
+          body { font-family: '${ps.font_family}', sans-serif; color: ${ps.secondary_color}; background: #fff; }
+          .cover { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: ${logoJustify}; text-align: center; page-break-after: always; padding: 60px; ${!ps.show_cover_page ? "display:none;" : ""} }
+          .cover h1 { font-size: ${ps.font_size_title}px; font-weight: 700; margin-bottom: 8px; }
+          .cover .meta { font-size: ${ps.font_size_body + 4}px; color: #6b7280; margin-top: 16px; }
           .content { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
-          .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151; }
-          .caption { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-top: 24px; }
-          .caption h3 { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-          .caption p { font-size: 14px; color: #4b5563; line-height: 1.6; }
+          .section-title { font-size: ${ps.font_size_body + 8}px; font-weight: 600; margin-bottom: 16px; color: ${ps.secondary_color}; }
+          .caption { border: 1px solid ${ps.primary_color}33; border-radius: 12px; padding: 24px; margin-top: 24px; }
+          .caption h3 { font-size: ${ps.font_size_body + 4}px; font-weight: 600; color: ${ps.secondary_color}; margin-bottom: 8px; }
+          .caption p { font-size: ${ps.font_size_body + 4}px; color: #4b5563; line-height: 1.6; }
+          .footer { text-align: center; font-size: ${ps.font_size_body}px; color: #9ca3af; margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
           @media print { .cover { page-break-after: always; } }
         </style></head><body>
           <div class="cover">
+            ${logoHtml}
             <h1>Carrossel Instagram</h1>
             <p style="font-size:18px;color:#6b7280;">${selectedBusiness}</p>
             <p class="meta">${dateStr}</p>
+            ${ps.header_text ? `<p style="font-size:12px;color:#9ca3af;margin-top:8px;">${ps.header_text}</p>` : ""}
           </div>
           <div class="content">
             <h2 class="section-title">Slides do Carrossel</h2>
@@ -275,6 +283,7 @@ export function ContentGenerator() {
               <h3>Legenda do Post</h3>
               <p>${result.caption || ""}</p>
             </div>
+            ${ps.footer_text ? `<div class="footer">${ps.footer_text}</div>` : ""}
           </div>
         </body></html>`);
       win.document.close();
@@ -287,14 +296,17 @@ export function ContentGenerator() {
     const printContent = printRef.current.innerHTML;
     const win = window.open("", "_blank");
     if (!win) return;
+    const ps = pdfSettings;
+    const logoHtml = ps.logo_url ? `<div style="text-align:${ps.logo_position};margin-bottom:20px;"><img src="${ps.logo_url}" style="max-height:50px;" /></div>` : "";
     win.document.write(`
       <html><head><title>Conteúdo — ${selectedBusiness}</title>
       <style>
-        body { font-family: sans-serif; padding: 40px; color: #1a1a1a; background: #fff; max-width: 800px; margin: 0 auto; }
-        h2 { margin-top: 24px; color: #333; } h3 { color: #555; }
+        body { font-family: '${ps.font_family}', sans-serif; padding: 40px; color: ${ps.secondary_color}; background: #fff; max-width: 800px; margin: 0 auto; font-size: ${ps.font_size_body + 4}px; }
+        h2 { margin-top: 24px; color: ${ps.secondary_color}; font-size: ${ps.font_size_title * 0.6}px; } h3 { color: #555; }
         p, div { line-height: 1.6; } .section { margin-bottom: 20px; padding: 16px; border: 1px solid #eee; border-radius: 8px; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; font-size: 12px; margin-right: 4px; }
-      </style></head><body>${printContent}</body></html>
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${ps.primary_color}20; color: ${ps.primary_color}; font-size: 12px; margin-right: 4px; }
+        .footer { text-align: center; font-size: ${ps.font_size_body}px; color: #9ca3af; margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+      </style></head><body>${logoHtml}${ps.header_text ? `<p style="text-align:center;font-size:12px;color:#9ca3af;margin-bottom:20px;">${ps.header_text}</p>` : ""}${printContent}${ps.footer_text ? `<div class="footer">${ps.footer_text}</div>` : ""}</body></html>
     `);
     win.document.close();
     win.print();
