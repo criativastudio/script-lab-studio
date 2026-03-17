@@ -574,6 +574,57 @@ export type Database = {
         }
         Relationships: []
       }
+      pdf_settings: {
+        Row: {
+          created_at: string | null
+          font_family: string
+          font_size_body: number
+          font_size_title: number
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          logo_position: string
+          logo_url: string | null
+          primary_color: string
+          secondary_color: string
+          show_cover_page: boolean
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          font_family?: string
+          font_size_body?: number
+          font_size_title?: number
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          logo_position?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          show_cover_page?: boolean
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          font_family?: string
+          font_size_body?: number
+          font_size_title?: number
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          logo_position?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          show_cover_page?: boolean
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
