@@ -30,6 +30,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { plan } = usePlanLimits();
 
   const handleSignOut = async () => {
     await signOut();
