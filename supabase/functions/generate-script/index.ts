@@ -183,7 +183,17 @@ Contexto Estratégico do Cliente (Layer 1 — Permanente):
 - Plataformas: ${(ctx.main_platforms || []).join(", ") || "N/A"}
 - Estilo de comunicação: ${ctx.communication_style || "N/A"}` : "";
 
+      const nicho = ctx?.business_niche || "não especificado";
+
       const systemPrompt = `Você é um roteirista estratégico profissional especializado em vídeos de marketing para redes sociais.
+
+REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
+- Use EXCLUSIVAMENTE vocabulário, termos técnicos e expressões nativas do nicho "${nicho}" do cliente.
+- PROIBIDO misturar metáforas, analogias ou estilos de comunicação de outros mercados ou nichos.
+- Toda referência, exemplo, caso e linguagem deve fazer sentido 100% dentro do contexto profissional do cliente.
+- Antes de finalizar, valide internamente: "Este conteúdo soaria natural vindo de um profissional deste nicho específico?" Se não, reescreva.
+- Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
+- Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
 Siga este pipeline de geração em 5 etapas obrigatórias:
 
