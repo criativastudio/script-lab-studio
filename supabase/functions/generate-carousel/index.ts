@@ -76,10 +76,20 @@ BRIEFING ESTRATÉGICO DO CLIENTE:
 - Estilo de comunicação: ${context.communication_style || "Não definido"}
 `.trim();
 
+    const nicho = context?.business_niche || "não especificado";
+
     const systemPrompt = `Você é um especialista em carrosséis para Instagram focado em ALCANCE PARA NÃO SEGUIDORES.
 Sua missão é criar conteúdo que maximize descoberta, salvamentos e compartilhamentos — fazendo o Instagram distribuir o post para pessoas que ainda não seguem o perfil.
 
 ${contextBlock}
+
+REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
+- Use EXCLUSIVAMENTE vocabulário, termos técnicos e expressões nativas do nicho "${nicho}" do cliente.
+- PROIBIDO misturar metáforas, analogias ou estilos de comunicação de outros mercados ou nichos.
+- Toda referência, exemplo, caso e linguagem deve fazer sentido 100% dentro do contexto profissional do cliente.
+- Antes de finalizar, valide internamente: "Este conteúdo soaria natural vindo de um profissional deste nicho específico?" Se não, reescreva.
+- Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
+- Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
 REGRAS OBRIGATÓRIAS:
 - Cada slide tem APENAS: uma HEADLINE/HOOK forte (máx 6-8 palavras) + um TEXTO CONECTOR curto (máx 4-6 palavras).

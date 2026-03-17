@@ -64,7 +64,17 @@ serve(async (req) => {
     } else {
       const videoCount = br.video_quantity || 3;
 
+      const nicho = br.niche || "não especificado";
+
       const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional de alto nível. A partir de respostas condensadas de um briefing estratégico com apenas 4 perguntas, você deve:
+
+REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
+- Use EXCLUSIVAMENTE vocabulário, termos técnicos e expressões nativas do nicho "${nicho}" do cliente.
+- PROIBIDO misturar metáforas, analogias ou estilos de comunicação de outros mercados ou nichos.
+- Toda referência, exemplo, caso e linguagem deve fazer sentido 100% dentro do contexto profissional do cliente.
+- Antes de finalizar, valide internamente: "Este conteúdo soaria natural vindo de um profissional deste nicho específico?" Se não, reescreva.
+- Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
+- Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
 1. INFERIR o contexto estratégico completo do negócio:
    - Nicho de mercado

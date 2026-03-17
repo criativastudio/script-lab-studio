@@ -86,12 +86,22 @@ serve(async (req) => {
     const effectiveTone = tone || context.tone_of_voice || context.communication_style || "profissional";
     const effectivePlatform = platform || (context.main_platforms?.length ? context.main_platforms[0] : "Instagram");
 
+    const nicho = context.business_niche || "não especificado";
+
     const systemPrompt = `Você é um especialista em copywriting para vídeos curtos e retenção de audiência.
 Seu objetivo é criar 10 ganchos de vídeo altamente impactantes que capturam atenção nos primeiros 3 segundos.
 
+REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
+- Use EXCLUSIVAMENTE vocabulário, termos técnicos e expressões nativas do nicho "${nicho}" do cliente.
+- PROIBIDO misturar metáforas, analogias ou estilos de comunicação de outros mercados ou nichos.
+- Toda referência, exemplo, caso e linguagem deve fazer sentido 100% dentro do contexto profissional do cliente.
+- Antes de finalizar, valide internamente: "Este conteúdo soaria natural vindo de um profissional deste nicho específico?" Se não, reescreva.
+- Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
+- Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
+
 CONTEXTO DO CLIENTE:
 - Negócio: ${context.business_name}
-- Nicho: ${context.business_niche || "não especificado"}
+- Nicho: ${nicho}
 - Público-alvo: ${effectiveAudience}
 - Tom de voz: ${effectiveTone}
 - Posicionamento: ${context.market_positioning || "não especificado"}

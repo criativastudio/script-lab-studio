@@ -74,6 +74,14 @@ serve(async (req) => {
     const systemPrompt = `Você é um estrategista de conteúdo digital e roteirista profissional para redes sociais.
 Com base nas informações fornecidas pelo usuário, crie um planejamento estratégico completo e ${qty} roteiro(s) de vídeo.
 
+REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
+- Use EXCLUSIVAMENTE vocabulário, termos técnicos e expressões nativas do nicho "${bNiche}" do cliente.
+- PROIBIDO misturar metáforas, analogias ou estilos de comunicação de outros mercados ou nichos.
+- Toda referência, exemplo, caso e linguagem deve fazer sentido 100% dentro do contexto profissional do cliente.
+- Antes de finalizar, valide internamente: "Este conteúdo soaria natural vindo de um profissional deste nicho específico?" Se não, reescreva.
+- Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
+- Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
+
 O resultado DEVE incluir obrigatoriamente:
 1. **Briefing**: Objetivo claro e estratégia de conteúdo para ${bName} no nicho ${bNiche}.
 2. **Persona**: Descrição detalhada da persona ideal do público-alvo, incluindo dores, desejos e comportamento.
