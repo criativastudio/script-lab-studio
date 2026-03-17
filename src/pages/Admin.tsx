@@ -191,7 +191,10 @@ const Admin = () => {
                             {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary" className="capitalize">{u.plan || "starter"}</Badge>
+                            <div className="flex items-center gap-1">
+                              <Badge variant="secondary" className="capitalize">{u.plan || "starter"}</Badge>
+                              <ChangePlanDialog userId={u.user_id} email={u.email} currentPlan={u.plan || "starter"} onPlanChanged={fetchData} />
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm">
                             <span>{u.briefings_used}/{limits.briefings} briefings</span>
