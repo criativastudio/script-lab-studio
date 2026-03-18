@@ -15,6 +15,7 @@ const navItems = [
   { href: "/gerador", label: "Gerador IA", icon: Sparkles },
   { href: "/analise-estrategica", label: "Análise Estratégica", icon: Target },
   { href: "/carrossel", label: "Carrossel", icon: LayoutList },
+  { href: "/diagnostico", label: "Diagnóstico", icon: Target },
   { href: "/metrics", label: "Análises", icon: BarChart3 },
   { href: "/whatsapp", label: "Distribuição", icon: Send },
 ];
