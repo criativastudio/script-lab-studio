@@ -20,6 +20,7 @@ import LandingPage from "./pages/LandingPage";
 import Checkout from "./pages/Checkout";
 import CarouselGenerator from "./pages/CarouselGenerator";
 import PdfSettings from "./pages/PdfSettings";
+import DiagnosticQuiz from "./pages/DiagnosticQuiz";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,8 @@ const App = () => (
             <Route path="/pdf-settings" element={<ProtectedRoute><PdfSettings /></ProtectedRoute>} />
             <Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/briefing/:token" element={<ClientBriefingForm />} />
+            <Route path="/diagnostico" element={<DiagnosticQuiz />} />
+            <Route path="/diagnostico/:type" element={<DiagnosticQuiz />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
