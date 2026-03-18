@@ -20,6 +20,7 @@ import LandingPage from "./pages/LandingPage";
 import Checkout from "./pages/Checkout";
 import CarouselGenerator from "./pages/CarouselGenerator";
 import PdfSettings from "./pages/PdfSettings";
+import DiagnosticQuiz from "./pages/DiagnosticQuiz";
 
 const queryClient = new QueryClient();
 
