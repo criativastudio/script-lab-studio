@@ -15,6 +15,8 @@ import { RainbowButton } from "@/components/ui/rainbow-button";
 import { useNavigate } from "react-router-dom";
 import { ScriptViewer } from "@/components/ScriptViewer";
 import { ClientListView } from "@/components/crm/ClientListView";
+import { usePdfSettings } from "@/hooks/usePdfSettings";
+import { buildPdfHtml, openPdfWindow } from "@/lib/pdf-builder";
 import { ClientDetailView } from "@/components/crm/ClientDetailView";
 import { StrategicContextTab } from "@/components/crm/StrategicContextTab";
 import { ProjectsTab } from "@/components/crm/ProjectsTab";
