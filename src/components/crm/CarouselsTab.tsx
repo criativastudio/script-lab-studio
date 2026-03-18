@@ -72,24 +72,16 @@ export function CarouselsTab({ carousels, onRefresh, toast }: CarouselsTabProps)
   };
 
   const handleDownloadPDF = (c: Script) => {
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(`
-      <html><head><title>${c.title || "Carrossel"}</title>
-      <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; max-width: 800px; margin: 0 auto; }
-        h1 { font-size: 22px; margin-bottom: 8px; }
-        .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
-        .content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; }
-        @media print { body { padding: 20px; } }
-      </style></head><body>
-      <h1>${c.title || "Carrossel"}</h1>
-      <div class="meta">${c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ""}</div>
-      <div class="content">${(c.script || "").replace(/</g, "&lt;")}</div>
-      </body></html>
-    `);
-    win.document.close();
-    setTimeout(() => win.print(), 400);
+    const dateStr = c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "";
+    const html = buildPdfHtml({
+      settings: pdfSettings,
+      documentTitle: c.title || "Carrossel",
+      coverTitle: c.title || "Carrossel",
+      coverSubtitle: "Carrossel de Conteúdo",
+      coverMeta: dateStr ? [dateStr] : [],
+      rawHtml: `<div class="section"><div class="section-title">Conteúdo</div><div class="card"><div class="content">${(c.script || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></div></div>`,
+    });
+    openPdfWindow(html);
   };
 
   if (carousels.length === 0) {
