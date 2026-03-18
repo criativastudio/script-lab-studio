@@ -113,8 +113,8 @@ const CRM = () => {
   // Plan limit modal
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
-  // PDF state
-  const [pdfData, setPdfData] = useState<{ client: BriefingRequest; briefing?: Briefing; scripts: Script[] } | null>(null);
+
+
 
   // Strategic context
   const [strategicContext, setStrategicContext] = useState<StrategicContext | null>(null);
