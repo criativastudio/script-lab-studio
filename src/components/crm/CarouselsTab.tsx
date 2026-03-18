@@ -33,6 +33,7 @@ interface CarouselsTabProps {
 }
 
 export function CarouselsTab({ carousels, onRefresh, toast }: CarouselsTabProps) {
+  const { settings: pdfSettings } = usePdfSettings();
   const [viewing, setViewing] = useState<Script | null>(null);
   const [editing, setEditing] = useState<Script | null>(null);
   const [editForm, setEditForm] = useState({ title: "", script: "" });
