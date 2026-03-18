@@ -62,6 +62,7 @@ const CRM = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount } = usePlanLimits();
+  const { settings: pdfSettings } = usePdfSettings();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
