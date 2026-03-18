@@ -937,59 +937,8 @@ const CRM = () => {
           platform={viewingProject ? undefined : strategicContext?.main_platforms?.[0] || undefined}
         />
 
-        {/* Hidden PDF print container */}
-        <div id="pdf-print-container" ref={printRef} className="hidden print:block">
-          {pdfData && (
-            <>
-              <div className="pdf-cover">
-                <div className="pdf-cover-badge">{briefingStatusLabels[pdfData.client.status] || pdfData.client.status}</div>
-                <h1 className="pdf-cover-title">{pdfData.client.business_name}</h1>
-                <p className="pdf-cover-subtitle">{pdfData.client.project_name}</p>
-                <div className="pdf-cover-meta">
-                  {pdfData.client.contact_name && <span>Contato: {pdfData.client.contact_name}</span>}
-                  <span>Data: {new Date(pdfData.client.created_at).toLocaleDateString("pt-BR")}</span>
-                  <span>{pdfData.client.video_quantity} vídeos</span>
-                </div>
-              </div>
-              {pdfData.briefing && (
-                <div className="pdf-section">
-                  <div className="pdf-section-title">Briefing Estratégico</div>
-                  <div className="pdf-card">
-                    <dl className="pdf-meta-grid">
-                      <dt>Objetivo</dt><dd>{pdfData.briefing.goal || "—"}</dd>
-                      <dt>Público-alvo</dt><dd>{pdfData.briefing.target_audience || "—"}</dd>
-                      <dt>Estilo de Conteúdo</dt><dd>{pdfData.briefing.content_style || "—"}</dd>
-                    </dl>
-                  </div>
-                </div>
-              )}
-              {pdfData.client.persona && (
-                <div className="pdf-section"><div className="pdf-section-title">Persona</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.persona}</div></div></div>
-              )}
-              {pdfData.client.positioning && (
-                <div className="pdf-section"><div className="pdf-section-title">Posicionamento</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.positioning}</div></div></div>
-              )}
-              {pdfData.client.tone_of_voice && (
-                <div className="pdf-section"><div className="pdf-section-title">Tom de Voz</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.tone_of_voice}</div></div></div>
-              )}
-              {pdfData.client.content_strategy && (
-                <div className="pdf-section"><div className="pdf-section-title">Funil de Conteúdo</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.content_strategy}</div></div></div>
-              )}
-              {pdfData.scripts.length > 0 && (
-                <div className="pdf-section pdf-page-break">
-                  <div className="pdf-section-title">Roteiros ({pdfData.scripts.length})</div>
-                  {pdfData.scripts.map((s, idx) => (
-                    <div key={s.id} className="pdf-script-card">
-                      <div className="pdf-script-number">Roteiro {idx + 1}</div>
-                      <h3>{s.title || "Sem título"}</h3>
-                      <div className="pdf-content">{s.script || "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+
+
       </DashboardLayout>
     );
   }
