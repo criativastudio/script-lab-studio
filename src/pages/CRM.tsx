@@ -15,6 +15,8 @@ import { RainbowButton } from "@/components/ui/rainbow-button";
 import { useNavigate } from "react-router-dom";
 import { ScriptViewer } from "@/components/ScriptViewer";
 import { ClientListView } from "@/components/crm/ClientListView";
+import { usePdfSettings } from "@/hooks/usePdfSettings";
+import { buildPdfHtml, openPdfWindow } from "@/lib/pdf-builder";
 import { ClientDetailView } from "@/components/crm/ClientDetailView";
 import { StrategicContextTab } from "@/components/crm/StrategicContextTab";
 import { ProjectsTab } from "@/components/crm/ProjectsTab";
@@ -60,6 +62,7 @@ const CRM = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount } = usePlanLimits();
+  const { settings: pdfSettings } = usePdfSettings();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
@@ -110,8 +113,8 @@ const CRM = () => {
   // Plan limit modal
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
-  // PDF state
-  const [pdfData, setPdfData] = useState<{ client: BriefingRequest; briefing?: Briefing; scripts: Script[] } | null>(null);
+
+
 
   // Strategic context
   const [strategicContext, setStrategicContext] = useState<StrategicContext | null>(null);
@@ -684,27 +687,59 @@ const CRM = () => {
     }
   };
 
-  // PDF handlers
+  // PDF helpers
+  const buildCrmPdf = (client: BriefingRequest, briefing?: Briefing, scripts: Script[] = []) => {
+    const sections: { title: string; content: string }[] = [];
+    if (client.persona) sections.push({ title: "Persona", content: client.persona });
+    if (client.positioning) sections.push({ title: "Posicionamento", content: client.positioning });
+    if (client.tone_of_voice) sections.push({ title: "Tom de Voz", content: client.tone_of_voice });
+    if (client.content_strategy) sections.push({ title: "Funil de Conteúdo", content: client.content_strategy });
+
+    const html = buildPdfHtml({
+      settings: pdfSettings,
+      documentTitle: `${client.business_name} — ${client.project_name}`,
+      coverTitle: client.business_name,
+      coverSubtitle: client.project_name,
+      coverBadge: briefingStatusLabels[client.status] || client.status,
+      coverMeta: [
+        ...(client.contact_name ? [`Contato: ${client.contact_name}`] : []),
+        `Data: ${new Date(client.created_at).toLocaleDateString("pt-BR")}`,
+        `${client.video_quantity} vídeos`,
+      ],
+      metaGrid: briefing ? [
+        { label: "Objetivo", value: briefing.goal || "—" },
+        { label: "Público-alvo", value: briefing.target_audience || "—" },
+        { label: "Estilo de Conteúdo", value: briefing.content_style || "—" },
+      ] : undefined,
+      sections,
+      scripts: scripts.map((s, idx) => ({
+        index: idx + 1,
+        title: s.title || "Sem título",
+        content: s.script || "—",
+      })),
+    });
+    openPdfWindow(html);
+  };
+
   const downloadPdf = (type: "briefing" | "script", item: Briefing | Script, project: BriefingRequest) => {
-    const allScripts = type === "script" ? [item as Script] : [];
-    const briefing = type === "briefing" ? item as Briefing : undefined;
-    setPdfData({ client: project, briefing, scripts: allScripts });
-    setTimeout(() => window.print(), 400);
+    buildCrmPdf(
+      project,
+      type === "briefing" ? item as Briefing : undefined,
+      type === "script" ? [item as Script] : [],
+    );
   };
 
   const downloadProjectPdf = (project: BriefingRequest) => {
     const briefs = projectBriefings[project.id] || [];
     const scrpts = projectScripts[project.id] || [];
-    setPdfData({ client: project, briefing: briefs[0], scripts: scrpts });
-    setTimeout(() => window.print(), 400);
+    buildCrmPdf(project, briefs[0], scrpts);
   };
 
   const downloadAllPdf = () => {
     if (!selectedGroup) return;
     const allBriefings = selectedGroup.projects.flatMap(p => projectBriefings[p.id] || []);
     const allScripts = selectedGroup.projects.flatMap(p => projectScripts[p.id] || []);
-    setPdfData({ client: selectedGroup.projects[0], briefing: allBriefings[0], scripts: allScripts });
-    setTimeout(() => window.print(), 400);
+    buildCrmPdf(selectedGroup.projects[0], allBriefings[0], allScripts);
   };
 
   // Quick action from list view
@@ -902,59 +937,8 @@ const CRM = () => {
           platform={viewingProject ? undefined : strategicContext?.main_platforms?.[0] || undefined}
         />
 
-        {/* Hidden PDF print container */}
-        <div id="pdf-print-container" ref={printRef} className="hidden print:block">
-          {pdfData && (
-            <>
-              <div className="pdf-cover">
-                <div className="pdf-cover-badge">{briefingStatusLabels[pdfData.client.status] || pdfData.client.status}</div>
-                <h1 className="pdf-cover-title">{pdfData.client.business_name}</h1>
-                <p className="pdf-cover-subtitle">{pdfData.client.project_name}</p>
-                <div className="pdf-cover-meta">
-                  {pdfData.client.contact_name && <span>Contato: {pdfData.client.contact_name}</span>}
-                  <span>Data: {new Date(pdfData.client.created_at).toLocaleDateString("pt-BR")}</span>
-                  <span>{pdfData.client.video_quantity} vídeos</span>
-                </div>
-              </div>
-              {pdfData.briefing && (
-                <div className="pdf-section">
-                  <div className="pdf-section-title">Briefing Estratégico</div>
-                  <div className="pdf-card">
-                    <dl className="pdf-meta-grid">
-                      <dt>Objetivo</dt><dd>{pdfData.briefing.goal || "—"}</dd>
-                      <dt>Público-alvo</dt><dd>{pdfData.briefing.target_audience || "—"}</dd>
-                      <dt>Estilo de Conteúdo</dt><dd>{pdfData.briefing.content_style || "—"}</dd>
-                    </dl>
-                  </div>
-                </div>
-              )}
-              {pdfData.client.persona && (
-                <div className="pdf-section"><div className="pdf-section-title">Persona</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.persona}</div></div></div>
-              )}
-              {pdfData.client.positioning && (
-                <div className="pdf-section"><div className="pdf-section-title">Posicionamento</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.positioning}</div></div></div>
-              )}
-              {pdfData.client.tone_of_voice && (
-                <div className="pdf-section"><div className="pdf-section-title">Tom de Voz</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.tone_of_voice}</div></div></div>
-              )}
-              {pdfData.client.content_strategy && (
-                <div className="pdf-section"><div className="pdf-section-title">Funil de Conteúdo</div><div className="pdf-card"><div className="pdf-content">{pdfData.client.content_strategy}</div></div></div>
-              )}
-              {pdfData.scripts.length > 0 && (
-                <div className="pdf-section pdf-page-break">
-                  <div className="pdf-section-title">Roteiros ({pdfData.scripts.length})</div>
-                  {pdfData.scripts.map((s, idx) => (
-                    <div key={s.id} className="pdf-script-card">
-                      <div className="pdf-script-number">Roteiro {idx + 1}</div>
-                      <h3>{s.title || "Sem título"}</h3>
-                      <div className="pdf-content">{s.script || "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+
+
       </DashboardLayout>
     );
   }
