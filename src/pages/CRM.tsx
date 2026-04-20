@@ -66,6 +66,7 @@ const CRM = () => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
+  const [allContexts, setAllContexts] = useState<{ business_name: string }[]>([]);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string | null>(null);
 
   // New client dialog
@@ -148,7 +149,7 @@ const CRM = () => {
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(c);
     });
-    return Array.from(map.values()).map((projects) => {
+    const groups: ClientGroup[] = Array.from(map.values()).map((projects) => {
       const first = projects[0];
       return {
         business_name: first.business_name,
@@ -158,7 +159,23 @@ const CRM = () => {
         projects: projects.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
       };
     });
-  }, [clients]);
+    // Merge orphan strategic contexts (clients with 0 projects) so the card stays visible
+    const existingKeys = new Set(groups.map((g) => g.business_name.trim().toLowerCase()));
+    allContexts.forEach((ctx) => {
+      const key = ctx.business_name.trim().toLowerCase();
+      if (!existingKeys.has(key)) {
+        groups.push({
+          business_name: ctx.business_name,
+          contact_name: null,
+          contact_email: null,
+          contact_whatsapp: null,
+          projects: [],
+        });
+        existingKeys.add(key);
+      }
+    });
+    return groups;
+  }, [clients, allContexts]);
 
   const uniqueCities = useMemo(() => {
     const set = new Set<string>();
@@ -186,7 +203,8 @@ const CRM = () => {
   }, [clientGroups, searchTerm, filterCity, filterNiche, showInactive]);
 
   const hasActiveFilters = searchTerm || filterCity || filterNiche;
-  const isGroupInactive = (group: ClientGroup) => group.projects.every(p => p.is_active === false);
+  const isGroupInactive = (group: ClientGroup) =>
+    group.projects.length > 0 && group.projects.every(p => p.is_active === false);
 
   const selectedGroup = useMemo(() => {
     if (!selectedBusinessName) return null;
@@ -196,12 +214,19 @@ const CRM = () => {
   // ── Data fetching ──────────────────────────────────────────
   const fetchClients = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("briefing_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    setClients((data as BriefingRequest[]) || []);
+    const [{ data: briefings }, { data: contexts }] = await Promise.all([
+      supabase
+        .from("briefing_requests")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("client_strategic_contexts")
+        .select("business_name")
+        .eq("user_id", user.id),
+    ]);
+    setClients((briefings as BriefingRequest[]) || []);
+    setAllContexts((contexts as { business_name: string }[]) || []);
   };
 
   const fetchProjectDetails = async (project: BriefingRequest) => {

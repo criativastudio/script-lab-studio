@@ -219,7 +219,22 @@ export function ProjectsTab({
         </Dialog>
       </div>
 
-      {/* Project cards as grid */}
+      {projects.length === 0 ? (
+        <Card className="rounded-2xl border-dashed border-border/60">
+          <CardContent className="p-10 text-center space-y-4">
+            <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <FolderPlus className="h-7 w-7" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-foreground">Nenhum projeto ainda</p>
+              <p className="text-sm text-muted-foreground">O contexto estratégico do cliente foi preservado e está pronto para um novo projeto.</p>
+            </div>
+            <Button onClick={() => setNewProjectOpen(true)}>
+              <FolderPlus className="h-4 w-4 mr-2" />Criar Primeiro Projeto
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {projects.map((project) => {
           const isOpen = openProjects.has(project.id);
@@ -284,6 +299,7 @@ export function ProjectsTab({
                             <AlertDialogTitle>Excluir projeto «{project.project_name}»?</AlertDialogTitle>
                             <AlertDialogDescription>
                               Esta ação é permanente e removerá também todos os briefings e roteiros vinculados. Não pode ser desfeita.
+                              {projects.length === 1 && " O contexto estratégico do cliente será preservado."}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -367,6 +383,7 @@ export function ProjectsTab({
           );
         })}
       </div>
+      )}
 
       <Dialog open={!!renamingProject} onOpenChange={(v) => { if (!renameSaving && !v) setRenamingProject(null); }}>
         <DialogContent>

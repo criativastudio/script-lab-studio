@@ -181,7 +181,7 @@ export function ClientListView({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredGroups.map((group) => {
-            const latestStatus = group.projects[0].status;
+            const hasProjects = group.projects.length > 0;
             const totalVideos = group.projects.reduce((sum, p) => sum + p.video_quantity, 0);
             const inactive = isGroupInactive(group);
             const niche = group.projects.find(p => p.niche)?.niche;
@@ -213,15 +213,21 @@ export function ClientListView({
                       )}
 
                       <div className="flex items-center gap-3 mt-3">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Hash className="h-3 w-3 text-primary/60" />{group.projects.length} projeto{group.projects.length !== 1 ? "s" : ""}
-                        </span>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Video className="h-3 w-3 text-primary/60" />{totalVideos} vídeos
-                        </span>
+                        {hasProjects ? (
+                          <>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Hash className="h-3 w-3 text-primary/60" />{group.projects.length} projeto{group.projects.length !== 1 ? "s" : ""}
+                            </span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Video className="h-3 w-3 text-primary/60" />{totalVideos} vídeos
+                            </span>
+                          </>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">Sem projetos</Badge>
+                        )}
                       </div>
 
-                      {lastScriptDate && (
+                      {hasProjects && lastScriptDate && (
                         <p className="text-[11px] text-muted-foreground mt-2">
                           Último: {new Date(lastScriptDate).toLocaleDateString("pt-BR")}
                         </p>
