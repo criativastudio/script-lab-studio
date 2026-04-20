@@ -5,27 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,9 +115,7 @@ export default function AdminDiagnostic() {
           <ClipboardCheck className="w-6 h-6 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">CRM de Diagnósticos</h1>
-            <p className="text-sm text-muted-foreground">
-              Leads que preencheram o quiz de diagnóstico gratuito
-            </p>
+            <p className="text-sm text-muted-foreground">Leads que preencheram o quiz de diagnóstico gratuito</p>
           </div>
         </div>
 
@@ -144,7 +124,8 @@ export default function AdminDiagnostic() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Link público para divulgação</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Compartilhe este link para que leads façam o diagnóstico gratuito.
+              Use este link como ferramenta de captação qualificada: quanto mais pessoas preencherem, mais oportunidades
+              você gera para vender seus serviços.
             </p>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-2">
@@ -164,10 +145,7 @@ export default function AdminDiagnostic() {
               >
                 <Copy className="w-4 h-4 mr-2" /> Copiar link
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => window.open("/diagnostico", "_blank")}
-              >
+              <Button variant="outline" onClick={() => window.open("/diagnostico", "_blank")}>
                 <ExternalLink className="w-4 h-4 mr-2" /> Abrir
               </Button>
             </div>
@@ -192,16 +170,18 @@ export default function AdminDiagnostic() {
               <div className="text-3xl font-bold">{stats.month}</div>
             </CardContent>
           </Card>
-          {Object.entries(TYPE_LABELS).map(([key, label]) => (
-            <Card key={key}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.byType[key] || 0}</div>
-              </CardContent>
-            </Card>
-          )).slice(0, 2)}
+          {Object.entries(TYPE_LABELS)
+            .map(([key, label]) => (
+              <Card key={key}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{stats.byType[key] || 0}</div>
+                </CardContent>
+              </Card>
+            ))
+            .slice(0, 2)}
         </div>
 
         {/* Filters */}
@@ -257,9 +237,7 @@ export default function AdminDiagnostic() {
                 <TableBody>
                   {filtered.map((l) => (
                     <TableRow key={l.id}>
-                      <TableCell className="text-xs">
-                        {new Date(l.created_at).toLocaleDateString("pt-BR")}
-                      </TableCell>
+                      <TableCell className="text-xs">{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{TYPE_LABELS[l.diagnostic_type] || l.diagnostic_type}</Badge>
                       </TableCell>
@@ -325,10 +303,18 @@ export default function AdminDiagnostic() {
             {viewing && (
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-muted-foreground">Empresa:</span> {viewing.business_name}</div>
-                  <div><span className="text-muted-foreground">Cidade:</span> {viewing.city}</div>
-                  <div><span className="text-muted-foreground">Email:</span> {viewing.email}</div>
-                  <div><span className="text-muted-foreground">Telefone:</span> {viewing.phone}</div>
+                  <div>
+                    <span className="text-muted-foreground">Empresa:</span> {viewing.business_name}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Cidade:</span> {viewing.city}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Email:</span> {viewing.email}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Telefone:</span> {viewing.phone}
+                  </div>
                 </div>
 
                 <div>
@@ -346,16 +332,21 @@ export default function AdminDiagnostic() {
                 {viewing.result && (
                   <div>
                     <h3 className="font-semibold mb-2">
-                      Resultado da IA {viewing.score != null && <Badge variant="outline" className="ml-2">{viewing.score}/10</Badge>}
+                      Resultado da IA{" "}
+                      {viewing.score != null && (
+                        <Badge variant="outline" className="ml-2">
+                          {viewing.score}/10
+                        </Badge>
+                      )}
                     </h3>
-                    {viewing.result.summary && (
-                      <p className="text-sm mb-3">{viewing.result.summary}</p>
-                    )}
+                    {viewing.result.summary && <p className="text-sm mb-3">{viewing.result.summary}</p>}
                     {viewing.result.strengths && viewing.result.strengths.length > 0 && (
                       <div className="mb-3">
                         <div className="text-xs font-medium text-muted-foreground mb-1">Pontos Fortes</div>
                         <ul className="text-sm list-disc list-inside space-y-1">
-                          {viewing.result.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                          {viewing.result.strengths.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
@@ -363,7 +354,9 @@ export default function AdminDiagnostic() {
                       <div className="mb-3">
                         <div className="text-xs font-medium text-muted-foreground mb-1">Pontos de Atenção</div>
                         <ul className="text-sm list-disc list-inside space-y-1">
-                          {viewing.result.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
+                          {viewing.result.weaknesses.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
@@ -371,7 +364,9 @@ export default function AdminDiagnostic() {
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-1">Recomendações</div>
                         <ul className="text-sm list-disc list-inside space-y-1">
-                          {viewing.result.recommendations.map((s, i) => <li key={i}>{s}</li>)}
+                          {viewing.result.recommendations.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
