@@ -200,6 +200,15 @@ export function ProjectsTab({
                         <Badge variant="secondary" className={`text-[10px] shrink-0 ${briefingStatusColors[project.status] || ""}`}>
                           {briefingStatusLabels[project.status] || project.status}
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); openRename(project); }}
+                          title="Renomear projeto"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Video className="h-3 w-3 text-primary/60" />{project.video_quantity} vídeos</span>
