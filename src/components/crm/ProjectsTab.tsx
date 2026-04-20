@@ -299,6 +299,7 @@ export function ProjectsTab({
                             <AlertDialogTitle>Excluir projeto «{project.project_name}»?</AlertDialogTitle>
                             <AlertDialogDescription>
                               Esta ação é permanente e removerá também todos os briefings e roteiros vinculados. Não pode ser desfeita.
+                              {projects.length === 1 && " O contexto estratégico do cliente será preservado."}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
