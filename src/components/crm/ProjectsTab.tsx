@@ -53,8 +53,7 @@ interface ProjectsTabProps {
   setNewProjectOpen: (v: boolean) => void;
   newProjectForm: any;
   setNewProjectForm: (v: any) => void;
-  newProjectLink: string | null;
-  setNewProjectLink: (v: string | null) => void;
+  creatingProject: boolean;
   handleCreateProject: () => void;
   toast: (opts: any) => void;
   maxVideos?: number;
