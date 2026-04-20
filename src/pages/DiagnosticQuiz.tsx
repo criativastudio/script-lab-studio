@@ -392,7 +392,13 @@ export default function DiagnosticQuiz() {
       const { data, error } = await supabase.functions.invoke("generate-diagnostic", {
         body: {
           type: quiz.id,
-          contact: { name: name.trim(), email: email.trim(), whatsapp: whatsapp.trim() },
+          contact: {
+            name: name.trim(),
+            email: email.trim(),
+            whatsapp: whatsapp.trim(),
+            business_name: businessName.trim(),
+            city: city.trim(),
+          },
           answers,
         },
       });
