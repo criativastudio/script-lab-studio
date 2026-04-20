@@ -469,6 +469,8 @@ const CRM = () => {
           video_quantity: project.video_quantity,
           content_type: fa.content_type || null,
           content_style: fa.content_style || null,
+          editorial_lines: fa.editorial_lines || [],
+          editorial_mode: fa.editorial_mode || "auto",
           business_name: project.business_name,
           niche: project.niche,
           user_id: user.id,
