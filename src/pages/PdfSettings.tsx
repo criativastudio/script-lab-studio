@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { usePdfSettings } from "@/hooks/usePdfSettings";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Save, Loader2, Image, Type, Palette, Layout } from "lucide-react";
+import { Upload, Save, Loader2, Image, Type, Palette, Layout, ChevronLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { hasFeatureAccess, requiredPlanLabel } from "@/lib/plan-features";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const FONT_OPTIONS = [
   { value: "Inter", label: "Inter" },
@@ -21,10 +26,13 @@ const FONT_OPTIONS = [
 
 const PdfSettings = () => {
   const { settings, loading, updateSettings, uploadLogo } = usePdfSettings();
+  const { isAdmin } = useAuth();
+  const { plan } = usePlanLimits();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const allowed = hasFeatureAccess(plan, "pdf_settings", isAdmin);
 
   const [local, setLocal] = useState(settings);
   const [initialized, setInitialized] = useState(false);
@@ -65,6 +73,20 @@ const PdfSettings = () => {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!allowed) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 max-w-2xl">
+          <Link to="/configuracoes" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <ChevronLeft className="h-3 w-3" /> Voltar
+          </Link>
+          <h1 className="text-2xl font-semibold">Personalização de PDFs</h1>
+          <UpgradePrompt message={`Disponível no plano ${requiredPlanLabel("pdf_settings")}. Faça upgrade para personalizar seus PDFs.`} />
         </div>
       </DashboardLayout>
     );

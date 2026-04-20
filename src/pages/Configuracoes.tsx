@@ -1,23 +1,31 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Palette, FormInput, FileText, ChevronRight } from "lucide-react";
+import { Users, Palette, FormInput, FileText, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { toast } from "sonner";
+import {
+  hasFeatureAccess,
+  requiredPlanFor,
+  requiredPlanLabel,
+  type Feature,
+} from "@/lib/plan-features";
 
 interface SettingCard {
   title: string;
   description: string;
   icon: typeof Users;
   href: string;
-  badge?: string;
   adminOnly?: boolean;
+  feature?: Feature;
 }
 
 const Configuracoes = () => {
   const { isAdmin } = useAuth();
   const { plan } = usePlanLimits();
+  const navigate = useNavigate();
 
   const cards: SettingCard[] = [
     {
@@ -32,23 +40,35 @@ const Configuracoes = () => {
       description: "Personalize cores, tipografia, tamanho de texto e densidade visual do app.",
       icon: Palette,
       href: "/configuracoes/interface",
+      feature: "interface_settings",
     },
     {
       title: "Personalização de Formulários",
       description: "Ajuste cores, bordas, ícones e aparência dos campos de formulário.",
       icon: FormInput,
       href: "/configuracoes/formularios",
+      feature: "form_settings",
     },
     {
       title: "Personalização de PDFs",
       description: "Configure logo, cores, fontes, cabeçalhos e layout dos PDFs exportados.",
       icon: FileText,
       href: "/configuracoes/pdf",
-      badge: plan === "scale_studio" ? undefined : "Scale Studio",
+      feature: "pdf_settings",
     },
   ];
 
   const visible = cards.filter((c) => !c.adminOnly || isAdmin);
+
+  const handleClick = (card: SettingCard) => {
+    if (card.feature && !hasFeatureAccess(plan, card.feature, isAdmin)) {
+      const required = requiredPlanFor(card.feature);
+      toast.info(`Disponível no plano ${requiredPlanLabel(card.feature)}`);
+      navigate(`/checkout/${required}`);
+      return;
+    }
+    navigate(card.href);
+  };
 
   return (
     <DashboardLayout>
@@ -64,17 +84,34 @@ const Configuracoes = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {visible.map((card) => {
             const Icon = card.icon;
+            const locked = !!card.feature && !hasFeatureAccess(plan, card.feature, isAdmin);
+            const badge = locked && card.feature ? requiredPlanLabel(card.feature) : undefined;
+
             return (
-              <Link key={card.href} to={card.href} className="group">
-                <Card className="h-full transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer">
+              <button
+                key={card.href}
+                type="button"
+                onClick={() => handleClick(card)}
+                className="group text-left"
+              >
+                <Card
+                  className={`h-full transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
+                    locked ? "opacity-80" : ""
+                  }`}
+                >
                   <CardContent className="p-6 space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
                         <Icon className="h-6 w-6" />
                       </div>
-                      {card.badge && (
-                        <Badge variant="outline" className="text-xs">{card.badge}</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {badge && (
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Lock className="h-3 w-3" />
+                            {badge}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <h3 className="font-semibold text-lg leading-tight flex items-center gap-1 group-hover:text-primary transition-colors">
@@ -87,7 +124,7 @@ const Configuracoes = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             );
           })}
         </div>
