@@ -683,8 +683,11 @@ export default function DiagnosticQuiz() {
               {/* Share */}
               <Card className="border-dashed">
                 <CardContent className="p-6">
-                  <p className="text-sm font-medium text-foreground mb-3 text-center">Compartilhe com sua rede</p>
-                  <div className="flex gap-3 justify-center">
+                  <p className="text-sm font-medium text-foreground mb-3 text-center">Baixe ou compartilhe seu diagnóstico</p>
+                  <div className="flex gap-3 justify-center flex-wrap">
+                    <Button variant="default" size="sm" onClick={handleDownloadPdf}>
+                      <Download className="w-4 h-4 mr-1" /> Baixar PDF
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleCopyLink}>
                       <Copy className="w-4 h-4 mr-1" /> Copiar link
                     </Button>
