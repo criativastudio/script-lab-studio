@@ -38,7 +38,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   };
 
   const scaleItems = plan === "scale_studio" ? [{ href: "/pdf-settings", label: "Personalizar PDF", icon: FileText }] : [];
-  const allItems = [...navItems, ...scaleItems, ...(isAdmin ? adminItems : [])];
+  const allItems = [
+    ...navItems,
+    ...(isAdmin ? diagnosticItem : []),
+    ...scaleItems,
+    ...(isAdmin ? adminItem : []),
+  ];
 
   const sidebarContent = (
     <>
