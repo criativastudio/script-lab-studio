@@ -1,59 +1,36 @@
 
 
-# Filtro de planos no Admin + reordenar menu lateral
+# Renomear projetos existentes em Clientes/Projetos
 
-## 1. Filtro de planos na página Admin
+## Mudança
 
-Em `src/pages/Admin.tsx`, adicionar acima da tabela "Usuários" (dentro do `CardHeader`, ao lado da busca) um grupo de **chips/botões de filtro** por plano:
+Adicionar opção de renomear o `project_name` em cada card de projeto dentro da aba "Projetos" do detalhe do cliente.
 
-- **Todos** (default)
-- **Starter**
-- **Creator Pro**
-- **Scale Studio**
+## UX
 
-Comportamento:
-- Novo state `planFilter: "all" | "starter" | "creator_pro" | "scale_studio"` (default `"all"`).
-- `filteredUsers` passa a aplicar **dois filtros combinados**: termo de busca (já existe) **+** plano selecionado (`u.plan === planFilter` quando ≠ "all"). Inclui aliases legados: `basic` conta como `starter`, `premium` conta como `creator_pro`.
-- Cada chip exibe ao lado o **contador** de usuários daquele plano (ex.: "Starter (12)") calculado a partir de `userList`.
-- Tabela passa a ser **ordenada** por plano (Scale Studio → Creator Pro → Starter) e, dentro de cada plano, por `created_at` desc — assim os usuários ficam organizados visualmente mesmo no filtro "Todos".
+No header do card de projeto (`ProjectsTab.tsx`), ao lado do `Badge` de status, adicionar um pequeno botão `Edit2` (ghost, h-7 w-7). Clicar abre um `Dialog` com:
 
-UI: usar `Button` variant `default` para o ativo e `outline` para os demais, em um `flex flex-wrap gap-2` logo abaixo do título do card (acima do `Input` de busca em mobile, ao lado em desktop).
+- Campo `Input` pré-preenchido com o nome atual
+- Botões **Cancelar** e **Salvar**
+- Validação: nome não pode ficar vazio; trim aplicado
 
-## 2. Reordenar menu lateral
+O botão fica dentro do `CollapsibleTrigger`, então usar `e.stopPropagation()` no `onClick` para não abrir/fechar o card ao clicar em editar.
 
-Em `src/components/DashboardLayout.tsx`, reorganizar de forma que a ordem final renderizada seja:
-
-1. Dashboard
-2. Clientes
-3. Análises
-4. **Diagnóstico CRM** (antepenúltimo) — admin only
-5. **Personalizar PDF** (penúltimo) — Scale Studio only
-6. **Admin** (último) — admin only
-
-Mudanças:
-- `navItems` mantém apenas: Dashboard, Clientes, Análises.
-- `adminItems` é dividido em dois: `diagnosticItem = [{ href: "/admin/diagnostico", label: "Diagnóstico CRM", icon: ClipboardCheck }]` e `adminItem = [{ href: "/admin", label: "Admin", icon: Shield }]`.
-- `scaleItems` continua sendo Personalizar PDF.
-- Nova montagem de `allItems`:
-  ```ts
-  const allItems = [
-    ...navItems,
-    ...(isAdmin ? diagnosticItem : []),
-    ...scaleItems,
-    ...(isAdmin ? adminItem : []),
-  ];
-  ```
+Ao salvar:
+- `UPDATE briefing_requests SET project_name = ... WHERE id = project.id`
+- Toast de sucesso "Projeto renomeado"
+- Recarregar a lista de clientes (`fetchClients()`) para refletir o novo nome em todos os lugares (header do card, AlertDialog de exclusão, PDFs futuros)
 
 ## Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/pages/Admin.tsx` | State `planFilter`, chips de filtro com contadores, ordenação por plano na tabela |
-| `src/components/DashboardLayout.tsx` | Separar `adminItems` em dois e reordenar `allItems` |
+| `src/pages/CRM.tsx` | Nova função `handleRenameProject(projectId: string, newName: string): Promise<void>` passada como prop para `ProjectsTab` |
+| `src/components/crm/ProjectsTab.tsx` | Novo botão de editar no header do card + `Dialog` controlado por state local `renamingProject` e `renameValue`; nova prop `handleRenameProject` |
 
 ## O que NÃO muda
 
-- Lógica de fetch, edge functions, schema do banco
-- Tabela de assinaturas, stat cards, busca por nome/email/telefone
-- Demais rotas e permissões
+- Schema do banco (campo `project_name` já existe em `briefing_requests`)
+- RLS (policy de UPDATE para owner/admin já existe)
+- Briefings, scripts, contexto estratégico, ideias vinculadas
 
