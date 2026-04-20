@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildPdfHtml, openPdfWindow } from "@/lib/pdf-builder";
+import { DEFAULT_PDF_SETTINGS } from "@/lib/pdf-defaults";
 import {
   Target,
   FileText,
@@ -24,6 +26,7 @@ import {
   Copy,
   MessageCircle,
   Sparkles,
+  Download,
 } from "lucide-react";
 
 // ── Quiz definitions ──
@@ -257,6 +260,8 @@ export default function DiagnosticQuiz() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [city, setCity] = useState("");
 
   // Quiz
   const [step, setStep] = useState<Step>("contact");
@@ -356,7 +361,10 @@ export default function DiagnosticQuiz() {
   };
 
   const canProceed = () => {
-    if (step === "contact") return name.trim() && email.trim() && whatsapp.trim();
+    if (step === "contact")
+      return (
+        name.trim() && email.trim() && whatsapp.trim() && businessName.trim() && city.trim()
+      );
     if (typeof step === "number" && currentQuestion) return !!answers[currentQuestion.key]?.trim();
     return false;
   };
@@ -384,7 +392,13 @@ export default function DiagnosticQuiz() {
       const { data, error } = await supabase.functions.invoke("generate-diagnostic", {
         body: {
           type: quiz.id,
-          contact: { name: name.trim(), email: email.trim(), whatsapp: whatsapp.trim() },
+          contact: {
+            name: name.trim(),
+            email: email.trim(),
+            whatsapp: whatsapp.trim(),
+            business_name: businessName.trim(),
+            city: city.trim(),
+          },
           answers,
         },
       });
@@ -415,6 +429,36 @@ export default function DiagnosticQuiz() {
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(`Fiz o ${quiz.title} e descobri minha nota! Faça o seu também: ${shareUrl}`);
     window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const handleDownloadPdf = () => {
+    if (!result) return;
+    const html = buildPdfHtml({
+      settings: DEFAULT_PDF_SETTINGS,
+      documentTitle: `Diagnóstico - ${quiz.title}`,
+      coverTitle: quiz.title,
+      coverSubtitle: `${businessName.trim()} • ${city.trim()}`,
+      coverBadge: "Diagnóstico Gratuito",
+      coverMeta: [
+        `Lead: ${name.trim()}`,
+        `Data: ${new Date().toLocaleDateString("pt-BR")}`,
+      ],
+      metaGrid: [
+        { label: "Nome", value: name.trim() },
+        { label: "E-mail", value: email.trim() },
+        { label: "WhatsApp", value: whatsapp.trim() },
+        { label: "Empresa", value: businessName.trim() },
+        { label: "Cidade", value: city.trim() },
+        { label: "Nota Geral", value: `${result.score}/10` },
+      ],
+      sections: [
+        { title: "Resumo", content: result.summary },
+        { title: "Pontos Fortes", content: result.strengths.map((s) => `• ${s}`).join("\n") },
+        { title: "Pontos de Atenção", content: result.weaknesses.map((w) => `• ${w}`).join("\n") },
+        { title: "Recomendações", content: result.recommendations.map((r) => `• ${r}`).join("\n") },
+      ],
+    });
+    openPdfWindow(html);
   };
 
   // ── Render ──
@@ -473,6 +517,22 @@ export default function DiagnosticQuiz() {
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
                       placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Nome da empresa/negócio *</label>
+                    <Input
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="Nome do seu negócio"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Cidade *</label>
+                    <Input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Sua cidade"
                     />
                   </div>
                   <Button className="w-full mt-2" disabled={!canProceed()} onClick={handleNext}>
@@ -623,8 +683,11 @@ export default function DiagnosticQuiz() {
               {/* Share */}
               <Card className="border-dashed">
                 <CardContent className="p-6">
-                  <p className="text-sm font-medium text-foreground mb-3 text-center">Compartilhe com sua rede</p>
-                  <div className="flex gap-3 justify-center">
+                  <p className="text-sm font-medium text-foreground mb-3 text-center">Baixe ou compartilhe seu diagnóstico</p>
+                  <div className="flex gap-3 justify-center flex-wrap">
+                    <Button variant="default" size="sm" onClick={handleDownloadPdf}>
+                      <Download className="w-4 h-4 mr-1" /> Baixar PDF
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleCopyLink}>
                       <Copy className="w-4 h-4 mr-1" /> Copiar link
                     </Button>

@@ -391,6 +391,48 @@ export type Database = {
           },
         ]
       }
+      diagnostic_leads: {
+        Row: {
+          answers: Json
+          business_name: string
+          city: string
+          created_at: string
+          diagnostic_type: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          result: Json | null
+          score: number | null
+        }
+        Insert: {
+          answers?: Json
+          business_name: string
+          city: string
+          created_at?: string
+          diagnostic_type: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+          result?: Json | null
+          score?: number | null
+        }
+        Update: {
+          answers?: Json
+          business_name?: string
+          city?: string
+          created_at?: string
+          diagnostic_type?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          result?: Json | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       generation_cache: {
         Row: {
           created_at: string | null

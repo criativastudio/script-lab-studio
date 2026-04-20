@@ -12,7 +12,14 @@ serve(async (req) => {
   try {
     const { type, contact, answers } = await req.json();
 
-    if (!type || !contact?.name?.trim() || !contact?.email?.trim() || !contact?.whatsapp?.trim()) {
+    if (
+      !type ||
+      !contact?.name?.trim() ||
+      !contact?.email?.trim() ||
+      !contact?.whatsapp?.trim() ||
+      !contact?.business_name?.trim() ||
+      !contact?.city?.trim()
+    ) {
       return new Response(JSON.stringify({ error: "Dados de contato obrigatórios." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -116,6 +123,29 @@ Gere um diagnóstico completo e personalizado baseado nessas respostas.`;
     if (!toolCall?.function?.arguments) throw new Error("No structured response from AI");
 
     const diagnostic = JSON.parse(toolCall.function.arguments);
+
+    // Persist lead in DB (service role bypasses RLS)
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (supabaseUrl && serviceKey) {
+        const supabase = createClient(supabaseUrl, serviceKey);
+        await supabase.from("diagnostic_leads").insert({
+          diagnostic_type: type,
+          name: contact.name.trim(),
+          phone: contact.whatsapp.trim(),
+          email: contact.email.trim(),
+          business_name: contact.business_name.trim(),
+          city: contact.city.trim(),
+          answers: answers || {},
+          result: diagnostic,
+          score: diagnostic?.score ?? null,
+        });
+      }
+    } catch (insertErr) {
+      console.error("Failed to persist diagnostic lead:", insertErr);
+      // Do not block user — continue returning the result
+    }
 
     return new Response(JSON.stringify(diagnostic), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
