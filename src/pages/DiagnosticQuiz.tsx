@@ -285,7 +285,7 @@ export default function DiagnosticQuiz() {
               <span className="text-primary">presença digital</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Escolha um dos diagnósticos abaixo e receba uma análise personalizada com IA em menos de 2 minutos.
+              Escolha um dos diagnósticos abaixo e receba uma análise personalizada em menos de 2 minutos.
             </p>
           </motion.div>
 
