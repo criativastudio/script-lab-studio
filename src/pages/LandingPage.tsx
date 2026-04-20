@@ -53,20 +53,20 @@ const steps = [
   {
     icon: FileText,
     num: "01",
-    title: "Crie seu briefing",
-    desc: "Defina objetivo, público e estilo.",
+    title: "Cadastre o cliente e colete os dados",
+    desc: "Envie um link e receba automaticamente informações como público, objetivo, funil e posicionamento.",
   },
   {
     icon: Users,
     num: "02",
-    title: "Defina persona e estratégia",
-    desc: "Persona, tom de voz e funil são gerados automaticamente.",
+    title: "Estratégia definida automaticamente",
+    desc: "Persona, tom de voz e direção de conteúdo são definidos com base nas respostas.",
   },
   {
     icon: Mic,
     num: "03",
-    title: "Gere roteiros prontos",
-    desc: "Receba roteiros cena a cena, prontos para gravar em segundos.",
+    title: "Receba os roteiros prontos para gravação",
+    desc: "Roteiros estratégicos, com gancho, narrativa e CTA — prontos para gravar.",
   },
 ];
 
