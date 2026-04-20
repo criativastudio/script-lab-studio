@@ -519,6 +519,22 @@ export default function DiagnosticQuiz() {
                       placeholder="(11) 99999-9999"
                     />
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Nome da empresa/negócio *</label>
+                    <Input
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="Nome do seu negócio"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Cidade *</label>
+                    <Input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Sua cidade"
+                    />
+                  </div>
                   <Button className="w-full mt-2" disabled={!canProceed()} onClick={handleNext}>
                     Começar diagnóstico <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
