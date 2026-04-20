@@ -1,31 +1,25 @@
 
 
-# Reorganizar acesso ao Diagnóstico
+# Remover "Gerador de Conteúdo" do Dashboard
 
-## Mudanças
+## Mudança
 
-### 1. Remover "Diagnóstico" do menu lateral
-Em `src/components/DashboardLayout.tsx`, remover o item `{ href: "/diagnostico", label: "Diagnóstico", icon: Target }` do array `navItems`. A rota pública `/diagnostico` continua funcionando normalmente (continua registrada em `App.tsx` como rota pública).
+Em `src/pages/Dashboard.tsx`:
 
-### 2. Adicionar link público compartilhável dentro de "Diagnóstico CRM"
-Em `src/pages/AdminDiagnostic.tsx`, adicionar no topo da página (logo abaixo do header "CRM de Diagnósticos") um **card de "Link Público do Diagnóstico"** contendo:
+- Remover o import `import { ContentGenerator } from "@/components/dashboard/ContentGenerator";`
+- Remover a renderização `<ContentGenerator />` do JSX (aparece logo após os stat cards, em torno da linha ~140).
 
-- Título: "Link público para divulgação"
-- Descrição curta: "Compartilhe este link para que leads façam o diagnóstico gratuito."
-- Campo `Input` readonly com a URL completa: `${window.location.origin}/diagnostico`
-- Botão **"Copiar link"** (ícone `Copy`) — usa `navigator.clipboard.writeText` + toast de confirmação
-- Botão **"Abrir"** (ícone `ExternalLink`) — abre `/diagnostico` em nova aba
+O widget de geração de conteúdo deixa de aparecer no Dashboard tanto para admins quanto para usuários comuns. O componente `ContentGenerator.tsx` continua existindo no codebase (não é deletado), apenas deixa de ser renderizado.
 
-## Arquivos modificados
+## Arquivo modificado
 
 | Arquivo | Mudança |
 |---|---|
-| `src/components/DashboardLayout.tsx` | Remover item "Diagnóstico" de `navItems` (e import `Target` se não usado em outro lugar) |
-| `src/pages/AdminDiagnostic.tsx` | Adicionar card com link público + botões copiar/abrir |
+| `src/pages/Dashboard.tsx` | Remover import e uso de `<ContentGenerator />` |
 
 ## O que NÃO muda
 
-- Rota pública `/diagnostico` e `/diagnostico/:type` continuam ativas em `App.tsx`
-- Funcionamento do quiz, edge function, tabela `diagnostic_leads`
-- Item "Diagnóstico CRM" no menu admin (já existe)
+- Stat cards, listas de Projetos/Roteiros/Ideias/Briefings/Relatórios recentes continuam iguais
+- Componente `ContentGenerator.tsx` permanece no projeto (caso queira reutilizar depois)
+- Demais módulos e rotas
 
