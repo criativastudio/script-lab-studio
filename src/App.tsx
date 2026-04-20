@@ -22,6 +22,9 @@ import CarouselGenerator from "./pages/CarouselGenerator";
 import PdfSettings from "./pages/PdfSettings";
 import DiagnosticQuiz from "./pages/DiagnosticQuiz";
 import AdminDiagnostic from "./pages/AdminDiagnostic";
+import Configuracoes from "./pages/Configuracoes";
+import InterfaceSettings from "./pages/InterfaceSettings";
+import FormSettingsPage from "./pages/FormSettings";
 
 const queryClient = new QueryClient();
 
@@ -43,9 +46,14 @@ const App = () => (
             <Route path="/gerador" element={<ProtectedRoute><ScriptGenerator /></ProtectedRoute>} />
             <Route path="/analise-estrategica" element={<ProtectedRoute><StrategicAnalysis /></ProtectedRoute>} />
             <Route path="/carrossel" element={<ProtectedRoute><CarouselGenerator /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+            <Route path="/admin" element={<Navigate to="/configuracoes/usuarios" replace />} />
             <Route path="/admin/diagnostico" element={<ProtectedRoute adminOnly><AdminDiagnostic /></ProtectedRoute>} />
-            <Route path="/pdf-settings" element={<ProtectedRoute><PdfSettings /></ProtectedRoute>} />
+            <Route path="/pdf-settings" element={<Navigate to="/configuracoes/pdf" replace />} />
+            <Route path="/configuracoes" element={<ProtectedRoute adminOnly><Configuracoes /></ProtectedRoute>} />
+            <Route path="/configuracoes/usuarios" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+            <Route path="/configuracoes/interface" element={<ProtectedRoute adminOnly><InterfaceSettings /></ProtectedRoute>} />
+            <Route path="/configuracoes/formularios" element={<ProtectedRoute adminOnly><FormSettingsPage /></ProtectedRoute>} />
+            <Route path="/configuracoes/pdf" element={<ProtectedRoute><PdfSettings /></ProtectedRoute>} />
             <Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/briefing/:token" element={<ClientBriefingForm />} />
             <Route path="/diagnostico" element={<DiagnosticQuiz />} />

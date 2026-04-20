@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, Users, BarChart3, Send, Shield, LogOut, Sparkles, Sun, Moon, Menu, LayoutList, FileText, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Send, Settings, LogOut, Sparkles, Sun, Moon, Menu, LayoutList, FileText, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,7 +20,7 @@ const diagnosticItem = [
 ];
 
 const adminItem = [
-  { href: "/admin", label: "Admin", icon: Shield },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
@@ -37,11 +37,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     navigate("/auth");
   };
 
-  const scaleItems = plan === "scale_studio" ? [{ href: "/pdf-settings", label: "Personalizar PDF", icon: FileText }] : [];
   const allItems = [
     ...navItems,
     ...(isAdmin ? diagnosticItem : []),
-    ...scaleItems,
     ...(isAdmin ? adminItem : []),
   ];
 
