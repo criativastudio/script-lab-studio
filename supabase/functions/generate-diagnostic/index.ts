@@ -12,7 +12,14 @@ serve(async (req) => {
   try {
     const { type, contact, answers } = await req.json();
 
-    if (!type || !contact?.name?.trim() || !contact?.email?.trim() || !contact?.whatsapp?.trim()) {
+    if (
+      !type ||
+      !contact?.name?.trim() ||
+      !contact?.email?.trim() ||
+      !contact?.whatsapp?.trim() ||
+      !contact?.business_name?.trim() ||
+      !contact?.city?.trim()
+    ) {
       return new Response(JSON.stringify({ error: "Dados de contato obrigatórios." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
