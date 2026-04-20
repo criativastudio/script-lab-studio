@@ -21,6 +21,7 @@ import Checkout from "./pages/Checkout";
 import CarouselGenerator from "./pages/CarouselGenerator";
 import PdfSettings from "./pages/PdfSettings";
 import DiagnosticQuiz from "./pages/DiagnosticQuiz";
+import AdminDiagnostic from "./pages/AdminDiagnostic";
 
 const queryClient = new QueryClient();
 
