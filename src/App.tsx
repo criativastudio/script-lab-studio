@@ -49,10 +49,10 @@ const App = () => (
             <Route path="/admin" element={<Navigate to="/configuracoes/usuarios" replace />} />
             <Route path="/admin/diagnostico" element={<ProtectedRoute adminOnly><AdminDiagnostic /></ProtectedRoute>} />
             <Route path="/pdf-settings" element={<Navigate to="/configuracoes/pdf" replace />} />
-            <Route path="/configuracoes" element={<ProtectedRoute adminOnly><Configuracoes /></ProtectedRoute>} />
+            <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
             <Route path="/configuracoes/usuarios" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
-            <Route path="/configuracoes/interface" element={<ProtectedRoute adminOnly><InterfaceSettings /></ProtectedRoute>} />
-            <Route path="/configuracoes/formularios" element={<ProtectedRoute adminOnly><FormSettingsPage /></ProtectedRoute>} />
+            <Route path="/configuracoes/interface" element={<ProtectedRoute><InterfaceSettings /></ProtectedRoute>} />
+            <Route path="/configuracoes/formularios" element={<ProtectedRoute><FormSettingsPage /></ProtectedRoute>} />
             <Route path="/configuracoes/pdf" element={<ProtectedRoute><PdfSettings /></ProtectedRoute>} />
             <Route path="/checkout/:plan" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/briefing/:token" element={<ClientBriefingForm />} />

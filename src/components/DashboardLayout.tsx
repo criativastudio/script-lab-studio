@@ -40,7 +40,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const allItems = [
     ...navItems,
     ...(isAdmin ? diagnosticItem : []),
-    ...(isAdmin ? adminItem : []),
+    ...adminItem,
   ];
 
   const sidebarContent = (
