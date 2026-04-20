@@ -17,10 +17,13 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const FormSettingsPage = () => {
   const { settings, loading, updateSettings } = useFormSettings();
+  const { isAdmin } = useAuth();
+  const { plan } = usePlanLimits();
   const { toast } = useToast();
   const [local, setLocal] = useState<FS>(settings);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const allowed = hasFeatureAccess(plan, "form_settings", isAdmin);
 
   useEffect(() => {
     if (!loading && !initialized) {
