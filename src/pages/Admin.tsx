@@ -199,6 +199,18 @@ const Admin = () => {
                 />
               </div>
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {planFilterOptions.map((opt) => (
+                <Button
+                  key={opt.value}
+                  size="sm"
+                  variant={planFilter === opt.value ? "default" : "outline"}
+                  onClick={() => setPlanFilter(opt.value)}
+                >
+                  {opt.label} ({opt.count})
+                </Button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {filteredUsers.length === 0 ? (
