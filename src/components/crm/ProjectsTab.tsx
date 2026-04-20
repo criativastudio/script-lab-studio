@@ -86,7 +86,7 @@ export function ProjectsTab({
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_style: "", publishing_frequency: "" }); } }}>
+        <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "" }); } }}>
           <DialogTrigger asChild>
             <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
           </DialogTrigger>
@@ -132,10 +132,30 @@ export function ProjectsTab({
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Estilo de Conteúdo</Label><Input value={newProjectForm.content_style} onChange={(e) => setNewProjectForm({ ...newProjectForm, content_style: e.target.value })} placeholder="Ex: Educativo e leve" /></div>
+                <div>
+                  <Label>Tipo de Conteúdo *</Label>
+                  <Select value={newProjectForm.content_type} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_type: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Roteiro">Roteiro (vídeo)</SelectItem>
+                      <SelectItem value="Carrossel">Carrossel (Instagram)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Estilo de Conteúdo</Label>
+                  <Select value={newProjectForm.content_style} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_style: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um estilo" /></SelectTrigger>
+                    <SelectContent>
+                      {["Engraçado","Sério","Educativo","Inspiracional","Curioso","Polêmico","Irônico","Bastidores","Narrativo","Minimalista","UGC","Nostálgico","Empático","Técnico","Urgente","Interativo","Reflexivo","Aspiracional"].map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Frequência de Publicação</Label><Input value={newProjectForm.publishing_frequency} onChange={(e) => setNewProjectForm({ ...newProjectForm, publishing_frequency: e.target.value })} placeholder="Ex: 3x por semana" /></div>
                 <p className="text-xs text-muted-foreground">O contexto estratégico do cliente será herdado automaticamente.</p>
-                <Button className="w-full" onClick={handleCreateProject} disabled={!newProjectForm.project_name}>
+                <Button className="w-full" onClick={handleCreateProject} disabled={!newProjectForm.project_name || !newProjectForm.content_type}>
                   <FolderPlus className="h-4 w-4 mr-2" />Criar Projeto
                 </Button>
               </div>

@@ -86,7 +86,7 @@ const CRM = () => {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newProjectForm, setNewProjectForm] = useState({
     project_name: "", video_quantity: "3",
-    campaign_objective: "", funnel_stage: "", content_style: "", publishing_frequency: "",
+    campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "",
   });
   const [newProjectLink, setNewProjectLink] = useState<string | null>(null);
 
@@ -343,12 +343,20 @@ const CRM = () => {
     }
 
     const first = selectedGroup.projects[0];
+    const mergedAnswers = {
+      ...(first.form_answers || {}),
+      content_type: newProjectForm.content_type,
+      content_style: newProjectForm.content_style,
+      campaign_objective: newProjectForm.campaign_objective,
+      funnel_stage: newProjectForm.funnel_stage,
+      publishing_frequency: newProjectForm.publishing_frequency,
+    };
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: first.business_name,
       contact_name: first.contact_name, contact_email: first.contact_email,
       contact_whatsapp: first.contact_whatsapp, project_name: newProjectForm.project_name,
       video_quantity: parseInt(newProjectForm.video_quantity),
-      form_answers: first.form_answers,
+      form_answers: mergedAnswers,
     }).select("token").single();
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     const link = `${window.location.origin}/briefing/${data.token}`;
@@ -392,12 +400,18 @@ const CRM = () => {
 
     setManualGenerating(true);
     try {
+      const fa = project.form_answers || {};
       const { data: fnData, error: fnError } = await supabase.functions.invoke("manual-generate", {
         body: {
           objective: manualForm.objective, target_audience: manualForm.target_audience,
           platform: manualForm.platform, hook: manualForm.hook,
           duration: manualForm.duration, notes: manualForm.notes,
           video_quantity: project.video_quantity,
+          content_type: fa.content_type || null,
+          content_style: fa.content_style || null,
+          business_name: project.business_name,
+          niche: project.niche,
+          user_id: user.id,
         },
       });
       if (fnError) throw fnError;

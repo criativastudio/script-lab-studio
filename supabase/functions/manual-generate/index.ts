@@ -16,6 +16,7 @@ serve(async (req) => {
       objective, target_audience, platform, hook, duration, notes, video_quantity, user_id, business_name, niche,
       customer_persona, tone_of_voice, market_positioning, communication_style,
       products_services, pain_points, differentiators, marketing_objectives,
+      content_type, content_style,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -71,6 +72,20 @@ serve(async (req) => {
 - Objetivos de Marketing: ${marketing_objectives || "Não informado"}`
       : "";
 
+    const stylePersonalizationBlock = (content_type || content_style) ? `
+
+TIPO DE CONTEÚDO ALVO: ${content_type || "Não definido"}
+ESTILO DE CONTEÚDO: ${content_style || "Não definido"}
+
+REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
+- Adapte tom, ritmo, vocabulário e exemplos ao estilo "${content_style || "padrão"}".
+- Linguagem natural, humana e estratégica — proibido tom robótico.
+- Use exemplos reais do contexto do público do nicho.
+- Foque em retenção, conexão e clareza.
+- Ajuste o tom sem perder profissionalismo.
+- Estilo é uma camada de tom, não substitui fidelidade ao nicho nem a lógica Conecta-Entretém-Vende.
+${content_type === "Carrossel" ? "- FORMATO: Estruture cada roteiro como SLIDES (S1 a S6) de carrossel para Instagram, com headline curta + conector entre slides, em vez de roteiro de vídeo contínuo." : ""}` : "";
+
     const systemPrompt = `Você é um estrategista de conteúdo digital e roteirista profissional para redes sociais.
 Com base nas informações fornecidas pelo usuário, crie um planejamento estratégico completo e ${qty} roteiro(s) de vídeo.
 
@@ -101,7 +116,7 @@ O resultado DEVE incluir obrigatoriamente:
 5. **Funil de Conteúdo**: Estratégia de conteúdo dividida em Topo (awareness), Meio (consideração) e Fundo (conversão) do funil.
 6. **Roteiro(s)**: Cada roteiro deve ter título atrativo e o roteiro completo com GANCHO, DESENVOLVIMENTO e CTA, incluindo indicações de cena e falas.
 
-Escreva tudo em português do Brasil.${contextBlock}`;
+Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}`;
 
     const userPrompt = `Informações do cliente:
 - Empresa: ${bName}

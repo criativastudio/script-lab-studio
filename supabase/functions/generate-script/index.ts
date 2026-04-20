@@ -76,7 +76,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const body = await req.json();
-    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, user_id, project_id } = body;
+    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, user_id, project_id, content_type, content_style } = body;
 
     // Enhanced mode: use strategic context + idea
     if (context_id && (idea_id || idea_title)) {
@@ -223,6 +223,19 @@ CATEGORIZAÇÃO: Classifique este roteiro em UMA categoria: educational, authori
 
 ${toneInstructions}
 
+${(content_type || content_style) ? `
+TIPO DE CONTEÚDO ALVO: ${content_type || "Não definido"}
+ESTILO DE CONTEÚDO: ${content_style || "Não definido"}
+
+REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
+- Adapte tom, ritmo, vocabulário e exemplos ao estilo "${content_style || "padrão"}".
+- Linguagem natural, humana e estratégica — proibido tom robótico.
+- Use exemplos reais do contexto do público do nicho.
+- Foque em retenção, conexão e clareza.
+- Ajuste o tom sem perder profissionalismo.
+- Estilo é uma camada de tom, não substitui fidelidade ao nicho nem a lógica Conecta-Entretém-Vende.
+${content_type === "Carrossel" ? "- FORMATO: Estruture o roteiro como SLIDES de carrossel (S1 a S6) com headline curta + conector entre slides, em vez de roteiro de vídeo contínuo. Use video_structure para descrever os slides e speaking_script para o texto de cada slide numerado." : ""}
+` : ""}
 Escreva em português brasileiro. Adapte ao tom de voz e estilo do cliente.
 Retorne o resultado usando a função generate_strategic_script.`;
 
