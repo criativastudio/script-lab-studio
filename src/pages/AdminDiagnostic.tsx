@@ -17,20 +17,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardCheck, Eye, Trash2, Search, Copy, ExternalLink } from "lucide-react";
+import { ClipboardCheck, Eye, Trash2, Search, Copy, ExternalLink, LayoutGrid, Table as TableIcon } from "lucide-react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+} from "@dnd-kit/core";
+import { LeadKanbanColumn, ColumnConfig } from "@/components/admin/LeadKanbanColumn";
+import { LeadKanbanCard, KanbanLead, PipelineStage } from "@/components/admin/LeadKanbanCard";
 
-interface DiagnosticLead {
-  id: string;
-  created_at: string;
-  diagnostic_type: string;
-  name: string;
-  phone: string;
-  email: string;
-  business_name: string;
-  city: string;
+interface DiagnosticLead extends KanbanLead {
   answers: Record<string, string>;
   result: {
     score?: number;
@@ -39,7 +43,8 @@ interface DiagnosticLead {
     weaknesses?: string[];
     recommendations?: string[];
   } | null;
-  score: number | null;
+  contacted_at: string | null;
+  stage_updated_at: string | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -48,13 +53,32 @@ const TYPE_LABELS: Record<string, string> = {
   autoridade: "Autoridade",
 };
 
+const STAGE_LABELS: Record<PipelineStage, string> = {
+  cold: "Lead Frio",
+  warm: "Lead Morno",
+  hot: "Lead Quente",
+  contacted: "Contatado",
+};
+
+const COLUMNS: ColumnConfig[] = [
+  { id: "cold", label: "Lead Frio", accent: "border-sky-500/60 bg-sky-500/5" },
+  { id: "warm", label: "Lead Morno", accent: "border-amber-500/60 bg-amber-500/5" },
+  { id: "hot", label: "Lead Quente", accent: "border-rose-500/60 bg-rose-500/5" },
+  { id: "contacted", label: "Contatado", accent: "border-emerald-500/60 bg-emerald-500/5" },
+];
+
 export default function AdminDiagnostic() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<DiagnosticLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [view, setView] = useState<"kanban" | "table">("kanban");
   const [viewing, setViewing] = useState<DiagnosticLead | null>(null);
+  const [deleting, setDeleting] = useState<DiagnosticLead | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -72,6 +96,27 @@ export default function AdminDiagnostic() {
 
   useEffect(() => {
     fetchLeads();
+    const channel = supabase
+      .channel("diagnostic_leads_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "diagnostic_leads" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setLeads((prev) =>
+              prev.find((l) => l.id === (payload.new as any).id) ? prev : [payload.new as any, ...prev],
+            );
+          } else if (payload.eventType === "UPDATE") {
+            setLeads((prev) => prev.map((l) => (l.id === (payload.new as any).id ? (payload.new as any) : l)));
+          } else if (payload.eventType === "DELETE") {
+            setLeads((prev) => prev.filter((l) => l.id !== (payload.old as any).id));
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -81,6 +126,34 @@ export default function AdminDiagnostic() {
     } else {
       toast({ title: "Lead excluído" });
       setLeads((prev) => prev.filter((l) => l.id !== id));
+    }
+    setDeleting(null);
+  };
+
+  const updateStage = async (lead: DiagnosticLead, stage: PipelineStage) => {
+    if (lead.pipeline_stage === stage) return;
+    const previous = lead.pipeline_stage;
+    // optimistic
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === lead.id
+          ? {
+              ...l,
+              pipeline_stage: stage,
+              contacted_at: stage === "contacted" ? new Date().toISOString() : l.contacted_at,
+              stage_updated_at: new Date().toISOString(),
+            }
+          : l,
+      ),
+    );
+    const update: any = { pipeline_stage: stage, stage_updated_at: new Date().toISOString() };
+    if (stage === "contacted" && !lead.contacted_at) update.contacted_at = new Date().toISOString();
+
+    const { error } = await supabase.from("diagnostic_leads").update(update).eq("id", lead.id);
+    if (error) {
+      // rollback
+      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, pipeline_stage: previous } : l)));
+      toast({ title: "Erro ao atualizar estágio", description: error.message, variant: "destructive" });
     }
   };
 
@@ -97,6 +170,15 @@ export default function AdminDiagnostic() {
     });
   }, [leads, search, typeFilter]);
 
+  const grouped = useMemo(() => {
+    const map: Record<PipelineStage, DiagnosticLead[]> = { cold: [], warm: [], hot: [], contacted: [] };
+    for (const l of filtered) {
+      const stage = (l.pipeline_stage as PipelineStage) || "cold";
+      (map[stage] ||= []).push(l);
+    }
+    return map;
+  }, [filtered]);
+
   const stats = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -108,15 +190,56 @@ export default function AdminDiagnostic() {
     return { total: leads.length, month: monthLeads, byType };
   }, [leads]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const lead = leads.find((l) => l.id === active.id);
+    if (!lead) return;
+
+    // over.id may be a column id or another lead id
+    const overId = String(over.id);
+    let targetStage: PipelineStage | null = null;
+    if ((COLUMNS.map((c) => c.id) as string[]).includes(overId)) {
+      targetStage = overId as PipelineStage;
+    } else {
+      const overLead = leads.find((l) => l.id === overId);
+      if (overLead) targetStage = overLead.pipeline_stage as PipelineStage;
+    }
+    if (!targetStage) return;
+    updateStage(lead, targetStage);
+  };
+
+  const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <ClipboardCheck className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">CRM de Diagnósticos</h1>
-            <p className="text-sm text-muted-foreground">Leads que preencheram o quiz de diagnóstico gratuito</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <ClipboardCheck className="w-6 h-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">CRM de Diagnósticos</h1>
+              <p className="text-sm text-muted-foreground">
+                Leads qualificados via quiz de diagnóstico — arraste para mover entre estágios
+              </p>
+            </div>
           </div>
+          <Tabs value={view} onValueChange={(v) => setView(v as any)}>
+            <TabsList>
+              <TabsTrigger value="kanban" className="gap-1.5">
+                <LayoutGrid className="w-4 h-4" /> Kanban
+              </TabsTrigger>
+              <TabsTrigger value="table" className="gap-1.5">
+                <TableIcon className="w-4 h-4" /> Tabela
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Public link */}
@@ -153,7 +276,7 @@ export default function AdminDiagnostic() {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Total de Leads</CardTitle>
@@ -170,18 +293,26 @@ export default function AdminDiagnostic() {
               <div className="text-3xl font-bold">{stats.month}</div>
             </CardContent>
           </Card>
-          {Object.entries(TYPE_LABELS)
-            .map(([key, label]) => (
-              <Card key={key}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{stats.byType[key] || 0}</div>
-                </CardContent>
-              </Card>
-            ))
-            .slice(0, 2)}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">Quentes + Contatados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {(grouped.hot?.length || 0) + (grouped.contacted?.length || 0)}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">Em Pipeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {(grouped.cold?.length || 0) + (grouped.warm?.length || 0)}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
@@ -212,85 +343,145 @@ export default function AdminDiagnostic() {
           </CardContent>
         </Card>
 
-        {/* Table */}
-        <Card>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="p-8 text-center text-muted-foreground">Carregando...</div>
-            ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">Nenhum lead encontrado.</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Cidade</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-xs">{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{TYPE_LABELS[l.diagnostic_type] || l.diagnostic_type}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{l.name}</TableCell>
-                      <TableCell>{l.business_name}</TableCell>
-                      <TableCell>{l.city}</TableCell>
-                      <TableCell className="text-xs">{l.email}</TableCell>
-                      <TableCell className="text-xs">{l.phone}</TableCell>
-                      <TableCell>
-                        {l.score != null ? (
-                          <Badge variant="outline">{l.score}/10</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => setViewing(l)}>
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost" className="text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir lead?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação é permanente e removerá o lead «{l.name}» do CRM.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(l.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Excluir permanentemente
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
+        {/* Kanban / Table */}
+        {loading ? (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent>
+          </Card>
+        ) : view === "kanban" ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveId(null)}
+          >
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1">
+              {COLUMNS.map((col) => (
+                <LeadKanbanColumn
+                  key={col.id}
+                  column={col}
+                  leads={grouped[col.id] || []}
+                  onView={(l) => setViewing(l as DiagnosticLead)}
+                  onMarkContacted={(l) => updateStage(l as DiagnosticLead, "contacted")}
+                  onDelete={(l) => setDeleting(l as DiagnosticLead)}
+                />
+              ))}
+            </div>
+            <DragOverlay>
+              {activeLead && (
+                <div className="rotate-2 opacity-95">
+                  <LeadKanbanCard
+                    lead={activeLead}
+                    onView={() => {}}
+                    onMarkContacted={() => {}}
+                    onDelete={() => {}}
+                  />
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              {filtered.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">Nenhum lead encontrado.</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Cidade</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Score</TableHead>
+                      <TableHead>Estágio</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((l) => (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs">
+                          {new Date(l.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{TYPE_LABELS[l.diagnostic_type] || l.diagnostic_type}</Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{l.name}</TableCell>
+                        <TableCell>{l.business_name}</TableCell>
+                        <TableCell>{l.city}</TableCell>
+                        <TableCell className="text-xs">{l.email}</TableCell>
+                        <TableCell>
+                          {l.score != null ? (
+                            <Badge variant="outline">{l.score}/10</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={(l.pipeline_stage as PipelineStage) || "cold"}
+                            onValueChange={(v) => updateStage(l, v as PipelineStage)}
+                          >
+                            <SelectTrigger className="h-8 w-36 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COLUMNS.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {STAGE_LABELS[c.id]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => setViewing(l)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => setDeleting(l)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Delete confirm */}
+        <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir lead?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação é permanente e removerá o lead «{deleting?.name}» do CRM.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleting && handleDelete(deleting.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir permanentemente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* View dialog */}
         <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
