@@ -88,7 +88,7 @@ const CRM = () => {
     project_name: "", video_quantity: "3",
     campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "",
   });
-  const [newProjectLink, setNewProjectLink] = useState<string | null>(null);
+  const [creatingProject, setCreatingProject] = useState(false);
 
   // Per-project data cache
   const [projectBriefings, setProjectBriefings] = useState<Record<string, Briefing[]>>({});
