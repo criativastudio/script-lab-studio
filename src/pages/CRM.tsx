@@ -84,9 +84,10 @@ const CRM = () => {
 
   // New project dialog
   const [newProjectOpen, setNewProjectOpen] = useState(false);
-  const [newProjectForm, setNewProjectForm] = useState({
+  const [newProjectForm, setNewProjectForm] = useState<any>({
     project_name: "", video_quantity: "3",
     campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "",
+    editorial_lines: [] as string[], editorial_mode: "auto" as "auto" | "manual",
   });
   const [creatingProject, setCreatingProject] = useState(false);
 
@@ -357,13 +358,24 @@ const CRM = () => {
 
     setCreatingProject(true);
     try {
+      const editorialLines: string[] = newProjectForm.editorial_lines || [];
+      const editorialMode = (editorialLines.length === 0 ? "auto" : (newProjectForm.editorial_mode || "manual"));
+      const derivedFunnel = editorialLines.includes("Topo de Funil")
+        ? "top"
+        : editorialLines.includes("Meio de Funil")
+        ? "middle"
+        : editorialLines.includes("Fundo de Funil")
+        ? "bottom"
+        : (newProjectForm.funnel_stage || "");
       const mergedAnswers = {
         ...(original.form_answers || {}),
         content_type: newProjectForm.content_type,
         content_style: newProjectForm.content_style,
         campaign_objective: newProjectForm.campaign_objective,
-        funnel_stage: newProjectForm.funnel_stage,
+        funnel_stage: derivedFunnel,
         publishing_frequency: newProjectForm.publishing_frequency,
+        editorial_lines: editorialLines,
+        editorial_mode: editorialMode,
       };
       const { data, error } = await supabase.from("briefing_requests").insert({
         user_id: user.id,
@@ -405,6 +417,7 @@ const CRM = () => {
       setNewProjectForm({
         project_name: "", video_quantity: "3", campaign_objective: "",
         funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "",
+        editorial_lines: [], editorial_mode: "auto",
       });
       fetchClients();
     } finally {
