@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
 
-    const { user_id, business_name, mode, topic, idea_count, idea_title } = await req.json();
+    const { user_id, business_name, mode, topic, idea_count, idea_title, content_style } = await req.json();
     if (!user_id || !business_name || !mode) {
       return new Response(JSON.stringify({ error: "user_id, business_name e mode são obrigatórios." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -115,7 +115,17 @@ MÉTRICAS-ALVO:
 - Compartilhamentos ≥ 5%
 - Alcance de não seguidores ≥ 60%
 
-AUDITORIA ANTI-GENÉRICO: Se algum conteúdo puder servir para qualquer nicho, reescreva adaptando para o nicho e persona do cliente.`;
+AUDITORIA ANTI-GENÉRICO: Se algum conteúdo puder servir para qualquer nicho, reescreva adaptando para o nicho e persona do cliente.${content_style ? `
+
+ESTILO DE CONTEÚDO: ${content_style}
+
+REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
+- Adapte tom, ritmo e vocabulário dos slides ao estilo "${content_style}".
+- Linguagem natural, humana e estratégica — proibido tom robótico.
+- Use exemplos reais do contexto do público do nicho.
+- Foque em retenção, conexão e clareza.
+- Ajuste o tom sem perder profissionalismo.
+- Estilo é uma camada de tom, não substitui fidelidade ao nicho nem a lógica Conecta-Entretém-Vende.` : ""}`;
 
     let toolSchema: any;
     let userPrompt: string;
