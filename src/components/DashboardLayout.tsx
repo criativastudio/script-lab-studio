@@ -15,9 +15,12 @@ const navItems = [
   { href: "/metrics", label: "Análises", icon: BarChart3 },
 ];
 
-const adminItems = [
-  { href: "/admin", label: "Admin", icon: Shield },
+const diagnosticItem = [
   { href: "/admin/diagnostico", label: "Diagnóstico CRM", icon: ClipboardCheck },
+];
+
+const adminItem = [
+  { href: "/admin", label: "Admin", icon: Shield },
 ];
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
