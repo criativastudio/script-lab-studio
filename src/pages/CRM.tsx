@@ -864,8 +864,7 @@ const CRM = () => {
                 setNewProjectOpen={setNewProjectOpen}
                 newProjectForm={newProjectForm}
                 setNewProjectForm={setNewProjectForm}
-                newProjectLink={newProjectLink}
-                setNewProjectLink={setNewProjectLink}
+                creatingProject={creatingProject}
                 handleCreateProject={handleCreateProject}
                 toast={toast}
                 maxVideos={limits.scriptsPerBriefing}
