@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildPdfHtml, openPdfWindow } from "@/lib/pdf-builder";
+import { DEFAULT_PDF_SETTINGS } from "@/lib/pdf-defaults";
 import {
   Target,
   FileText,
@@ -24,6 +26,7 @@ import {
   Copy,
   MessageCircle,
   Sparkles,
+  Download,
 } from "lucide-react";
 
 // ── Quiz definitions ──
