@@ -93,7 +93,7 @@ export function ProjectsTab({
             <DialogHeader><DialogTitle>Novo Projeto para {businessName}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-muted-foreground">
-                ✨ O briefing original do cliente será reutilizado automaticamente. Nenhum link será enviado.
+                O conteúdo será criado de forma estratégica utilizando o contexto original preenchido pelo cliente no formulário.
               </div>
               <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
               <div>
