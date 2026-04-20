@@ -16,7 +16,7 @@ serve(async (req) => {
       objective, target_audience, platform, hook, duration, notes, video_quantity, user_id, business_name, niche,
       customer_persona, tone_of_voice, market_positioning, communication_style,
       products_services, pain_points, differentiators, marketing_objectives,
-      content_type, content_style,
+      content_type, content_style, editorial_lines, editorial_mode,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -72,6 +72,19 @@ serve(async (req) => {
 - Objetivos de Marketing: ${marketing_objectives || "Não informado"}`
       : "";
 
+    const _editorialLines: string[] = Array.isArray(editorial_lines) ? editorial_lines : [];
+    const _editorialMode: string = editorial_mode || (_editorialLines.length === 0 ? "auto" : "manual");
+    const editorialBlock = `
+
+LINHA EDITORIAL (estratégia / objetivo do conteúdo):
+- Modo: ${_editorialMode === "auto"
+      ? "AUTOMÁTICO — você decide a melhor combinação de linhas editoriais com base no briefing, persona e momento do funil."
+      : "MANUAL — use EXCLUSIVAMENTE as seguintes linhas editoriais: " + _editorialLines.join(", ") + "."}
+- Distribua os ${qty} conteúdos equilibrando as linhas escolhidas (no modo manual) ou siga jornada Topo→Meio→Fundo proporcional (no modo automático).
+- Linha editorial = OBJETIVO estratégico. Estilo = FORMA de comunicação. Combine ambos sem que um anule o outro.
+- Foco obrigatório: retenção (primeiros 3s), conexão (identificação com a persona) e conversão (CTA orgânico).
+- Linguagem natural e específica do nicho — proibido genérico ou óbvio.`;
+
     const stylePersonalizationBlock = (content_type || content_style) ? `
 
 TIPO DE CONTEÚDO ALVO: ${content_type || "Não definido"}
@@ -84,7 +97,7 @@ REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
 - Foque em retenção, conexão e clareza.
 - Ajuste o tom sem perder profissionalismo.
 - Estilo é uma camada de tom, não substitui fidelidade ao nicho nem a lógica Conecta-Entretém-Vende.
-${content_type === "Carrossel" ? "- FORMATO: Estruture cada roteiro como SLIDES (S1 a S6) de carrossel para Instagram, com headline curta + conector entre slides, em vez de roteiro de vídeo contínuo." : ""}` : "";
+${content_type === "Carrossel" ? "- FORMATO: Estruture cada roteiro como SLIDES (S1 a S6) de carrossel para Instagram, com headline curta + conector entre slides, em vez de roteiro de vídeo contínuo." : ""}${editorialBlock}` : editorialBlock;
 
     const systemPrompt = `Você é um estrategista de conteúdo digital e roteirista profissional para redes sociais.
 Com base nas informações fornecidas pelo usuário, crie um planejamento estratégico completo e ${qty} roteiro(s) de vídeo.

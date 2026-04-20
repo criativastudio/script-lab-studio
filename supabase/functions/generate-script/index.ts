@@ -76,7 +76,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const body = await req.json();
-    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, user_id, project_id, content_type, content_style } = body;
+    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, user_id, project_id, content_type, content_style, editorial_lines, editorial_mode } = body;
 
     // Enhanced mode: use strategic context + idea
     if (context_id && (idea_id || idea_title)) {
@@ -223,6 +223,19 @@ CATEGORIZAÇÃO: Classifique este roteiro em UMA categoria: educational, authori
 
 ${toneInstructions}
 
+${(() => {
+  const _lines: string[] = Array.isArray(editorial_lines) ? editorial_lines : [];
+  const _mode: string = editorial_mode || (_lines.length === 0 ? "auto" : "manual");
+  return `
+LINHA EDITORIAL (estratégia / objetivo do conteúdo):
+- Modo: ${_mode === "auto"
+    ? "AUTOMÁTICO — você decide a melhor linha editorial com base no contexto do cliente, projeto e ideia."
+    : "MANUAL — use EXCLUSIVAMENTE: " + _lines.join(", ") + "."}
+- Linha editorial = OBJETIVO estratégico. Estilo = FORMA de comunicação. Combine ambos sem que um anule o outro.
+- Foco obrigatório: retenção (primeiros 3s), conexão (identificação com a persona) e conversão (CTA orgânico).
+- Linguagem natural e específica do nicho — proibido genérico ou óbvio.
+`;
+})()}
 ${(content_type || content_style) ? `
 TIPO DE CONTEÚDO ALVO: ${content_type || "Não definido"}
 ESTILO DE CONTEÚDO: ${content_style || "Não definido"}
