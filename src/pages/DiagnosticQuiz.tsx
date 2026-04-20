@@ -361,7 +361,10 @@ export default function DiagnosticQuiz() {
   };
 
   const canProceed = () => {
-    if (step === "contact") return name.trim() && email.trim() && whatsapp.trim();
+    if (step === "contact")
+      return (
+        name.trim() && email.trim() && whatsapp.trim() && businessName.trim() && city.trim()
+      );
     if (typeof step === "number" && currentQuestion) return !!answers[currentQuestion.key]?.trim();
     return false;
   };
