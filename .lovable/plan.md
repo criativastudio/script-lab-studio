@@ -1,38 +1,95 @@
 
 
-# Botão "Excluir Projeto" nos cards de Projetos
+# Diagnóstico: PDF, novos campos obrigatórios e CRM de leads no Admin
 
-## Comportamento
+## 1. Novos campos obrigatórios no formulário de contato
 
-Cada card de projeto em CRM > Projetos ganha um botão **"Excluir Projeto"** (ícone lixeira + texto, variante destrutiva) na linha de ações já existente (junto de "PDF", "Gerar com Agente", "Criar Manual + IA").
+Em `src/pages/DiagnosticQuiz.tsx`, a etapa "contact" passa a ter 5 campos obrigatórios:
 
-Ao clicar:
-1. Abre `AlertDialog` de confirmação: *"Excluir projeto «Nome»? Esta ação é permanente e removerá também todos os briefings e roteiros vinculados. Não pode ser desfeita."*
-2. Botões **Cancelar** / **Excluir permanentemente** (destrutivo).
-3. Ao confirmar:
-   - Deleta `briefings` onde `project_id = projeto.id`
-   - Deleta `scripts` onde `project_id = projeto.id`
-   - Se `projeto.project_id` (FK para `projects`) existir, deleta a linha em `projects`
-   - Deleta a linha em `briefing_requests` (`id = projeto.id`)
-   - Toast de sucesso, atualiza lista (`fetchClients()` e remove dos `projectBriefings`/`projectScripts`/`openProjects` locais).
-4. Em caso de erro, toast vermelho com a mensagem; nada é alterado na UI.
+- Nome completo *
+- Telefone (WhatsApp) *
+- E-mail *
+- Nome da empresa/negócio * (novo)
+- Cidade * (novo)
 
-## Garantias
+`canProceed()` valida todos. `handleSubmit` envia os 5 no payload da edge function.
 
-- Apenas o projeto clicado é afetado. Outros projetos do mesmo cliente, contexto estratégico, ideias e carrosséis permanecem intactos (esses estão vinculados a `business_name`, não ao `project_id`).
-- RLS já permite DELETE em `briefing_requests`, `briefings`, `scripts` e `projects` para o `user_id` dono — sem mudança de policy.
-- Sem migration de banco.
+## 2. Nova tabela `diagnostic_leads`
 
-## Arquivos modificados
+Migration cria tabela para armazenar todos os leads do diagnóstico:
+
+```sql
+create table public.diagnostic_leads (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  diagnostic_type text not null,         -- posicionamento | conteudo | autoridade
+  name text not null,
+  phone text not null,
+  email text not null,
+  business_name text not null,
+  city text not null,
+  answers jsonb not null default '{}',
+  result jsonb,                          -- score, summary, strengths, weaknesses, recommendations
+  score numeric
+);
+alter table public.diagnostic_leads enable row level security;
+
+-- Inserção pública (formulário aberto)
+create policy "Anyone can insert leads" on public.diagnostic_leads
+  for insert to anon, authenticated with check (true);
+
+-- Apenas admins veem/gerenciam
+create policy "Admins view all leads" on public.diagnostic_leads
+  for select using (has_role(auth.uid(), 'admin'));
+create policy "Admins delete leads" on public.diagnostic_leads
+  for delete using (has_role(auth.uid(), 'admin'));
+```
+
+## 3. Edge function `generate-diagnostic` — salvar lead
+
+Após gerar o resultado da IA (e antes de retornar ao cliente), inserir uma linha em `diagnostic_leads` usando o **service role key** (independe de RLS) com: `diagnostic_type`, `name`, `phone`, `email`, `business_name`, `city`, `answers`, `result`, `score`. Validar os 5 campos obrigatórios; retornar 400 se faltar algum.
+
+## 4. Download em PDF dos resultados
+
+Em `src/pages/DiagnosticQuiz.tsx`, na tela "result", adicionar botão **"Baixar PDF do diagnóstico"** ao lado dos botões de compartilhamento. Usa `buildPdfHtml` (já existente em `src/lib/pdf-builder.ts`) com:
+
+- `coverTitle`: título do quiz
+- `coverSubtitle`: nome da empresa + cidade
+- `coverBadge`: "Diagnóstico Gratuito"
+- `metaGrid`: nome, e-mail, telefone, empresa, cidade, data
+- `sections`: Resumo, Pontos Fortes, Pontos de Atenção, Recomendações (cada lista vira texto com bullets) + a nota final no resumo
+
+Como o quiz é público e não há `usePdfSettings` (requer login), usamos `DEFAULT_SETTINGS` direto do hook (objeto exportado) para evitar quebrar o fluxo anônimo. Em seguida `openPdfWindow(html)`.
+
+## 5. Nova página admin: CRM de Diagnósticos
+
+Nova rota protegida `/admin/diagnostico` (admin only), arquivo `src/pages/AdminDiagnostic.tsx`:
+
+- Lista todos os registros de `diagnostic_leads` ordenados por `created_at desc`.
+- Filtros: busca por nome/email/empresa, filtro por tipo de diagnóstico (posicionamento/conteúdo/autoridade).
+- Tabela com colunas: Data, Tipo, Nome, Empresa, Cidade, Email, Telefone, Score, Ações.
+- Ação "Ver respostas" abre `Dialog` com `answers` formatadas + bloco do `result` da IA.
+- Ação "Excluir" com `AlertDialog` de confirmação.
+- Card de stats no topo: total de leads, leads do mês, distribuição por tipo.
+
+Adicionar link **"Diagnóstico"** no menu lateral admin (`src/components/DashboardLayout.tsx` → `adminItems`) com ícone `ClipboardCheck`.
+
+Registrar rota em `src/App.tsx` dentro de `<ProtectedRoute adminOnly>`.
+
+## Arquivos modificados / criados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/components/crm/ProjectsTab.tsx` | Adicionar botão "Excluir Projeto" no bloco de ações do card + `AlertDialog` de confirmação. Receber nova prop `deleteProject(project)`. |
-| `src/pages/CRM.tsx` | Implementar `handleDeleteProject(project)`: deleta briefings → scripts → projects → briefing_requests; atualiza estados locais; toasts. Passar como prop ao `ProjectsTab`. |
+| Nova migration | Criar tabela `diagnostic_leads` + policies |
+| `supabase/functions/generate-diagnostic/index.ts` | Validar `business_name`/`city`, inserir lead via service role |
+| `src/pages/DiagnosticQuiz.tsx` | Campos `business_name`/`city`, envio no payload, botão "Baixar PDF" |
+| `src/pages/AdminDiagnostic.tsx` | **Novo** — CRM de leads do diagnóstico |
+| `src/components/DashboardLayout.tsx` | Adicionar item "Diagnóstico" em `adminItems` |
+| `src/App.tsx` | Rota `/admin/diagnostico` (adminOnly) |
 
 ## O que NÃO muda
 
-- Schema do banco, RLS, edge functions.
-- Demais módulos (Clientes, Ideias, Carrosséis, Contexto Estratégico).
-- Botão "Desativar/Excluir Cliente" no header do cliente (continua igual).
+- Lógica do quiz (perguntas, chips, fluxo de etapas).
+- Demais módulos do Admin (usuários, planos, assinaturas).
+- Outras edge functions.
 
