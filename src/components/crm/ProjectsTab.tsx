@@ -79,7 +79,7 @@ export function ProjectsTab({
   downloadProjectPdf, downloadPdf, openEditBriefing, openEditScript,
   deleteItem, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
-  newProjectLink, setNewProjectLink, handleCreateProject, toast,
+  creatingProject, handleCreateProject, toast,
   maxVideos, onVideoLimitExceeded,
 }: ProjectsTabProps) {
   return (
