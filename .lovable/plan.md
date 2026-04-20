@@ -1,25 +1,31 @@
 
 
-# Remover itens do menu lateral da Dashboard
+# Reorganizar acesso ao Diagnóstico
 
-## Mudança
+## Mudanças
 
-Remover os seguintes itens do menu lateral (`navItems` em `DashboardLayout.tsx`) para **todos os usuários** (admin e produtores):
+### 1. Remover "Diagnóstico" do menu lateral
+Em `src/components/DashboardLayout.tsx`, remover o item `{ href: "/diagnostico", label: "Diagnóstico", icon: Target }` do array `navItems`. A rota pública `/diagnostico` continua funcionando normalmente (continua registrada em `App.tsx` como rota pública).
 
-- Gerador IA
-- Análise Estratégica
-- Carrossel
-- Distribuição
+### 2. Adicionar link público compartilhável dentro de "Diagnóstico CRM"
+Em `src/pages/AdminDiagnostic.tsx`, adicionar no topo da página (logo abaixo do header "CRM de Diagnósticos") um **card de "Link Público do Diagnóstico"** contendo:
 
-## Arquivo modificado
+- Título: "Link público para divulgação"
+- Descrição curta: "Compartilhe este link para que leads façam o diagnóstico gratuito."
+- Campo `Input` readonly com a URL completa: `${window.location.origin}/diagnostico`
+- Botão **"Copiar link"** (ícone `Copy`) — usa `navigator.clipboard.writeText` + toast de confirmação
+- Botão **"Abrir"** (ícone `ExternalLink`) — abre `/diagnostico` em nova aba
+
+## Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/components/DashboardLayout.tsx` | Remover 4 objetos do array `navItems` (linhas ~35-38 aproximadamente) |
+| `src/components/DashboardLayout.tsx` | Remover item "Diagnóstico" de `navItems` (e import `Target` se não usado em outro lugar) |
+| `src/pages/AdminDiagnostic.tsx` | Adicionar card com link público + botões copiar/abrir |
 
 ## O que NÃO muda
 
-- As rotas continuam existindo (acessíveis diretamente por URL se necessário)
-- Demais itens do menu (Dashboard, Clientes, Análises, Admin, etc.)
-- Funcionalidade dos módulos removidos do menu
+- Rota pública `/diagnostico` e `/diagnostico/:type` continuam ativas em `App.tsx`
+- Funcionamento do quiz, edge function, tabela `diagnostic_leads`
+- Item "Diagnóstico CRM" no menu admin (já existe)
 
