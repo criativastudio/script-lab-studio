@@ -396,40 +396,49 @@ export type Database = {
           answers: Json
           business_name: string
           city: string
+          contacted_at: string | null
           created_at: string
           diagnostic_type: string
           email: string
           id: string
           name: string
           phone: string
+          pipeline_stage: string
           result: Json | null
           score: number | null
+          stage_updated_at: string
         }
         Insert: {
           answers?: Json
           business_name: string
           city: string
+          contacted_at?: string | null
           created_at?: string
           diagnostic_type: string
           email: string
           id?: string
           name: string
           phone: string
+          pipeline_stage?: string
           result?: Json | null
           score?: number | null
+          stage_updated_at?: string
         }
         Update: {
           answers?: Json
           business_name?: string
           city?: string
+          contacted_at?: string | null
           created_at?: string
           diagnostic_type?: string
           email?: string
           id?: string
           name?: string
           phone?: string
+          pipeline_stage?: string
           result?: Json | null
           score?: number | null
+          stage_updated_at?: string
         }
         Relationships: []
       }
