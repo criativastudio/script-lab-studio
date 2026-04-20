@@ -53,19 +53,19 @@ const steps = [
   {
     icon: FileText,
     num: "01",
-    title: "Cadastre o cliente e colete os dados",
+    title: "Cadastre e capture os dados",
     desc: "Envie um link e receba automaticamente informações como público, objetivo, funil e posicionamento.",
   },
   {
     icon: Users,
     num: "02",
-    title: "Estratégia definida automaticamente",
+    title: "Estratégia pronta para performar",
     desc: "Persona, tom de voz e direção de conteúdo são definidos com base nas respostas.",
   },
   {
     icon: Mic,
     num: "03",
-    title: "Receba os roteiros prontos para gravação",
+    title: "Roteiros prontos para gravar",
     desc: "Roteiros estratégicos, com gancho, narrativa e CTA — prontos para gravar.",
   },
 ];
