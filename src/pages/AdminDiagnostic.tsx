@@ -38,7 +38,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardCheck, Eye, Trash2, Search } from "lucide-react";
+import { ClipboardCheck, Eye, Trash2, Search, Copy, ExternalLink } from "lucide-react";
 
 interface DiagnosticLead {
   id: string;
@@ -138,6 +138,41 @@ export default function AdminDiagnostic() {
             </p>
           </div>
         </div>
+
+        {/* Public link */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Link público para divulgação</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Compartilhe este link para que leads façam o diagnóstico gratuito.
+            </p>
+          </CardHeader>
+          <CardContent className="flex flex-col md:flex-row gap-2">
+            <Input
+              readOnly
+              value={`${window.location.origin}/diagnostico`}
+              className="flex-1 font-mono text-sm"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/diagnostico`);
+                  toast({ title: "Link copiado!", description: "Cole onde quiser divulgar." });
+                }}
+              >
+                <Copy className="w-4 h-4 mr-2" /> Copiar link
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.open("/diagnostico", "_blank")}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" /> Abrir
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
