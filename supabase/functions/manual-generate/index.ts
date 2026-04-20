@@ -82,6 +82,17 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA):
+1. ABERTURA POR IDENTIFICAÇÃO: comece com problema, situação ou pensamento comum do público — nunca com saudação, apresentação pessoal ou anúncio direto.
+2. STORYTELLING NATURAL: narrativa leve e fluida, não lista de benefícios.
+3. ENTRETENIMENTO ANTES DE VENDA: os primeiros segundos devem prender atenção e gerar conexão. Tom de anúncio é PROIBIDO na abertura.
+4. OFERTA ORGÂNICA: insira CTA/oferta dentro da história — nunca como bloco isolado tipo "COMPRE AGORA".
+5. EXPERIÊNCIA PRÁTICA: mostre uso real, resultado, bastidores ou reação concreta sempre que possível.
+6. LINGUAGEM SIMPLES E PROFISSIONAL: conversacional, envolvente, sem jargão desnecessário, mantendo autoridade do nicho.
+7. FLEXIBILIDADE: NÃO use todos os elementos em todo conteúdo. Adapte tom (divertido/sério) ao contexto. EVITE rótulos visíveis tipo "GANCHO/DESENVOLVIMENTO/CTA" no texto final — flua como narrativa contínua. GANCHO/DESENVOLVIMENTO/CTA são camadas internas, não rótulos a aparecer no texto.
+8. ANTI-PROPAGANDA: antes de finalizar, valide "Isso parece anúncio?" — se sim, reescreva como conversa, história ou observação genuína.
+OBJETIVO FINAL: conteúdo que conecta, entretém e vende sem parecer venda.
+
 O resultado DEVE incluir obrigatoriamente:
 1. **Briefing**: Objetivo claro e estratégia de conteúdo para ${bName} no nicho ${bNiche}.
 2. **Persona**: Descrição detalhada da persona ideal do público-alvo, incluindo dores, desejos e comportamento.

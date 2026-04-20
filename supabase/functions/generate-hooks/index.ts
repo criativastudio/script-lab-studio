@@ -99,6 +99,13 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA):
+- Todo gancho deve partir de IDENTIFICAÇÃO IMEDIATA: problema, situação ou pensamento comum do público — nunca apresentação pessoal, saudação ou anúncio direto.
+- Priorize gatilhos baseados em STORY, PROBLEM, QUESTION e MYTH_BREAKING — eles geram mais conexão antes de vender.
+- O gatilho BOLD_STATEMENT deve ser usado com tom de observação genuína ou quebra de crença, NUNCA com tom de propaganda.
+- Ganchos devem soar como conversa, história ou observação real do nicho — não como manchete de anúncio.
+- Antes de finalizar cada gancho, valide: "Isso parece anúncio?" Se sim, reescreva para parecer conversa ou identificação espontânea.
+
 CONTEXTO DO CLIENTE:
 - Negócio: ${context.business_name}
 - Nicho: ${nicho}

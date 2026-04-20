@@ -128,6 +128,13 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA):
+- Títulos das ideias devem partir de IDENTIFICAÇÃO: problema comum, situação cotidiana, pensamento típico do público ou observação real do nicho.
+- Prefira fórmulas como "Você já passou por...", "Acontece muito quando...", "O que ninguém te conta sobre...", "Aquele momento em que...", "A verdade sobre..." em vez de promessas de venda batidas.
+- EVITE títulos com tom de anúncio ("Descubra como ganhar...", "O método infalível para..."). Prefira ângulos de história, bastidor, observação ou quebra de crença.
+- Cada ideia deve sugerir um conteúdo que ENTRETÉM antes de vender — narrativa, experiência prática ou identificação genuína.
+- Adapte o tom (divertido ou sério) ao contexto do cliente; não engesse em fórmulas únicas.
+
 Distribua as ideias entre estas categorias de conteúdo: educational, authority, story, case_study, tips, myth_breaking, behind_scenes.
 Cada ideia DEVE ser classificada em uma dessas categorias.`;
 

@@ -195,6 +195,18 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA):
+1. ABERTURA POR IDENTIFICAÇÃO: o gancho deve começar com problema, situação ou pensamento comum do público — nunca com saudação, apresentação pessoal ou anúncio direto.
+2. STORYTELLING NATURAL: o roteiro de fala deve fluir como narrativa leve, não como lista de benefícios ou pitch comercial.
+3. ENTRETENIMENTO ANTES DE VENDA: os primeiros segundos devem prender atenção e gerar conexão. Tom de anúncio é PROIBIDO na abertura.
+4. OFERTA ORGÂNICA: o CTA deve emergir naturalmente da história — nunca soar como bloco isolado de venda.
+5. EXPERIÊNCIA PRÁTICA: priorize mostrar uso real, resultado concreto, bastidores ou reação verdadeira sobre teoria.
+6. LINGUAGEM SIMPLES E PROFISSIONAL: conversacional, envolvente, mantendo autoridade do nicho.
+7. ANTI-ENGESSAMENTO: GANCHO, DESENVOLVIMENTO e CTA são CAMADAS INTERNAS de estrutura — NÃO escreva esses rótulos literalmente no roteiro de fala (speaking_script). O texto final deve parecer fala contínua e natural, não esqueleto rotulado.
+8. FLEXIBILIDADE: adapte o tom (divertido/sério) ao contexto do cliente. Não force todos os elementos em todo roteiro.
+9. ANTI-PROPAGANDA: antes de finalizar, valide "Isso parece anúncio?" — se sim, reescreva como conversa, história ou observação genuína.
+OBJETIVO FINAL: roteiro que conecta, entretém e vende sem parecer venda.
+
 Siga este pipeline de geração em 5 etapas obrigatórias:
 
 ETAPA 1 — ÂNGULO ESTRATÉGICO: Analise o contexto do cliente, projeto e ideia. Derive um ângulo estratégico único que conecte a dor do público com o diferencial do negócio.
@@ -399,10 +411,16 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA):
+- Abra com IDENTIFICAÇÃO IMEDIATA (problema, situação ou pensamento comum do público) — nunca com saudação ou anúncio direto.
+- Use storytelling natural; entretenimento vem antes da venda; CTA orgânico dentro da narrativa.
+- GANCHO/DESENVOLVIMENTO/CTA são camadas INTERNAS — NÃO escreva esses rótulos literalmente no texto final.
+- Antes de finalizar, valide "Isso parece anúncio?" — se sim, reescreva como conversa, história ou observação genuína.
+
 Diretrizes:
 - Escreva em português brasileiro
 - Use linguagem adequada ao público-alvo
-- Estruture o roteiro com: GANCHO (abertura), DESENVOLVIMENTO, CTA (chamada para ação)
+- Estruture internamente com gancho, desenvolvimento e CTA, mas faça o texto final fluir como narrativa contínua (sem rótulos visíveis)
 - Inclua indicações de cena entre colchetes [CENA: descrição]
 - Inclua indicações de texto na tela entre parênteses (TEXTO NA TELA: conteúdo)
 - Adapte o tom e ritmo à duração e plataforma
