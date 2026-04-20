@@ -13,15 +13,22 @@ import {
 import { Loader2, Save, ChevronLeft, Palette } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useInterfaceSettings, type InterfaceSettings as IS } from "@/hooks/useInterfaceSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { hasFeatureAccess, requiredPlanLabel } from "@/lib/plan-features";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const FONTS = ["Inter", "Helvetica", "Georgia", "System"];
 
 const InterfaceSettings = () => {
   const { settings, loading, updateSettings } = useInterfaceSettings();
+  const { isAdmin } = useAuth();
+  const { plan } = usePlanLimits();
   const { toast } = useToast();
   const [local, setLocal] = useState<IS>(settings);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const allowed = hasFeatureAccess(plan, "interface_settings", isAdmin);
 
   useEffect(() => {
     if (!loading && !initialized) {
