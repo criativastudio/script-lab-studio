@@ -4,6 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -46,6 +50,7 @@ interface ProjectsTabProps {
   openEditBriefing: (b: Briefing) => void;
   openEditScript: (s: Script) => void;
   deleteItem: (table: "briefings" | "scripts", id: string, project: BriefingRequest) => void;
+  deleteProject: (project: BriefingRequest) => void;
   setViewingScript: (s: Script | null) => void;
   setViewingProject: (p: BriefingRequest | null) => void;
   // New project dialog
@@ -77,7 +82,7 @@ export function ProjectsTab({
   projectBriefings, projectScripts, generatingProject,
   handleGenerateWithAgent, setManualCreateProjectId, manualGenerating,
   downloadProjectPdf, downloadPdf, openEditBriefing, openEditScript,
-  deleteItem, setViewingScript, setViewingProject,
+  deleteItem, deleteProject, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   creatingProject, handleCreateProject, toast,
   maxVideos, onVideoLimitExceeded,
@@ -199,6 +204,30 @@ export function ProjectsTab({
                       <Button size="sm" variant="outline" onClick={() => setManualCreateProjectId(project.id)} disabled={manualGenerating}>
                         <Sparkles className="h-3.5 w-3.5 mr-1.5" />Criar Manual + IA
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-3.5 w-3.5 mr-1.5" />Excluir Projeto
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir projeto «{project.project_name}»?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação é permanente e removerá também todos os briefings e roteiros vinculados. Não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteProject(project)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Excluir permanentemente
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
 
                     {(project.persona || project.positioning || project.tone_of_voice || project.content_strategy) && (
