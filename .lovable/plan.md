@@ -1,114 +1,94 @@
 
 
-# Reestruturar "Admin" → "Configurações" com submenus em cards
+# Refinar Novo Projeto: Linha Editorial multi-select + Quantidade ampliada
 
-## 1. Renomear menu lateral
+## 1. Mudanças no formulário (`ProjectsTab.tsx` — diálogo Novo Projeto)
 
-Em `src/components/DashboardLayout.tsx`:
-- `adminItem` passa de `{ label: "Admin", icon: Shield }` para `{ label: "Configurações", icon: Settings, href: "/configuracoes" }`.
-- **Remover** `scaleItems` (Personalizar PDF) do menu lateral — passa a viver dentro de Configurações.
-- Ordem final do menu: Dashboard → Clientes → Análises → Diagnóstico CRM (admin) → **Configurações** (admin).
+### a) **Tipo de Conteúdo** (obrigatório) — sem mudança
+Mantém `Roteiro` / `Carrossel` (já existe).
 
-## 2. Nova página hub `/configuracoes`
+### b) **Linha Editorial** (NOVO — multi-select, obrigatório com fallback Automático)
+Substitui o atual `Etapa do Funil` (3 opções) por um seletor visual de **chips clicáveis multi-seleção** com 12 opções:
 
-Criar `src/pages/Configuracoes.tsx` — landing visual com 4 cards (grid `md:grid-cols-2 lg:grid-cols-3`, hover elevado, ícone grande no topo, título, descrição curta, badge de plano quando aplicável):
+> Autoridade, Educação, Conexão, Storytelling, Prova, Bastidores, Solução de Problemas, Posicionamento, Conversão, Topo de Funil, Meio de Funil, Fundo de Funil
 
-| Card | Ícone | Rota |
-|---|---|---|
-| **Gerenciar Usuários & Planos** | `Users` | `/configuracoes/usuarios` |
-| **Ajustes da Interface** | `Palette` | `/configuracoes/interface` |
-| **Personalização de Formulários** | `FormInput` | `/configuracoes/formularios` |
-| **Personalização de PDFs** | `FileText` | `/configuracoes/pdf` (badge "Scale Studio" se não tiver acesso, redireciona) |
+- Botão extra no topo: **"Automático (IA define)"** — quando ativo, limpa todas as seleções e a IA decide com base no briefing. É o **default**.
+- UI: grid `grid-cols-2 md:grid-cols-3 gap-2` com `Toggle`/`Badge` clicáveis (variant outline → default quando selecionado). Indicador "X selecionadas" ou "Automático".
+- Estado: `editorial_lines: string[]` no `newProjectForm` (default `[]` = automático).
 
-Header: breadcrumb "Configurações" + subtítulo "Gerencie sua conta, aparência e exportações". Layout com `DashboardLayout`.
+### c) **Estilo de Conteúdo** (expandido, opcional)
+Atualizar a lista de 18 para incluir **todas** as opções pedidas (atualmente faltam algumas reordenações; lista final):
 
-## 3. Roteamento
+> Engraçado, Sério, Educativo, Inspiracional, Curioso, Polêmico, Irônico, Narrativo, Minimalista, UGC, Nostálgico, Empático, Técnico, Urgente, Interativo, Reflexivo, Aspiracional, Bastidores
 
-Em `src/App.tsx`, adicionar rotas (todas `adminOnly` exceto PDF que mantém regra atual):
+Mantém `Select` de seleção única (já implementado).
 
-```
-/configuracoes                  → Configuracoes (hub)
-/configuracoes/usuarios         → Admin (página existente, conteúdo intacto)
-/configuracoes/interface        → InterfaceSettings (nova, placeholder funcional)
-/configuracoes/formularios      → FormSettings (nova, placeholder funcional)
-/configuracoes/pdf              → PdfSettings (página existente reaproveitada)
-```
+### d) **Quantidade de Conteúdos** (expandido)
+Substituir as 5 opções atuais (`1, 3, 5, 10, 15`) pela lista pedida:
 
-Manter `/admin` e `/pdf-settings` como **redirects** (`<Navigate to="/configuracoes/usuarios" replace />` e `/configuracoes/pdf`) para não quebrar links salvos.
+> 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
 
-## 4. Novas páginas (Interface + Formulários)
+Mantém validação contra `maxVideos` do plano.
 
-Ambas seguem o mesmo padrão visual de `PdfSettings.tsx` (coluna esquerda com cards de ajuste, coluna direita com preview sticky), salvando em duas novas tabelas Supabase:
+### e) Remover campo redundante
+Remover o campo separado **"Etapa do Funil"** — agora as 3 etapas (Topo/Meio/Fundo de Funil) vivem dentro de Linha Editorial. `funnel_stage` permanece no payload por retrocompat: se o usuário marcar uma das 3 etapas, derivamos `funnel_stage` ("top"/"middle"/"bottom") automaticamente; senão fica `""`.
 
-### `interface_settings` (1 linha por user)
-- `primary_color`, `accent_color`, `background_color` (hex)
-- `font_family` (Inter / Helvetica / Georgia / System)
-- `font_size_base` (12-18px)
-- `border_radius` (0-16px)
-- `density` ("compact" | "comfortable" | "spacious")
+## 2. Persistência (`CRM.tsx` → `handleCreateProject`)
 
-### `form_settings` (1 linha por user)
-- `field_bg_color`, `field_border_color`, `label_color`
-- `input_radius` (0-16px)
-- `show_field_icons` (bool)
-- `compact_mode` (bool)
+`form_answers` mesclado ganha:
 
-Hooks `useInterfaceSettings` e `useFormSettings` espelhando `usePdfSettings` (load + `updateSettings` + valores default). Preview ao vivo dentro da própria página. **Aplicação global da interface fica como next step** (este plano cria a infraestrutura + UI de configuração; aplicar tokens no `index.css` em runtime é fora do escopo aqui para não quebrar layout existente — fica anotado no card como "Preview da aparência abaixo").
-
-## 5. Migração SQL
-
-```sql
-create table public.interface_settings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade unique,
-  primary_color text default '#cbacef',
-  accent_color text default '#f5cea5',
-  background_color text default '#121213',
-  font_family text default 'Inter',
-  font_size_base int default 14,
-  border_radius int default 8,
-  density text default 'comfortable',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-alter table public.interface_settings enable row level security;
-create policy "users manage own interface settings" on public.interface_settings
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
-create table public.form_settings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade unique,
-  field_bg_color text default '#1a1a1c',
-  field_border_color text default '#2a2a2d',
-  label_color text default '#cbacef',
-  input_radius int default 8,
-  show_field_icons boolean default true,
-  compact_mode boolean default false,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-alter table public.form_settings enable row level security;
-create policy "users manage own form settings" on public.form_settings
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```ts
+{
+  content_type,
+  content_style,
+  campaign_objective,
+  funnel_stage,                  // derivado
+  publishing_frequency,
+  editorial_lines: string[],     // NOVO — array das linhas escolhidas, [] = automático
+  editorial_mode: "auto" | "manual",
+}
 ```
 
-## Arquivos modificados / criados
+Reset do form e prop drilling de/para `ProjectsTab` ajustados para incluir `editorial_lines`.
+
+## 3. Edge Functions (prompts adaptados)
+
+Em `process-briefing`, `manual-generate` e `generate-script`, dentro do bloco **REGRAS DE PERSONALIZAÇÃO POR ESTILO**, injetar nova seção:
+
+```
+LINHA EDITORIAL (estratégia / objetivo do conteúdo):
+- Modo: ${editorial_mode === "auto" ? "AUTOMÁTICO — você decide a melhor combinação com base no briefing, persona e momento do funil" : "MANUAL — use exclusivamente: " + editorial_lines.join(", ")}
+- Distribua os ${video_quantity} conteúdos equilibrando as linhas escolhidas (no modo manual) ou siga jornada Topo→Meio→Fundo proporcional (no modo auto).
+- Linha editorial = OBJETIVO. Estilo = FORMA. Combine ambos sem que um anule o outro.
+- Foco obrigatório: retenção (primeiros 3s), conexão (identificação com a persona) e conversão (CTA orgânico).
+- Linguagem natural, específica do nicho — proibido genérico/IA-óbvio.
+```
+
+Funções tocadas:
+- `supabase/functions/process-briefing/index.ts`
+- `supabase/functions/manual-generate/index.ts`
+- `supabase/functions/generate-script/index.ts`
+
+Todas leem `editorial_lines`/`editorial_mode` de `form_answers` (process-briefing) ou do body (manual-generate, generate-script).
+
+## 4. Memória de aprendizado
+
+`process-briefing` e `manual-generate` já gravam tópicos em `client_content_memory`. Adicionar `editorial_line` como categoria para o sistema rastrear distribuição e evitar repetição (campo `category` já existe na tabela — usar a linha editorial escolhida pela IA).
+
+## Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/components/DashboardLayout.tsx` | Renomear item para "Configurações" (`Settings` icon, `/configuracoes`); remover `scaleItems` do menu |
-| `src/App.tsx` | Adicionar 5 rotas + 2 redirects (`/admin`, `/pdf-settings`) |
-| `src/pages/Configuracoes.tsx` | **NOVO** — hub com 4 cards |
-| `src/pages/InterfaceSettings.tsx` | **NOVO** — ajustes de interface + preview |
-| `src/pages/FormSettings.tsx` | **NOVO** — ajustes de formulários + preview |
-| `src/hooks/useInterfaceSettings.ts` | **NOVO** |
-| `src/hooks/useFormSettings.ts` | **NOVO** |
-| Migration SQL | **NOVA** — tabelas + RLS |
+| `src/components/crm/ProjectsTab.tsx` | Novo grid de chips multi-select para Linha Editorial + botão Automático; remover Select de Funil; expandir options de Quantidade; sincronizar `funnel_stage` derivado |
+| `src/pages/CRM.tsx` | `newProjectForm` ganha `editorial_lines: []` e `editorial_mode: "auto"`; reset/handleCreateProject persistem em `form_answers` |
+| `supabase/functions/process-briefing/index.ts` | Ler e injetar bloco LINHA EDITORIAL no system prompt |
+| `supabase/functions/manual-generate/index.ts` | Aceitar `editorial_lines`/`editorial_mode` e injetar bloco no prompt |
+| `supabase/functions/generate-script/index.ts` | Aceitar `editorial_lines`/`editorial_mode` e injetar bloco no prompt |
 
 ## O que NÃO muda
 
-- Página Admin (gestão de usuários/assinaturas/filtros) — mesma UI, só muda a rota onde é exibida
-- Página PdfSettings — reaproveitada em `/configuracoes/pdf`
-- `/admin` e `/pdf-settings` continuam acessíveis (redirects)
-- Edge functions, schema atual de `pdf_settings`, permissões existentes
+- Schema do banco (tudo em `form_answers` jsonb — sem migration)
+- Tipo de Conteúdo, Estilo, Frequência, Nome, Plano de limites
+- Edge functions de Hooks, Carrossel direto e Ideias (estas usam project context já populado)
+- Validação `maxVideos` do plano
 
