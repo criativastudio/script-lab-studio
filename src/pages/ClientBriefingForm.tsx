@@ -25,21 +25,35 @@ interface AISuggestions {
 
 const DEFAULT_CHIPS = {
   business_context: [
-    "Serviço local", "Negócio online", "Loja física",
-    "Clínica ou consultório", "Restaurante ou alimentação",
-    "Educação ou treinamento", "Produtos digitais",
+    "Serviço local",
+    "Negócio online",
+    "Loja física",
+    "Clínica ou consultório",
+    "Restaurante ou alimentação",
+    "Educação ou treinamento",
+    "Produtos digitais",
   ],
   ideal_audience: [
-    "Mulheres 25-45 anos", "Homens 30-50 anos", "Jovens profissionais",
-    "Empresários", "Famílias", "Estudantes",
+    "Mulheres 25-45 anos",
+    "Homens 30-50 anos",
+    "Jovens profissionais",
+    "Empresários",
+    "Famílias",
+    "Estudantes",
   ],
   desired_outcome: [
-    "Seguir o perfil", "Enviar mensagem", "Comprar um produto",
-    "Construir autoridade", "Educar a audiência",
+    "Seguir o perfil",
+    "Enviar mensagem",
+    "Comprar um produto",
+    "Construir autoridade",
+    "Educar a audiência",
   ],
   brand_voice: [
-    "Especialista e autoritário", "Educativo e útil",
-    "Amigável e próximo", "Provocativo e ousado", "Inspiracional",
+    "Especialista e autoritário",
+    "Educativo e útil",
+    "Amigável e próximo",
+    "Provocativo e ousado",
+    "Inspiracional",
   ],
 };
 
@@ -94,7 +108,8 @@ const ClientBriefingForm = () => {
       key: "business_context",
       title: "Contexto do Negócio",
       question: "O que seu negócio faz, para quem vende e qual o principal problema que resolve?",
-      example: "Exemplo: Somos uma clínica odontológica em Porto Velho especializada em estética dental. Atendemos mulheres que querem um sorriso mais bonito e confiante.",
+      example:
+        "Exemplo: Somos uma clínica odontológica em Porto Velho especializada em estética dental. Atendemos mulheres que querem um sorriso mais bonito e confiante.",
       chips: DEFAULT_CHIPS.business_context,
       type: "textarea",
     },
@@ -130,7 +145,7 @@ const ClientBriefingForm = () => {
   const fetchAISuggestions = async (currentStep: number) => {
     const businessContext = answers.business_context?.trim();
     if (!businessContext) return;
-    
+
     setLoadingSuggestions(true);
     try {
       const { data, error } = await supabase.functions.invoke("suggest-briefing", {
@@ -209,7 +224,7 @@ const ClientBriefingForm = () => {
     const key = currentQ?.key;
     if (!key) return false;
     if (currentQ.type === "multi") {
-      return (answers[key] as string[] || []).length > 0;
+      return ((answers[key] as string[]) || []).length > 0;
     }
     return !!(answers[key] as string)?.trim();
   };
@@ -242,7 +257,8 @@ const ClientBriefingForm = () => {
             <CheckCircle className="h-16 w-16 text-accent mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">Obrigado!</h2>
             <p className="text-muted-foreground">
-              Suas respostas foram enviadas com sucesso. Sua estratégia de conteúdo e roteiros estão sendo gerados automaticamente.
+              Suas respostas foram enviadas com sucesso. Sua estratégia de conteúdo e roteiros estão sendo gerados
+              automaticamente.
             </p>
             <p className="text-sm text-muted-foreground">
               A equipe de produção entrará em contato com os próximos passos.
@@ -260,15 +276,15 @@ const ClientBriefingForm = () => {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              AI Strategic Brief Builder
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground">Planejamento Estratégico da Sua Comunicação</h1>
           </div>
           <p className="text-muted-foreground">
             {briefing?.business_name} — {briefing?.project_name}
           </p>
           <div className="flex items-center gap-3 justify-center">
-            <span className="text-sm text-muted-foreground">Pergunta {step + 1} de {questions.length}</span>
+            <span className="text-sm text-muted-foreground">
+              Pergunta {step + 1} de {questions.length}
+            </span>
             <Badge variant="secondary">{briefing?.video_quantity} vídeos</Badge>
           </div>
           <Progress value={progress} className="h-2 mt-2" />
@@ -279,9 +295,7 @@ const ClientBriefingForm = () => {
           <CardHeader>
             <CardTitle className="text-lg">{currentQ.title}</CardTitle>
             <p className="text-foreground font-medium">{currentQ.question}</p>
-            {currentQ.example && (
-              <p className="text-sm text-muted-foreground italic">{currentQ.example}</p>
-            )}
+            {currentQ.example && <p className="text-sm text-muted-foreground italic">{currentQ.example}</p>}
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Loading suggestions indicator */}
@@ -303,9 +317,8 @@ const ClientBriefingForm = () => {
             {/* Helper chips */}
             <div className="flex flex-wrap gap-2">
               {currentQ.chips.map((chip) => {
-                const isSelected = currentQ.type === "multi"
-                  ? (answers[currentQ.key] as string[] || []).includes(chip)
-                  : false;
+                const isSelected =
+                  currentQ.type === "multi" ? ((answers[currentQ.key] as string[]) || []).includes(chip) : false;
                 return (
                   <button
                     key={chip}
@@ -334,7 +347,7 @@ const ClientBriefingForm = () => {
             )}
 
             {/* Selected items for multi */}
-            {currentQ.type === "multi" && (answers[currentQ.key] as string[] || []).length > 0 && (
+            {currentQ.type === "multi" && ((answers[currentQ.key] as string[]) || []).length > 0 && (
               <p className="text-sm text-muted-foreground">
                 Selecionados: {(answers[currentQ.key] as string[]).join(", ")}
               </p>
@@ -344,11 +357,7 @@ const ClientBriefingForm = () => {
 
         {/* Navigation */}
         <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setStep(step - 1)}
-            disabled={step === 0}
-          >
+          <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 0}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Anterior
           </Button>
