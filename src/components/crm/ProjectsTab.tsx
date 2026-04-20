@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ interface ProjectsTabProps {
   toast: (opts: any) => void;
   maxVideos?: number;
   onVideoLimitExceeded?: () => void;
+  handleRenameProject: (projectId: string, newName: string) => Promise<void>;
 }
 
 function StrategicCard({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) {
@@ -85,8 +87,25 @@ export function ProjectsTab({
   deleteItem, deleteProject, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   creatingProject, handleCreateProject, toast,
-  maxVideos, onVideoLimitExceeded,
+  maxVideos, onVideoLimitExceeded, handleRenameProject,
 }: ProjectsTabProps) {
+  const [renamingProject, setRenamingProject] = useState<BriefingRequest | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+
+  const openRename = (p: BriefingRequest) => {
+    setRenamingProject(p);
+    setRenameValue(p.project_name);
+  };
+
+  const submitRename = async () => {
+    if (!renamingProject) return;
+    setRenameSaving(true);
+    await handleRenameProject(renamingProject.id, renameValue);
+    setRenameSaving(false);
+    setRenamingProject(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -181,6 +200,15 @@ export function ProjectsTab({
                         <Badge variant="secondary" className={`text-[10px] shrink-0 ${briefingStatusColors[project.status] || ""}`}>
                           {briefingStatusLabels[project.status] || project.status}
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); openRename(project); }}
+                          title="Renomear projeto"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Video className="h-3 w-3 text-primary/60" />{project.video_quantity} vídeos</span>
@@ -298,6 +326,30 @@ export function ProjectsTab({
           );
         })}
       </div>
+
+      <Dialog open={!!renamingProject} onOpenChange={(v) => { if (!renameSaving && !v) setRenamingProject(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Renomear projeto</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome do projeto</Label>
+              <Input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                placeholder="Nome do projeto"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter" && renameValue.trim()) submitRename(); }}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRenamingProject(null)} disabled={renameSaving}>Cancelar</Button>
+              <Button onClick={submitRename} disabled={renameSaving || !renameValue.trim()}>
+                {renameSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : "Salvar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

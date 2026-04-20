@@ -562,6 +562,22 @@ const CRM = () => {
     }
   };
 
+  const handleRenameProject = async (projectId: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      toast({ title: "Nome inválido", description: "O nome do projeto não pode ficar vazio.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { error } = await supabase.from("briefing_requests").update({ project_name: trimmed }).eq("id", projectId);
+      if (error) throw error;
+      await fetchClients();
+      toast({ title: "Projeto renomeado" });
+    } catch (err: any) {
+      toast({ title: "Erro ao renomear projeto", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleToggleActive = async (group: ClientGroup) => {
     const allInactive = group.projects.every(p => p.is_active === false);
     const newValue = allInactive;
@@ -878,6 +894,7 @@ const CRM = () => {
                 openEditScript={openEditScript}
                 deleteItem={deleteItem}
                 deleteProject={handleDeleteProject}
+                handleRenameProject={handleRenameProject}
                 setViewingScript={setViewingScript}
                 setViewingProject={setViewingProject}
                 newProjectOpen={newProjectOpen}
