@@ -87,8 +87,25 @@ export function ProjectsTab({
   deleteItem, deleteProject, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   creatingProject, handleCreateProject, toast,
-  maxVideos, onVideoLimitExceeded,
+  maxVideos, onVideoLimitExceeded, handleRenameProject,
 }: ProjectsTabProps) {
+  const [renamingProject, setRenamingProject] = useState<BriefingRequest | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+
+  const openRename = (p: BriefingRequest) => {
+    setRenamingProject(p);
+    setRenameValue(p.project_name);
+  };
+
+  const submitRename = async () => {
+    if (!renamingProject) return;
+    setRenameSaving(true);
+    await handleRenameProject(renamingProject.id, renameValue);
+    setRenameSaving(false);
+    setRenamingProject(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
