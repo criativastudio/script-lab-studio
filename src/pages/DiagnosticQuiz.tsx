@@ -260,6 +260,8 @@ export default function DiagnosticQuiz() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [city, setCity] = useState("");
 
   // Quiz
   const [step, setStep] = useState<Step>("contact");
