@@ -433,6 +433,45 @@ export type Database = {
         }
         Relationships: []
       }
+      form_settings: {
+        Row: {
+          compact_mode: boolean
+          created_at: string
+          field_bg_color: string
+          field_border_color: string
+          id: string
+          input_radius: number
+          label_color: string
+          show_field_icons: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compact_mode?: boolean
+          created_at?: string
+          field_bg_color?: string
+          field_border_color?: string
+          id?: string
+          input_radius?: number
+          label_color?: string
+          show_field_icons?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compact_mode?: boolean
+          created_at?: string
+          field_bg_color?: string
+          field_border_color?: string
+          id?: string
+          input_radius?: number
+          label_color?: string
+          show_field_icons?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       generation_cache: {
         Row: {
           created_at: string | null
@@ -494,6 +533,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      interface_settings: {
+        Row: {
+          accent_color: string
+          background_color: string
+          border_radius: number
+          created_at: string
+          density: string
+          font_family: string
+          font_size_base: number
+          id: string
+          primary_color: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          border_radius?: number
+          created_at?: string
+          density?: string
+          font_family?: string
+          font_size_base?: number
+          id?: string
+          primary_color?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          border_radius?: number
+          created_at?: string
+          density?: string
+          font_family?: string
+          font_size_base?: number
+          id?: string
+          primary_color?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       leads: {
         Row: {
