@@ -326,6 +326,30 @@ export function ProjectsTab({
           );
         })}
       </div>
+
+      <Dialog open={!!renamingProject} onOpenChange={(v) => { if (!renameSaving && !v) setRenamingProject(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Renomear projeto</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome do projeto</Label>
+              <Input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                placeholder="Nome do projeto"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter" && renameValue.trim()) submitRename(); }}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRenamingProject(null)} disabled={renameSaving}>Cancelar</Button>
+              <Button onClick={submitRename} disabled={renameSaving || !renameValue.trim()}>
+                {renameSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : "Salvar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
