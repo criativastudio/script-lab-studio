@@ -10,6 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Save, ChevronLeft, FormInput, Mail, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormSettings, type FormSettings as FS } from "@/hooks/useFormSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { hasFeatureAccess, requiredPlanLabel } from "@/lib/plan-features";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const FormSettingsPage = () => {
   const { settings, loading, updateSettings } = useFormSettings();

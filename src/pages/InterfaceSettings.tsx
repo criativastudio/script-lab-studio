@@ -59,6 +59,20 @@ const InterfaceSettings = () => {
     );
   }
 
+  if (!allowed) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 max-w-2xl">
+          <Link to="/configuracoes" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <ChevronLeft className="h-3 w-3" /> Voltar
+          </Link>
+          <h1 className="text-2xl font-semibold">Ajustes da Interface</h1>
+          <UpgradePrompt message={`Disponível no plano ${requiredPlanLabel("interface_settings")}. Faça upgrade para personalizar a interface.`} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
