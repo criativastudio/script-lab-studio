@@ -10,9 +10,20 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Target, FileText, Award, ArrowRight, ArrowLeft, Loader2, Share2,
-  CheckCircle2, AlertTriangle, Lightbulb, Star, Copy, MessageCircle,
-  Sparkles
+  Target,
+  FileText,
+  Award,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Share2,
+  CheckCircle2,
+  AlertTriangle,
+  Lightbulb,
+  Star,
+  Copy,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react";
 
 // ── Quiz definitions ──
@@ -47,28 +58,58 @@ const QUIZZES: QuizDef[] = [
         title: "Seu Nicho",
         question: "Qual é o nicho ou segmento do seu negócio?",
         placeholder: "Ex: Nutrição esportiva, Advocacia trabalhista...",
-        chips: ["Saúde e Bem-estar", "Educação", "Tecnologia", "Moda e Beleza", "Finanças", "Gastronomia", "Direito", "Marketing Digital"],
+        chips: [
+          "Saúde e Bem-estar",
+          "Educação",
+          "Tecnologia",
+          "Moda e Beleza",
+          "Finanças",
+          "Gastronomia",
+          "Direito",
+          "Marketing Digital",
+        ],
       },
       {
         key: "audience",
         title: "Público Ideal",
         question: "Quem é seu público ideal nas redes sociais?",
         placeholder: "Ex: Mulheres 25-40 que buscam emagrecimento saudável...",
-        chips: ["Empreendedores", "Profissionais liberais", "Jovens adultos", "Mães", "Executivos", "Estudantes universitários"],
+        chips: [
+          "Empreendedores",
+          "Profissionais liberais",
+          "Jovens adultos",
+          "Mães",
+          "Executivos",
+          "Estudantes universitários",
+        ],
       },
       {
         key: "differentiator",
         title: "Diferencial",
         question: "Qual é o maior diferencial do seu negócio?",
         placeholder: "Ex: Método exclusivo, atendimento personalizado...",
-        chips: ["Método próprio", "Experiência comprovada", "Preço acessível", "Atendimento premium", "Resultados rápidos", "Inovação tecnológica"],
+        chips: [
+          "Método próprio",
+          "Experiência comprovada",
+          "Preço acessível",
+          "Atendimento premium",
+          "Resultados rápidos",
+          "Inovação tecnológica",
+        ],
       },
       {
         key: "presence",
         title: "Presença Atual",
         question: "Como você se apresenta nas redes hoje?",
         placeholder: "Ex: Posto conteúdo educativo 3x por semana no Instagram...",
-        chips: ["Posts esporádicos", "Conteúdo diário", "Apenas stories", "Não tenho presença", "Vídeos no Reels/TikTok", "Conteúdo educativo"],
+        chips: [
+          "Posts esporádicos",
+          "Conteúdo diário",
+          "Apenas stories",
+          "Não tenho presença",
+          "Vídeos no Reels/TikTok",
+          "Conteúdo educativo",
+        ],
       },
     ],
   },
@@ -84,7 +125,15 @@ const QUIZZES: QuizDef[] = [
         title: "Tipo de Conteúdo",
         question: "Que tipo de conteúdo você publica atualmente?",
         placeholder: "Ex: Dicas rápidas, tutoriais, bastidores...",
-        chips: ["Dicas e tutoriais", "Bastidores", "Depoimentos", "Conteúdo educativo", "Entretenimento", "Cases de sucesso", "Não publico ainda"],
+        chips: [
+          "Dicas e tutoriais",
+          "Bastidores",
+          "Depoimentos",
+          "Conteúdo educativo",
+          "Entretenimento",
+          "Cases de sucesso",
+          "Não publico ainda",
+        ],
       },
       {
         key: "frequency",
@@ -105,7 +154,14 @@ const QUIZZES: QuizDef[] = [
         title: "Desafio Principal",
         question: "Qual é seu maior desafio com conteúdo nas redes?",
         placeholder: "Ex: Não tenho ideias, falta consistência...",
-        chips: ["Falta de ideias", "Sem tempo", "Baixo engajamento", "Não converte em vendas", "Não sei o que postar", "Falta de consistência"],
+        chips: [
+          "Falta de ideias",
+          "Sem tempo",
+          "Baixo engajamento",
+          "Não converte em vendas",
+          "Não sei o que postar",
+          "Falta de consistência",
+        ],
       },
     ],
   },
@@ -121,28 +177,56 @@ const QUIZZES: QuizDef[] = [
         title: "Tempo de Presença",
         question: "Há quanto tempo você está ativo nas redes sociais profissionalmente?",
         placeholder: "Ex: Comecei há 2 anos...",
-        chips: ["Menos de 6 meses", "6 meses a 1 ano", "1 a 3 anos", "3 a 5 anos", "Mais de 5 anos", "Ainda não comecei"],
+        chips: [
+          "Menos de 6 meses",
+          "6 meses a 1 ano",
+          "1 a 3 anos",
+          "3 a 5 anos",
+          "Mais de 5 anos",
+          "Ainda não comecei",
+        ],
       },
       {
         key: "social_proof",
         title: "Prova Social",
         question: "Que tipo de prova social você possui?",
         placeholder: "Ex: Depoimentos de clientes, certificações...",
-        chips: ["Depoimentos de clientes", "Certificações", "Mídia/imprensa", "Seguidores engajados", "Cases publicados", "Nenhuma ainda"],
+        chips: [
+          "Depoimentos de clientes",
+          "Certificações",
+          "Mídia/imprensa",
+          "Seguidores engajados",
+          "Cases publicados",
+          "Nenhuma ainda",
+        ],
       },
       {
         key: "results",
         title: "Resultados",
         question: "Que resultados você já entregou para clientes ou audiência?",
         placeholder: "Ex: +100 clientes atendidos, R$1M em vendas geradas...",
-        chips: ["Transformação de clientes", "Vendas geradas", "Seguidores crescendo", "Engajamento alto", "Resultados mensuráveis", "Ainda estou construindo"],
+        chips: [
+          "Transformação de clientes",
+          "Vendas geradas",
+          "Seguidores crescendo",
+          "Engajamento alto",
+          "Resultados mensuráveis",
+          "Ainda estou construindo",
+        ],
       },
       {
         key: "education",
         title: "Educação da Audiência",
         question: "Como você educa e entrega valor para sua audiência?",
         placeholder: "Ex: Faço lives semanais, tenho um e-book gratuito...",
-        chips: ["Lives e webinars", "E-books/materiais", "Mini-cursos gratuitos", "Newsletter", "Conteúdo aprofundado", "Não educo ainda"],
+        chips: [
+          "Lives e webinars",
+          "E-books/materiais",
+          "Mini-cursos gratuitos",
+          "Newsletter",
+          "Conteúdo aprofundado",
+          "Não educo ainda",
+        ],
       },
     ],
   },
@@ -196,7 +280,8 @@ export default function DiagnosticQuiz() {
               <Sparkles className="w-3 h-3 mr-1" /> Diagnóstico Gratuito
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-[Blauer_Nue]">
-              Descubra seu nível de<br />
+              Descubra seu nível de
+              <br />
               <span className="text-primary">presença digital</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -208,13 +293,20 @@ export default function DiagnosticQuiz() {
             {QUIZZES.map((q, i) => {
               const Icon = q.icon;
               return (
-                <motion.div key={q.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                <motion.div
+                  key={q.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
                   <Card
                     className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-border/50 group"
                     onClick={() => navigate(`/diagnostico/${q.id}`)}
                   >
                     <CardHeader className="text-center pb-3">
-                      <div className={`w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br ${q.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                      <div
+                        className={`w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br ${q.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+                      >
                         <Icon className="w-7 h-7 text-primary-foreground" />
                       </div>
                       <CardTitle className="text-lg">{q.title}</CardTitle>
@@ -251,7 +343,8 @@ export default function DiagnosticQuiz() {
   // ── Helpers ──
 
   const totalSteps = quiz.questions.length + 1; // contact + questions
-  const progressValue = step === "contact" ? 0 : step === "loading" || step === "result" ? 100 : ((step as number) / totalSteps) * 100;
+  const progressValue =
+    step === "contact" ? 0 : step === "loading" || step === "result" ? 100 : ((step as number) / totalSteps) * 100;
 
   const currentQuestion = typeof step === "number" ? quiz.questions[step] : null;
 
@@ -303,7 +396,11 @@ export default function DiagnosticQuiz() {
       setStep("result");
     } catch (e: any) {
       console.error(e);
-      toast({ title: "Erro ao gerar diagnóstico", description: e.message || "Tente novamente.", variant: "destructive" });
+      toast({
+        title: "Erro ao gerar diagnóstico",
+        description: e.message || "Tente novamente.",
+        variant: "destructive",
+      });
       setStep(quiz.questions.length - 1);
     }
   };
@@ -340,14 +437,17 @@ export default function DiagnosticQuiz() {
           </div>
         </div>
 
-        {step !== "loading" && step !== "result" && (
-          <Progress value={progressValue} className="mb-8 h-2" />
-        )}
+        {step !== "loading" && step !== "result" && <Progress value={progressValue} className="mb-8 h-2" />}
 
         <AnimatePresence mode="wait">
           {/* ── Contact Step ── */}
           {step === "contact" && (
-            <motion.div key="contact" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+            <motion.div
+              key="contact"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+            >
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl">Seus dados de contato</CardTitle>
@@ -360,11 +460,20 @@ export default function DiagnosticQuiz() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">E-mail *</label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp *</label>
-                    <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
+                    <Input
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      placeholder="(11) 99999-9999"
+                    />
                   </div>
                   <Button className="w-full mt-2" disabled={!canProceed()} onClick={handleNext}>
                     Começar diagnóstico <ArrowRight className="w-4 h-4 ml-1" />
@@ -376,7 +485,12 @@ export default function DiagnosticQuiz() {
 
           {/* ── Question Steps ── */}
           {typeof step === "number" && currentQuestion && (
-            <motion.div key={`q-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+            <motion.div
+              key={`q-${step}`}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+            >
               <Card>
                 <CardHeader>
                   <Badge variant="outline" className="w-fit mb-2">
@@ -420,21 +534,34 @@ export default function DiagnosticQuiz() {
 
           {/* ── Loading ── */}
           {step === "loading" && (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 gap-4">
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 gap-4"
+            >
               <Loader2 className="w-12 h-12 animate-spin text-primary" />
-              <p className="text-lg font-medium text-foreground">Analisando suas respostas com IA...</p>
+              <p className="text-lg font-medium text-foreground">Analisando suas respostas...</p>
               <p className="text-sm text-muted-foreground">Isso leva menos de 30 segundos</p>
             </motion.div>
           )}
 
           {/* ── Result ── */}
           {step === "result" && result && (
-            <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
               {/* Score */}
               <Card className="border-primary/30">
                 <CardContent className="p-6 text-center">
                   <p className="text-sm text-muted-foreground mb-2">Sua nota geral</p>
-                  <div className="text-6xl font-bold text-primary mb-1">{result.score}<span className="text-2xl text-muted-foreground">/10</span></div>
+                  <div className="text-6xl font-bold text-primary mb-1">
+                    {result.score}
+                    <span className="text-2xl text-muted-foreground">/10</span>
+                  </div>
                   <p className="text-muted-foreground text-sm mt-3">{result.summary}</p>
                 </CardContent>
               </Card>
