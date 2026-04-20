@@ -86,7 +86,7 @@ export function ProjectsTab({
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_style: "", publishing_frequency: "" }); } }}>
+        <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "" }); } }}>
           <DialogTrigger asChild>
             <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
           </DialogTrigger>
