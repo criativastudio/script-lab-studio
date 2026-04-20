@@ -38,6 +38,15 @@ const Admin = () => {
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [userList, setUserList] = useState<UserRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState<"all" | "starter" | "creator_pro" | "scale_studio">("all");
+
+  const normalizePlan = (p: string | null | undefined): "starter" | "creator_pro" | "scale_studio" => {
+    const v = (p || "starter").toLowerCase();
+    if (v === "basic") return "starter";
+    if (v === "premium") return "creator_pro";
+    if (v === "creator_pro" || v === "scale_studio" || v === "starter") return v as "starter" | "creator_pro" | "scale_studio";
+    return "starter";
+  };
 
   const fetchData = async () => {
     const monthStart = new Date();
