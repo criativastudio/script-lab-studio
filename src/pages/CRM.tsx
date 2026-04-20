@@ -400,12 +400,18 @@ const CRM = () => {
 
     setManualGenerating(true);
     try {
+      const fa = project.form_answers || {};
       const { data: fnData, error: fnError } = await supabase.functions.invoke("manual-generate", {
         body: {
           objective: manualForm.objective, target_audience: manualForm.target_audience,
           platform: manualForm.platform, hook: manualForm.hook,
           duration: manualForm.duration, notes: manualForm.notes,
           video_quantity: project.video_quantity,
+          content_type: fa.content_type || null,
+          content_style: fa.content_style || null,
+          business_name: project.business_name,
+          niche: project.niche,
+          user_id: user.id,
         },
       });
       if (fnError) throw fnError;
