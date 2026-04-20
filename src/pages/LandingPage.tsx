@@ -54,7 +54,7 @@ const steps = [
     icon: FileText,
     num: "01",
     title: "Crie seu briefing",
-    desc: "Defina objetivo, público e estilo — a IA faz o resto.",
+    desc: "Defina objetivo, público e estilo.",
   },
   {
     icon: Users,
