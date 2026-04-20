@@ -382,6 +382,7 @@ export function ProjectsTab({
           );
         })}
       </div>
+      )}
 
       <Dialog open={!!renamingProject} onOpenChange={(v) => { if (!renameSaving && !v) setRenamingProject(null); }}>
         <DialogContent>
