@@ -894,6 +894,7 @@ const CRM = () => {
                 openEditScript={openEditScript}
                 deleteItem={deleteItem}
                 deleteProject={handleDeleteProject}
+                handleRenameProject={handleRenameProject}
                 setViewingScript={setViewingScript}
                 setViewingProject={setViewingProject}
                 newProjectOpen={newProjectOpen}
