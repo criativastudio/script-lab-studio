@@ -365,7 +365,7 @@ export default function LandingPage() {
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
             <p className="mx-auto mb-10 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
-              Em três passos simples, você sai da ideia ao roteiro pronto.
+              Transforme informações do cliente em conteúdo estratégico em segundos.
             </p>
           </motion.div>
           <div className="grid gap-8 md:grid-cols-3 relative">
