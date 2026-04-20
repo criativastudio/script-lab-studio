@@ -1,98 +1,47 @@
 
 
-# Tipo de Conteúdo + Estilo no "Novo Projeto"
+# Novo Projeto: gerar conteúdo direto do briefing existente
 
-## Objetivo
+## Comportamento atual vs novo
 
-No diálogo **Novo Projeto** (CRM > Projetos), adicionar:
-1. **Tipo de Conteúdo** (obrigatório): Roteiro ou Carrossel
-2. **Estilo de Conteúdo** (seletor com 18 opções pré-definidas)
+**Hoje:** Criar Projeto → cria `briefing_requests` com `status="pending"` → mostra link → cliente precisa preencher de novo → só então gera conteúdo.
 
-E propagar essas escolhas para a IA, garantindo geração personalizada, natural e adaptada ao estilo escolhido — sem perder a fidelidade ao nicho nem a lógica "Conecta-Entretém-Vende" já implementadas.
+**Novo:** Criar Projeto → reusa briefing original do cliente + seleções (Tipo/Estilo/Quantidade) → chama `process-briefing` imediatamente → retorna projeto + roteiros/carrosséis prontos. Sem link, sem nova etapa.
 
-## Mudanças no Frontend
+## Fluxo
 
-### `src/components/crm/ProjectsTab.tsx`
+1. Usuário abre Novo Projeto e preenche: nome, quantidade de vídeos, **Tipo** (Roteiro/Carrossel), **Estilo**, objetivo de campanha, etapa do funil, frequência.
+2. Sistema valida que o cliente tem **pelo menos um briefing original respondido** (linha em `briefing_requests` com `form_answers` ou `persona` preenchidos). Se não tiver, bloqueia com toast: "Este cliente ainda não preencheu o briefing inicial."
+3. Sistema cria nova linha em `briefing_requests` já com:
+   - `status = "submitted"` (não `pending`)
+   - `form_answers` = mescla das respostas originais + `content_type` + `content_style` + objetivos do dialog
+   - `persona`, `positioning`, `tone_of_voice`, `content_strategy`, `niche`, `city`, dados de contato copiados do briefing original
+4. Sistema chama imediatamente `supabase.functions.invoke("process-briefing", { token })` — que já lê `form_answers` e gera projeto + briefing + roteiros (ou slides, se Carrossel).
+5. Botão mostra loader. Ao terminar: toast de sucesso, dialog fecha, lista de projetos atualiza.
+6. **Nenhum link é exibido em momento algum.**
 
-Substituir o campo livre `Estilo de Conteúdo` (Input de texto) por:
+## Garantia de consistência
 
-- **Tipo de Conteúdo** *(obrigatório)* — `Select` com:
-  - Roteiro (vídeo)
-  - Carrossel (Instagram)
-- **Estilo de Conteúdo** — `Select` com 18 opções:
-  Engraçado, Sério, Educativo, Inspiracional, Curioso, Polêmico, Irônico, Bastidores, Narrativo, Minimalista, UGC, Nostálgico, Empático, Técnico, Urgente, Interativo, Reflexivo, Aspiracional.
-
-Botão "Criar Projeto" desabilitado enquanto `project_name` ou `content_type` estiverem vazios.
-
-### `src/pages/CRM.tsx`
-
-- Estender o `newProjectForm` com `content_type: ""` e manter `content_style` como string do enum.
-- Em `handleCreateProject`, salvar os dois novos campos em `briefing_requests.form_answers` (JSON) — sem migration, pois `form_answers` já é `jsonb` livre:
-  ```ts
-  form_answers: {
-    ...(first.form_answers || {}),
-    content_type: newProjectForm.content_type,
-    content_style: newProjectForm.content_style,
-  }
-  ```
-
-## Mudanças nas Edge Functions
-
-### `supabase/functions/process-briefing/index.ts`
-
-- Ler `answers.content_type` e `answers.content_style` do `form_answers`.
-- Injetar no `systemPrompt` um bloco dinâmico:
-  ```text
-  TIPO DE CONTEÚDO ALVO: {Roteiro|Carrossel}
-  ESTILO DE CONTEÚDO: {estilo selecionado}
-  
-  Adapte tom, ritmo, vocabulário e exemplos a este estilo
-  sem perder profissionalismo, fidelidade ao nicho e a
-  lógica Conecta-Entretém-Vende.
-  ```
-- Quando `content_type === "Carrossel"`, instruir a IA a gerar os scripts no formato de slides (S1–S6) em vez de roteiro de vídeo. Quando `Roteiro`, manter o formato atual.
-
-### `supabase/functions/manual-generate/index.ts`, `generate-script/index.ts`, `generate-carousel/index.ts`
-
-- Aceitar dois novos campos opcionais no body: `content_type` e `content_style`.
-- Quando presentes, injetar o mesmo bloco dinâmico no `systemPrompt` (mantendo fidelidade ao nicho + Conecta-Entretém-Vende).
-- `manual-generate` e `generate-script` recebem `content_style` do formulário/projeto e ajustam tom.
-- `generate-carousel` usa `content_style` para ajustar o tom dos slides.
-
-### Em `CRM.tsx > handleManualGenerate` e `handleGenerateWithAgent`
-
-Repassar `content_type` e `content_style` (lidos de `project.form_answers`) para as edge functions correspondentes.
-
-## Regras de Geração reforçadas no prompt
-
-Bloco fixo a adicionar ao `systemPrompt` (junto ao bloco existente de Conecta-Entretém-Vende):
-
-```text
-REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
-- Adapte tom e ritmo ao estilo selecionado.
-- Linguagem natural, humana e estratégica — proibido tom robótico.
-- Use exemplos reais do contexto do público do nicho.
-- Foque em retenção, conexão e clareza.
-- Ajuste o tom sem perder profissionalismo.
-- Estilo é uma camada de tom, não substitui fidelidade ao nicho
-  nem a lógica Conecta-Entretém-Vende.
-```
+- A função `process-briefing` já injeta `content_type` / `content_style` no prompt (lógica recém-implementada).
+- Como copiamos `persona`, `tone_of_voice`, `positioning`, `niche` do briefing original e o frontend não muda esses campos, todos os projetos futuros do mesmo cliente compartilham o mesmo contexto estratégico — apenas Tipo/Estilo/Quantidade variam por projeto.
+- Caso o `client_strategic_contexts` daquele cliente exista (criado pelo primeiro briefing), `process-briefing` o atualizará no final do fluxo, mantendo um único registro de verdade por cliente.
 
 ## Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/components/crm/ProjectsTab.tsx` | Trocar Input de estilo por Select de 18 opções; adicionar Select de Tipo (Roteiro/Carrossel) |
-| `src/pages/CRM.tsx` | Estender `newProjectForm`, salvar em `form_answers`, repassar para functions |
-| `supabase/functions/process-briefing/index.ts` | Ler e injetar `content_type` + `content_style` no prompt |
-| `supabase/functions/manual-generate/index.ts` | Aceitar e injetar os 2 campos no prompt |
-| `supabase/functions/generate-script/index.ts` | Aceitar e injetar `content_style` no prompt |
-| `supabase/functions/generate-carousel/index.ts` | Aceitar e injetar `content_style` no prompt |
+| `src/pages/CRM.tsx` | Reescrever `handleCreateProject`: validar briefing original → inserir nova linha com `status="submitted"` + dados estratégicos copiados + `form_answers` mesclado → invocar `process-briefing` → fechar dialog. Remover uso de `newProjectLink`/`setNewProjectLink`. |
+| `src/components/crm/ProjectsTab.tsx` | Remover bloco do link copiável e props `newProjectLink`/`setNewProjectLink`. Adicionar nota "O briefing original do cliente será reutilizado automaticamente." Botão "Criar Projeto" exibe loader durante geração. |
 
 ## O que NÃO muda
 
-- Schema do banco (uso de `form_answers` jsonb existente — sem migration).
-- Schemas das tool calls da IA.
-- Regra de Fidelidade ao Nicho e lógica Conecta-Entretém-Vende.
-- UI do restante do CRM.
+- Schema do banco, RLS, edge functions (`process-briefing`, `generate-script`, `generate-carousel` continuam idênticos).
+- Lógica Conecta-Entretém-Vende, Tipo/Estilo, Fidelidade ao Nicho.
+- Fluxo de **cadastro de cliente novo** — esse continua gerando o link inicial (é o único momento em que o cliente preenche o briefing).
+- Qualquer outro módulo (Ideias, Carrosséis avulsos, CRM, Dashboard).
+
+## Erros tratados
+
+- Briefing original ausente → toast vermelho, dialog permanece aberto.
+- Falha em `process-briefing` → toast vermelho com mensagem; a linha criada permanece para o usuário tentar "Gerar com Agente" depois.
 
