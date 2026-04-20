@@ -1,107 +1,103 @@
-# Liberar menus admin para usuários comuns com gating por plano
-
-## Objetivo
-
-Hoje os menus **Diagnóstico CRM** e **Configurações** (e suas 4 subpáginas) só aparecem para `isAdmin`. Vou expor esses menus para todos os usuários autenticados e controlar acesso por plano contratado, mantendo "Gerenciar Usuários & Planos" e "Diagnóstico CRM" exclusivos do admin (são funcionalidades de plataforma, não de cliente).
-
-## Matriz de acesso por plano
 
 
-| Funcionalidade                  | Starter | Creator Pro | Scale Studio | Admin |
-| ------------------------------- | ------- | ----------- | ------------ | ----- |
-| Dashboard, Clientes, Análises   | ✅       | ✅           | ✅            | ✅     |
-| Configurações (hub)             | ✅       | ✅           | ✅            | ✅     |
-| └ Ajustes da Interface          | 🔒      | ✅           | ✅            | ✅     |
-| └ Personalização de Formulários | 🔒      | 🔒          | ✅            | ✅     |
-| └ Personalização de PDFs        | 🔒      | 🔒          | ✅            | ✅     |
-| └ Gerenciar Usuários & Planos   | ❌       | ❌           | ❌            | ✅     |
-| Diagnóstico CRM                 | ❌       | ❌           | ❌            | ✅     |
+# Kanban de Leads no Diagnóstico CRM
 
+Transformar a tabela atual de `/admin/diagnostico` em um board kanban com 4 colunas e drag-and-drop, mantendo a tabela como visualização alternativa opcional.
 
-- 🔒 = card visível com badge de upgrade; clicar leva para `/checkout/<plano>`
-- ❌ = não aparece no menu (admin-only)
-- ✅ = acesso liberado
+## 1. Schema (migration)
 
-Justificativa: gerenciar usuários da plataforma e gerar leads via diagnóstico público são tarefas operacionais do dono da plataforma, não do cliente pagante. Personalização visual (interface/forms/PDF) é o que faz sentido como diferencial de plano.
+Tabela `diagnostic_leads` hoje não tem campo de status do pipeline e não permite `UPDATE`. Mudanças:
 
-## Mudanças
+```sql
+-- Nova coluna para o estágio do kanban
+ALTER TABLE public.diagnostic_leads
+  ADD COLUMN pipeline_stage text NOT NULL DEFAULT 'cold';
+-- Valores: 'cold' | 'warm' | 'hot' | 'contacted'
 
-### 1. `src/lib/plan-features.ts` (NOVO)
+-- Trigger updated_at opcional + nova coluna para registrar contato
+ALTER TABLE public.diagnostic_leads
+  ADD COLUMN contacted_at timestamptz,
+  ADD COLUMN stage_updated_at timestamptz DEFAULT now();
 
-Centralizar regras de acesso por plano:
-
-```ts
-export type Feature = "interface_settings" | "form_settings" | "pdf_settings";
-export const FEATURE_MIN_PLAN: Record<Feature, "creator_pro" | "scale_studio"> = {
-  interface_settings: "creator_pro",
-  form_settings: "creator_pro",
-  pdf_settings: "scale_studio",
-};
-export const PLAN_RANK = { starter: 0, basic: 0, creator_pro: 1, premium: 1, scale_studio: 2 };
-export function hasFeatureAccess(plan: string, feature: Feature): boolean { ... }
-export function requiredPlanLabel(feature: Feature): string { ... }
+-- Política UPDATE para admins (hoje só existe SELECT/DELETE/INSERT)
+CREATE POLICY "Admins update diagnostic leads"
+  ON public.diagnostic_leads FOR UPDATE TO authenticated
+  USING (has_role(auth.uid(), 'admin'));
 ```
 
-### 2. `src/components/DashboardLayout.tsx`
+Backfill: leads existentes ficam em `cold` por padrão.
 
-- Mover `adminItem` (Configurações) para fora do gating `isAdmin` — fica visível para todos os autenticados.
-- Manter `diagnosticItem` apenas para admin (continua como hoje).
-- Ordem final do menu para usuário comum: Dashboard → Clientes → Análises → **Configurações**.
+## 2. Componente Kanban (`src/pages/AdminDiagnostic.tsx`)
 
-### 3. `src/pages/Configuracoes.tsx`
+### Layout
 
-- Mostrar todos os 4 cards para todos os usuários (com filtragem por `adminOnly` mantida só para "Gerenciar Usuários & Planos").
-- Cards de Interface, Formulários e PDFs ganham:
-  - **Badge de plano requerido** (ex: "Creator Pro", "Scale Studio") quando o usuário não tem acesso.
-  - Ícone `Lock` discreto no canto.
-  - Ao clicar em card bloqueado, redirecionar para `/checkout/creator_pro` ou `/checkout/scale_studio` (em vez da página de configuração) + toast "Disponível no plano X".
-  - Cards desbloqueados navegam normalmente.
+- Toggle no topo: **Kanban** (default) / **Tabela** (mantém UI atual intacta).
+- Filtros existentes (busca + tipo) continuam aplicáveis às duas views.
+- Stats cards permanecem inalterados.
 
-### 4. `src/App.tsx` — rotas
+### Board
 
-Mudar de `adminOnly` para `ProtectedRoute` simples nas 3 rotas de personalização. O gating de plano será feito **dentro** de cada página (server-side check via hook), não na rota:
+Grid horizontal com 4 colunas (scroll vertical interno por coluna, scroll horizontal no mobile):
 
-```diff
-- <Route path="/configuracoes" element={<ProtectedRoute adminOnly>...
-+ <Route path="/configuracoes" element={<ProtectedRoute>...
-- <Route path="/configuracoes/interface" element={<ProtectedRoute adminOnly>...
-+ <Route path="/configuracoes/interface" element={<ProtectedRoute>...
-- <Route path="/configuracoes/formularios" element={<ProtectedRoute adminOnly>...
-+ <Route path="/configuracoes/formularios" element={<ProtectedRoute>...
+```
+┌─ Lead Frio ──┐ ┌─ Lead Morno ─┐ ┌─ Lead Quente ┐ ┌─ Contatado ─┐
+│ contagem  N  │ │ contagem  N  │ │ contagem  N  │ │ contagem N  │
+│ ┌──────────┐ │ │              │ │              │ │             │
+│ │ card     │ │ │              │ │              │ │             │
+│ └──────────┘ │ │              │ │              │ │             │
+└──────────────┘ └──────────────┘ └──────────────┘ └─────────────┘
 ```
 
-Manter `/configuracoes/usuarios` e `/admin/diagnostico` como `adminOnly`.
+Cada coluna tem cor de borda/header semântica (cold=azul, warm=âmbar, hot=vermelho/peach, contacted=verde) usando tokens do design system (sem cores hardcoded fora do tema).
 
-### 5. Gating dentro de InterfaceSettings, FormSettings, PdfSettings
+### Card de lead (informações essenciais)
 
-No topo de cada página, checar `hasFeatureAccess(plan, "<feature>")`:
+- Nome + badge do tipo de diagnóstico
+- Empresa · Cidade
+- Score (badge `X/10` colorida por faixa)
+- Data relativa ("há 2 dias")
+- Telefone/email com botões de ação rápida (📞 wa.me, ✉️ mailto)
+- Click no card → abre o `Dialog` existente com respostas + resultado IA
+- Botão `…` no canto: marcar como contatado, excluir
 
-- Se sim → renderiza normalmente.
-- Se não → renderiza um "paywall" reaproveitando o componente `UpgradePrompt` existente (`src/components/UpgradePrompt.tsx`), com CTA para `/checkout/<plano>`.
+### Drag & drop
 
-Isso impede que um usuário starter acesse digitando a URL diretamente.
+Usar `@dnd-kit/core` + `@dnd-kit/sortable` (leve, performático, acessível, já é o padrão moderno do ecossistema React). Adicionar como dependência.
 
-### 6. Permissão de admin não-restritiva
+- `DndContext` envolvendo as 4 `SortableContext` (uma por coluna).
+- `onDragEnd`: optimistic update no estado local + `supabase.update({ pipeline_stage, stage_updated_at, contacted_at? })`.
+- Se mover para "Contatado", preencher `contacted_at = now()` automaticamente.
+- Em caso de erro do Supabase: rollback do estado + toast destrutivo.
 
-Admin vê e usa **tudo**, independente de plano (já garantido pelo `PLAN_RANK` quando combinado com bypass: `if (isAdmin) return true` dentro de `hasFeatureAccess` — passar `isAdmin` como segundo parâmetro opcional, ou checar no caller).
+### Realtime
 
-## Arquivos modificados / criados
+Subscrever canal Supabase realtime na tabela `diagnostic_leads` (eventos INSERT/UPDATE/DELETE) → atualizar estado local automaticamente. Garante que se outro admin mover um card, o board sincroniza sem refresh.
 
+### Performance
 
-| Arquivo                              | Mudança                                                                                                               |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `src/lib/plan-features.ts`           | **NOVO** — matriz de features × plano + helpers                                                                       |
-| `src/components/DashboardLayout.tsx` | Remover gating `isAdmin` do item Configurações                                                                        |
-| `src/pages/Configuracoes.tsx`        | Mostrar todos os cards; bloquear visualmente os sem acesso; redirect para checkout                                    |
-| `src/App.tsx`                        | Trocar `adminOnly` por `ProtectedRoute` em `/configuracoes`, `/configuracoes/interface`, `/configuracoes/formularios` |
-| `src/pages/InterfaceSettings.tsx`    | Gating no topo via `hasFeatureAccess` + `UpgradePrompt`                                                               |
-| `src/pages/FormSettings.tsx`         | Gating no topo via `hasFeatureAccess` + `UpgradePrompt`                                                               |
-| `src/pages/PdfSettings.tsx`          | Gating no topo via `hasFeatureAccess` + `UpgradePrompt` (já existe regra Scale Studio — consolidar via helper)        |
+- Memoizar agrupamento por estágio com `useMemo`.
+- `pointer-events: none` durante drag para evitar reflows desnecessários.
+- Animações via CSS transforms (`@dnd-kit` já faz por padrão).
 
+## 3. Fallback Tabela
+
+Manter toda a UI atual de tabela acessível via toggle, com nova coluna **Estágio** (Select inline para mudar sem drag). Reaproveita o mesmo update.
+
+## Arquivos
+
+| Arquivo | Mudança |
+|---|---|
+| Migration SQL | Nova — adiciona `pipeline_stage`, `contacted_at`, `stage_updated_at`, política UPDATE para admins |
+| `src/pages/AdminDiagnostic.tsx` | Refatorar — adicionar toggle, board kanban, drag-and-drop, realtime sync; manter tabela como alternativa |
+| `src/components/admin/LeadKanbanCard.tsx` | **NOVO** — card visual do lead (memoizado) |
+| `src/components/admin/LeadKanbanColumn.tsx` | **NOVO** — coluna droppable com header colorido + contagem |
+| `package.json` | Adicionar `@dnd-kit/core` e `@dnd-kit/sortable` |
 
 ## O que NÃO muda
 
-- Schema do banco / RLS (controle é puramente de UX/UI; backend já protege via RLS por `user_id`)
-- Páginas Admin (`/configuracoes/usuarios`) e Diagnóstico (`/admin/diagnostico`) continuam admin-only
-- Edge functions, limites de uso de geração (clientes/briefings/scripts/mês) — `usePlanLimits` permanece intacto
-- Fluxo de checkout existente
+- Diagnostic quiz público (`/diagnostico`) — captação continua igual
+- Edge function `generate-diagnostic` — não mexe
+- RLS de SELECT/INSERT/DELETE existentes
+- Stats, filtros, dialog de visualização detalhada do lead
+- Acesso continua restrito a `isAdmin`
+
