@@ -76,6 +76,16 @@ REGRA DE FIDELIDADE AO NICHO (OBRIGATÓRIA):
 - Evite analogias genéricas que servem para qualquer nicho (ex: "transforme sua vida", "destaque-se da multidão").
 - Mantenha coerência absoluta entre posicionamento, tom de voz e vocabulário do nicho.
 
+LÓGICA DE CONTEÚDO "CONECTA-ENTRETÉM-VENDE" (OBRIGATÓRIA para todos os roteiros gerados):
+1. ABERTURA POR IDENTIFICAÇÃO: cada hook deve começar com problema, situação ou pensamento comum do público — nunca saudação ou anúncio direto.
+2. STORYTELLING NATURAL: a narração deve fluir como história, não como pitch comercial.
+3. ENTRETENIMENTO ANTES DE VENDA: os primeiros segundos prendem atenção e geram conexão; tom de anúncio é PROIBIDO na abertura.
+4. OFERTA ORGÂNICA: o call_to_action deve emergir da história — nunca soar como bloco isolado de venda.
+5. EXPERIÊNCIA PRÁTICA: priorize uso real, bastidores, resultado concreto sobre teoria.
+6. ANTI-ENGESSAMENTO: hook, scene_structure, narration e call_to_action são campos estruturais internos — a narração final deve fluir como fala natural, não como esqueleto rotulado.
+7. ANTI-PROPAGANDA: antes de finalizar, valide "Isso parece anúncio?" — se sim, reescreva como conversa, história ou observação genuína.
+OBJETIVO FINAL: roteiros que conectam, entretêm e vendem sem parecer venda.
+
 1. INFERIR o contexto estratégico completo do negócio:
    - Nicho de mercado
    - Persona detalhada do cliente ideal
