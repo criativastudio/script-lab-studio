@@ -342,27 +342,74 @@ const CRM = () => {
       return;
     }
 
-    const first = selectedGroup.projects[0];
-    const mergedAnswers = {
-      ...(first.form_answers || {}),
-      content_type: newProjectForm.content_type,
-      content_style: newProjectForm.content_style,
-      campaign_objective: newProjectForm.campaign_objective,
-      funnel_stage: newProjectForm.funnel_stage,
-      publishing_frequency: newProjectForm.publishing_frequency,
-    };
-    const { data, error } = await supabase.from("briefing_requests").insert({
-      user_id: user.id, business_name: first.business_name,
-      contact_name: first.contact_name, contact_email: first.contact_email,
-      contact_whatsapp: first.contact_whatsapp, project_name: newProjectForm.project_name,
-      video_quantity: parseInt(newProjectForm.video_quantity),
-      form_answers: mergedAnswers,
-    }).select("token").single();
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
-    const link = `${window.location.origin}/briefing/${data.token}`;
-    setNewProjectLink(link);
-    fetchClients();
-    toast({ title: "Projeto criado!" });
+    // Find the original briefing (one with form_answers or persona filled)
+    const original = selectedGroup.projects.find(
+      (p) => (p.form_answers && Object.keys(p.form_answers).length > 0) || p.persona
+    );
+    if (!original) {
+      toast({
+        title: "Briefing inicial pendente",
+        description: "Este cliente ainda não preencheu o briefing inicial.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatingProject(true);
+    try {
+      const mergedAnswers = {
+        ...(original.form_answers || {}),
+        content_type: newProjectForm.content_type,
+        content_style: newProjectForm.content_style,
+        campaign_objective: newProjectForm.campaign_objective,
+        funnel_stage: newProjectForm.funnel_stage,
+        publishing_frequency: newProjectForm.publishing_frequency,
+      };
+      const { data, error } = await supabase.from("briefing_requests").insert({
+        user_id: user.id,
+        business_name: original.business_name,
+        contact_name: original.contact_name,
+        contact_email: original.contact_email,
+        contact_whatsapp: original.contact_whatsapp,
+        project_name: newProjectForm.project_name,
+        video_quantity: parseInt(newProjectForm.video_quantity),
+        form_answers: mergedAnswers,
+        status: "submitted",
+        persona: original.persona,
+        positioning: original.positioning,
+        tone_of_voice: original.tone_of_voice,
+        content_strategy: original.content_strategy,
+        niche: original.niche,
+        city: original.city,
+      }).select("token").single();
+      if (error) {
+        toast({ title: "Erro ao criar projeto", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      // Immediately invoke process-briefing to generate content from the existing briefing
+      const { error: fnError } = await supabase.functions.invoke("process-briefing", {
+        body: { token: data.token },
+      });
+      if (fnError) {
+        toast({
+          title: "Projeto criado, mas falhou a geração",
+          description: fnError.message + ". Tente 'Gerar com Agente' no card do projeto.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Projeto criado!", description: "Conteúdo gerado a partir do briefing original." });
+      }
+
+      setNewProjectOpen(false);
+      setNewProjectForm({
+        project_name: "", video_quantity: "3", campaign_objective: "",
+        funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "",
+      });
+      fetchClients();
+    } finally {
+      setCreatingProject(false);
+    }
   };
 
   const handleGenerateWithAgent = async (project: BriefingRequest) => {
