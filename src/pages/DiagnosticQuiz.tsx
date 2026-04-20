@@ -431,6 +431,36 @@ export default function DiagnosticQuiz() {
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
+  const handleDownloadPdf = () => {
+    if (!result) return;
+    const html = buildPdfHtml({
+      settings: DEFAULT_PDF_SETTINGS,
+      documentTitle: `Diagnóstico - ${quiz.title}`,
+      coverTitle: quiz.title,
+      coverSubtitle: `${businessName.trim()} • ${city.trim()}`,
+      coverBadge: "Diagnóstico Gratuito",
+      coverMeta: [
+        `Lead: ${name.trim()}`,
+        `Data: ${new Date().toLocaleDateString("pt-BR")}`,
+      ],
+      metaGrid: [
+        { label: "Nome", value: name.trim() },
+        { label: "E-mail", value: email.trim() },
+        { label: "WhatsApp", value: whatsapp.trim() },
+        { label: "Empresa", value: businessName.trim() },
+        { label: "Cidade", value: city.trim() },
+        { label: "Nota Geral", value: `${result.score}/10` },
+      ],
+      sections: [
+        { title: "Resumo", content: result.summary },
+        { title: "Pontos Fortes", content: result.strengths.map((s) => `• ${s}`).join("\n") },
+        { title: "Pontos de Atenção", content: result.weaknesses.map((w) => `• ${w}`).join("\n") },
+        { title: "Recomendações", content: result.recommendations.map((r) => `• ${r}`).join("\n") },
+      ],
+    });
+    openPdfWindow(html);
+  };
+
   // ── Render ──
 
   const Icon = quiz.icon;
