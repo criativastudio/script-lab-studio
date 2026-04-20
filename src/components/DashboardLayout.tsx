@@ -15,9 +15,12 @@ const navItems = [
   { href: "/metrics", label: "Análises", icon: BarChart3 },
 ];
 
-const adminItems = [
-  { href: "/admin", label: "Admin", icon: Shield },
+const diagnosticItem = [
   { href: "/admin/diagnostico", label: "Diagnóstico CRM", icon: ClipboardCheck },
+];
+
+const adminItem = [
+  { href: "/admin", label: "Admin", icon: Shield },
 ];
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
@@ -35,7 +38,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   };
 
   const scaleItems = plan === "scale_studio" ? [{ href: "/pdf-settings", label: "Personalizar PDF", icon: FileText }] : [];
-  const allItems = [...navItems, ...scaleItems, ...(isAdmin ? adminItems : [])];
+  const allItems = [
+    ...navItems,
+    ...(isAdmin ? diagnosticItem : []),
+    ...scaleItems,
+    ...(isAdmin ? adminItem : []),
+  ];
 
   const sidebarContent = (
     <>

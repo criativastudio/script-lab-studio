@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
@@ -38,6 +39,15 @@ const Admin = () => {
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [userList, setUserList] = useState<UserRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState<"all" | "starter" | "creator_pro" | "scale_studio">("all");
+
+  const normalizePlan = (p: string | null | undefined): "starter" | "creator_pro" | "scale_studio" => {
+    const v = (p || "starter").toLowerCase();
+    if (v === "basic") return "starter";
+    if (v === "premium") return "creator_pro";
+    if (v === "creator_pro" || v === "scale_studio" || v === "starter") return v as "starter" | "creator_pro" | "scale_studio";
+    return "starter";
+  };
 
   const fetchData = async () => {
     const monthStart = new Date();
@@ -106,15 +116,43 @@ const Admin = () => {
     </DashboardLayout>
   );
 
-  const filteredUsers = userList.filter(u => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (u.full_name?.toLowerCase().includes(term)) ||
-      (u.email?.toLowerCase().includes(term)) ||
-      (u.whatsapp?.includes(term))
-    );
-  });
+  const planOrder: Record<string, number> = { scale_studio: 0, creator_pro: 1, starter: 2 };
+  const filteredUsers = userList
+    .filter(u => {
+      const np = normalizePlan(u.plan);
+      if (planFilter !== "all" && np !== planFilter) return false;
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        (u.full_name?.toLowerCase().includes(term)) ||
+        (u.email?.toLowerCase().includes(term)) ||
+        (u.whatsapp?.includes(term))
+      );
+    })
+    .sort((a, b) => {
+      const pa = planOrder[normalizePlan(a.plan)] ?? 99;
+      const pb = planOrder[normalizePlan(b.plan)] ?? 99;
+      if (pa !== pb) return pa - pb;
+      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return db - da;
+    });
+
+  const planCounts = userList.reduce(
+    (acc, u) => {
+      const np = normalizePlan(u.plan);
+      acc[np] = (acc[np] || 0) + 1;
+      return acc;
+    },
+    { starter: 0, creator_pro: 0, scale_studio: 0 } as Record<string, number>
+  );
+
+  const planFilterOptions: { value: "all" | "starter" | "creator_pro" | "scale_studio"; label: string; count: number }[] = [
+    { value: "all", label: "Todos", count: userList.length },
+    { value: "starter", label: "Starter", count: planCounts.starter },
+    { value: "creator_pro", label: "Creator Pro", count: planCounts.creator_pro },
+    { value: "scale_studio", label: "Scale Studio", count: planCounts.scale_studio },
+  ];
 
   const statCards = [
     { title: "Usuários", value: stats.users, icon: Users },
@@ -161,6 +199,18 @@ const Admin = () => {
                   className="pl-9"
                 />
               </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {planFilterOptions.map((opt) => (
+                <Button
+                  key={opt.value}
+                  size="sm"
+                  variant={planFilter === opt.value ? "default" : "outline"}
+                  onClick={() => setPlanFilter(opt.value)}
+                >
+                  {opt.label} ({opt.count})
+                </Button>
+              ))}
             </div>
           </CardHeader>
           <CardContent className="p-0">
