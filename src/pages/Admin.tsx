@@ -115,15 +115,43 @@ const Admin = () => {
     </DashboardLayout>
   );
 
-  const filteredUsers = userList.filter(u => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (u.full_name?.toLowerCase().includes(term)) ||
-      (u.email?.toLowerCase().includes(term)) ||
-      (u.whatsapp?.includes(term))
-    );
-  });
+  const planOrder: Record<string, number> = { scale_studio: 0, creator_pro: 1, starter: 2 };
+  const filteredUsers = userList
+    .filter(u => {
+      const np = normalizePlan(u.plan);
+      if (planFilter !== "all" && np !== planFilter) return false;
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        (u.full_name?.toLowerCase().includes(term)) ||
+        (u.email?.toLowerCase().includes(term)) ||
+        (u.whatsapp?.includes(term))
+      );
+    })
+    .sort((a, b) => {
+      const pa = planOrder[normalizePlan(a.plan)] ?? 99;
+      const pb = planOrder[normalizePlan(b.plan)] ?? 99;
+      if (pa !== pb) return pa - pb;
+      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return db - da;
+    });
+
+  const planCounts = userList.reduce(
+    (acc, u) => {
+      const np = normalizePlan(u.plan);
+      acc[np] = (acc[np] || 0) + 1;
+      return acc;
+    },
+    { starter: 0, creator_pro: 0, scale_studio: 0 } as Record<string, number>
+  );
+
+  const planFilterOptions: { value: "all" | "starter" | "creator_pro" | "scale_studio"; label: string; count: number }[] = [
+    { value: "all", label: "Todos", count: userList.length },
+    { value: "starter", label: "Starter", count: planCounts.starter },
+    { value: "creator_pro", label: "Creator Pro", count: planCounts.creator_pro },
+    { value: "scale_studio", label: "Scale Studio", count: planCounts.scale_studio },
+  ];
 
   const statCards = [
     { title: "Usuários", value: stats.users, icon: Users },
