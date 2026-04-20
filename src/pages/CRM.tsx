@@ -543,6 +543,25 @@ const CRM = () => {
     toast({ title: "Item removido!" });
   };
 
+  const handleDeleteProject = async (project: BriefingRequest) => {
+    try {
+      if (project.project_id) {
+        await supabase.from("briefings").delete().eq("project_id", project.project_id);
+        await supabase.from("scripts").delete().eq("project_id", project.project_id);
+        await supabase.from("projects").delete().eq("id", project.project_id);
+      }
+      const { error } = await supabase.from("briefing_requests").delete().eq("id", project.id);
+      if (error) throw error;
+      setProjectBriefings(prev => { const n = { ...prev }; delete n[project.id]; return n; });
+      setProjectScripts(prev => { const n = { ...prev }; delete n[project.id]; return n; });
+      setOpenProjects(prev => { const n = new Set(prev); n.delete(project.id); return n; });
+      await fetchClients();
+      toast({ title: "Projeto excluído com sucesso!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir projeto", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleToggleActive = async (group: ClientGroup) => {
     const allInactive = group.projects.every(p => p.is_active === false);
     const newValue = allInactive;
