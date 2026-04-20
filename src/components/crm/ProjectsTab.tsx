@@ -53,8 +53,7 @@ interface ProjectsTabProps {
   setNewProjectOpen: (v: boolean) => void;
   newProjectForm: any;
   setNewProjectForm: (v: any) => void;
-  newProjectLink: string | null;
-  setNewProjectLink: (v: string | null) => void;
+  creatingProject: boolean;
   handleCreateProject: () => void;
   toast: (opts: any) => void;
   maxVideos?: number;
@@ -80,86 +79,77 @@ export function ProjectsTab({
   downloadProjectPdf, downloadPdf, openEditBriefing, openEditScript,
   deleteItem, setViewingScript, setViewingProject,
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
-  newProjectLink, setNewProjectLink, handleCreateProject, toast,
+  creatingProject, handleCreateProject, toast,
   maxVideos, onVideoLimitExceeded,
 }: ProjectsTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Dialog open={newProjectOpen} onOpenChange={(v) => { setNewProjectOpen(v); if (!v) { setNewProjectLink(null); setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "" }); } }}>
+        <Dialog open={newProjectOpen} onOpenChange={(v) => { if (creatingProject) return; setNewProjectOpen(v); if (!v) { setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "" }); } }}>
           <DialogTrigger asChild>
             <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Novo Projeto para {businessName}</DialogTitle></DialogHeader>
-            {newProjectLink ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Projeto criado! Link do briefing:</p>
-                <div className="flex gap-2">
-                  <Input value={newProjectLink} readOnly className="flex-1 text-xs" />
-                  <Button size="sm" onClick={() => { navigator.clipboard.writeText(newProjectLink); toast({ title: "Link copiado!" }); }}><Copy className="h-4 w-4" /></Button>
-                </div>
-                <Button className="w-full" variant="outline" onClick={() => { setNewProjectOpen(false); setNewProjectLink(null); }}>Fechar</Button>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-muted-foreground">
+                ✨ O briefing original do cliente será reutilizado automaticamente. Nenhum link será enviado.
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
-                <div>
-                  <Label>Quantidade de Vídeos</Label>
-                  <Select value={newProjectForm.video_quantity} onValueChange={(v) => {
-                    if (maxVideos && parseInt(v) > maxVideos) {
-                      setNewProjectForm({ ...newProjectForm, video_quantity: String(maxVideos) });
-                      onVideoLimitExceeded?.();
-                      return;
-                    }
-                    setNewProjectForm({ ...newProjectForm, video_quantity: v });
-                  }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Objetivo da Campanha</Label><Input value={newProjectForm.campaign_objective} onChange={(e) => setNewProjectForm({ ...newProjectForm, campaign_objective: e.target.value })} placeholder="Ex: Lançar novo serviço" /></div>
-                <div>
-                  <Label>Etapa do Funil</Label>
-                  <Select value={newProjectForm.funnel_stage} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, funnel_stage: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="top">Topo (Descoberta)</SelectItem>
-                      <SelectItem value="middle">Meio (Consideração)</SelectItem>
-                      <SelectItem value="bottom">Fundo (Decisão)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Tipo de Conteúdo *</Label>
-                  <Select value={newProjectForm.content_type} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_type: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Roteiro">Roteiro (vídeo)</SelectItem>
-                      <SelectItem value="Carrossel">Carrossel (Instagram)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Estilo de Conteúdo</Label>
-                  <Select value={newProjectForm.content_style} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_style: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um estilo" /></SelectTrigger>
-                    <SelectContent>
-                      {["Engraçado","Sério","Educativo","Inspiracional","Curioso","Polêmico","Irônico","Bastidores","Narrativo","Minimalista","UGC","Nostálgico","Empático","Técnico","Urgente","Interativo","Reflexivo","Aspiracional"].map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Frequência de Publicação</Label><Input value={newProjectForm.publishing_frequency} onChange={(e) => setNewProjectForm({ ...newProjectForm, publishing_frequency: e.target.value })} placeholder="Ex: 3x por semana" /></div>
-                <p className="text-xs text-muted-foreground">O contexto estratégico do cliente será herdado automaticamente.</p>
-                <Button className="w-full" onClick={handleCreateProject} disabled={!newProjectForm.project_name || !newProjectForm.content_type}>
-                  <FolderPlus className="h-4 w-4 mr-2" />Criar Projeto
-                </Button>
+              <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
+              <div>
+                <Label>Quantidade de Vídeos</Label>
+                <Select value={newProjectForm.video_quantity} onValueChange={(v) => {
+                  if (maxVideos && parseInt(v) > maxVideos) {
+                    setNewProjectForm({ ...newProjectForm, video_quantity: String(maxVideos) });
+                    onVideoLimitExceeded?.();
+                    return;
+                  }
+                  setNewProjectForm({ ...newProjectForm, video_quantity: v });
+                }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+              <div><Label>Objetivo da Campanha</Label><Input value={newProjectForm.campaign_objective} onChange={(e) => setNewProjectForm({ ...newProjectForm, campaign_objective: e.target.value })} placeholder="Ex: Lançar novo serviço" /></div>
+              <div>
+                <Label>Etapa do Funil</Label>
+                <Select value={newProjectForm.funnel_stage} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, funnel_stage: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Topo (Descoberta)</SelectItem>
+                    <SelectItem value="middle">Meio (Consideração)</SelectItem>
+                    <SelectItem value="bottom">Fundo (Decisão)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Tipo de Conteúdo *</Label>
+                <Select value={newProjectForm.content_type} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_type: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Roteiro">Roteiro (vídeo)</SelectItem>
+                    <SelectItem value="Carrossel">Carrossel (Instagram)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Estilo de Conteúdo</Label>
+                <Select value={newProjectForm.content_style} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_style: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um estilo" /></SelectTrigger>
+                  <SelectContent>
+                    {["Engraçado","Sério","Educativo","Inspiracional","Curioso","Polêmico","Irônico","Bastidores","Narrativo","Minimalista","UGC","Nostálgico","Empático","Técnico","Urgente","Interativo","Reflexivo","Aspiracional"].map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Frequência de Publicação</Label><Input value={newProjectForm.publishing_frequency} onChange={(e) => setNewProjectForm({ ...newProjectForm, publishing_frequency: e.target.value })} placeholder="Ex: 3x por semana" /></div>
+              <Button className="w-full" onClick={handleCreateProject} disabled={!newProjectForm.project_name || !newProjectForm.content_type || creatingProject}>
+                {creatingProject ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando conteúdo...</> : <><FolderPlus className="h-4 w-4 mr-2" />Criar Projeto e Gerar</>}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
