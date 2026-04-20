@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { EDITORIAL_LINES, CONTENT_STYLES, VIDEO_QUANTITIES, deriveFunnelStage } from "@/lib/editorial-lines";
+import { Sparkle } from "lucide-react";
 import {
   FolderPlus, Hash, Video, Calendar, ChevronDown, Bot, Sparkles, Download,
   BookOpen, FileText, Edit2, Trash2, Eye, Loader2, Target, Megaphone, MessageSquare, Lightbulb, Copy,
@@ -109,11 +111,11 @@ export function ProjectsTab({
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Dialog open={newProjectOpen} onOpenChange={(v) => { if (creatingProject) return; setNewProjectOpen(v); if (!v) { setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "" }); } }}>
+        <Dialog open={newProjectOpen} onOpenChange={(v) => { if (creatingProject) return; setNewProjectOpen(v); if (!v) { setNewProjectForm({ project_name: "", video_quantity: "3", campaign_objective: "", funnel_stage: "", content_type: "", content_style: "", publishing_frequency: "", editorial_lines: [], editorial_mode: "auto" }); } }}>
           <DialogTrigger asChild>
             <Button size="sm"><FolderPlus className="h-4 w-4 mr-1.5" />Novo Projeto</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Novo Projeto para {businessName}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-muted-foreground">
@@ -121,7 +123,7 @@ export function ProjectsTab({
               </div>
               <div><Label>Nome do Projeto *</Label><Input value={newProjectForm.project_name} onChange={(e) => setNewProjectForm({ ...newProjectForm, project_name: e.target.value })} placeholder="Ex: Campanha Abril 2026" /></div>
               <div>
-                <Label>Quantidade de Vídeos</Label>
+                <Label>Quantidade de Conteúdos</Label>
                 <Select value={newProjectForm.video_quantity} onValueChange={(v) => {
                   if (maxVideos && parseInt(v) > maxVideos) {
                     setNewProjectForm({ ...newProjectForm, video_quantity: String(maxVideos) });
@@ -132,22 +134,61 @@ export function ProjectsTab({
                 }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
+                    {VIDEO_QUANTITIES.map(v => <SelectItem key={v} value={v}>{v} conteúdo{v !== "1" ? "s" : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div><Label>Objetivo da Campanha</Label><Input value={newProjectForm.campaign_objective} onChange={(e) => setNewProjectForm({ ...newProjectForm, campaign_objective: e.target.value })} placeholder="Ex: Lançar novo serviço" /></div>
+
               <div>
-                <Label>Etapa do Funil</Label>
-                <Select value={newProjectForm.funnel_stage} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, funnel_stage: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top">Topo (Descoberta)</SelectItem>
-                    <SelectItem value="middle">Meio (Consideração)</SelectItem>
-                    <SelectItem value="bottom">Fundo (Decisão)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Linha Editorial</Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    {newProjectForm.editorial_mode === "auto" || !newProjectForm.editorial_lines?.length
+                      ? "Automático (IA define)"
+                      : `${newProjectForm.editorial_lines.length} selecionada${newProjectForm.editorial_lines.length > 1 ? "s" : ""}`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNewProjectForm({ ...newProjectForm, editorial_lines: [], editorial_mode: "auto" })}
+                  className={`w-full mb-2 flex items-center justify-center gap-1.5 text-xs rounded-lg px-3 py-2 border transition-colors ${
+                    newProjectForm.editorial_mode === "auto" || !newProjectForm.editorial_lines?.length
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Sparkle className="h-3 w-3" /> Automático (IA define)
+                </button>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                  {EDITORIAL_LINES.map((line) => {
+                    const selected = (newProjectForm.editorial_lines || []).includes(line);
+                    return (
+                      <button
+                        key={line}
+                        type="button"
+                        onClick={() => {
+                          const current: string[] = newProjectForm.editorial_lines || [];
+                          const next = selected ? current.filter((l) => l !== line) : [...current, line];
+                          setNewProjectForm({
+                            ...newProjectForm,
+                            editorial_lines: next,
+                            editorial_mode: next.length === 0 ? "auto" : "manual",
+                          });
+                        }}
+                        className={`text-[11px] rounded-lg px-2 py-1.5 border transition-colors text-left ${
+                          selected
+                            ? "border-primary bg-primary/15 text-primary font-medium"
+                            : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        {line}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
               <div>
                 <Label>Tipo de Conteúdo *</Label>
                 <Select value={newProjectForm.content_type} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_type: v })}>
@@ -163,7 +204,7 @@ export function ProjectsTab({
                 <Select value={newProjectForm.content_style} onValueChange={(v) => setNewProjectForm({ ...newProjectForm, content_style: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione um estilo" /></SelectTrigger>
                   <SelectContent>
-                    {["Engraçado","Sério","Educativo","Inspiracional","Curioso","Polêmico","Irônico","Bastidores","Narrativo","Minimalista","UGC","Nostálgico","Empático","Técnico","Urgente","Interativo","Reflexivo","Aspiracional"].map(s => (
+                    {CONTENT_STYLES.map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                   </SelectContent>

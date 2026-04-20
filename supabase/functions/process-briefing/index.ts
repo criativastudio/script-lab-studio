@@ -67,6 +67,19 @@ serve(async (req) => {
       const nicho = br.niche || "não especificado";
       const contentType = answers.content_type || null;
       const contentStyle = answers.content_style || null;
+      const editorialLines: string[] = Array.isArray(answers.editorial_lines) ? answers.editorial_lines : [];
+      const editorialMode: string = answers.editorial_mode || (editorialLines.length === 0 ? "auto" : "manual");
+
+      const editorialBlock = `
+
+LINHA EDITORIAL (estratégia / objetivo do conteúdo):
+- Modo: ${editorialMode === "auto"
+        ? "AUTOMÁTICO — você decide a melhor combinação de linhas editoriais com base no briefing, persona e momento do funil."
+        : "MANUAL — use EXCLUSIVAMENTE as seguintes linhas editoriais: " + editorialLines.join(", ") + "."}
+- Distribua os ${videoCount} conteúdos equilibrando as linhas escolhidas (no modo manual) ou siga jornada Topo→Meio→Fundo proporcional (no modo automático).
+- Linha editorial = OBJETIVO estratégico. Estilo = FORMA de comunicação. Combine ambos sem que um anule o outro.
+- Foco obrigatório: retenção (primeiros 3s), conexão (identificação com a persona) e conversão (CTA orgânico).
+- Linguagem natural e específica do nicho — proibido genérico ou óbvio.`;
 
       const stylePersonalizationBlock = (contentType || contentStyle) ? `
 
@@ -80,7 +93,7 @@ REGRAS DE PERSONALIZAÇÃO POR ESTILO (OBRIGATÓRIAS):
 - Foque em retenção, conexão e clareza.
 - Ajuste o tom sem perder profissionalismo.
 - Estilo é uma camada de tom, não substitui fidelidade ao nicho nem a lógica Conecta-Entretém-Vende.
-${contentType === "Carrossel" ? "- FORMATO: Estruture cada script como SLIDES (S1 a S6) de carrossel para Instagram (headline curta + conector entre slides), em vez de roteiro de vídeo. Use os campos hook=S1, scene_structure=descrição dos slides, narration=texto de cada slide numerado, call_to_action=S6." : ""}` : "";
+${contentType === "Carrossel" ? "- FORMATO: Estruture cada script como SLIDES (S1 a S6) de carrossel para Instagram (headline curta + conector entre slides), em vez de roteiro de vídeo. Use os campos hook=S1, scene_structure=descrição dos slides, narration=texto de cada slide numerado, call_to_action=S6." : ""}${editorialBlock}` : editorialBlock;
 
       const systemPrompt = `Você é um estrategista de conteúdo audiovisual profissional de alto nível. A partir de respostas condensadas de um briefing estratégico com apenas 4 perguntas, você deve:
 
