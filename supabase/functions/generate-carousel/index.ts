@@ -7,6 +7,7 @@ import {
   logUsage,
   estimateTokens,
   validateInputLength,
+  requireAuth,
 } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
@@ -24,9 +25,13 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
 
-    const { user_id, business_name, mode, topic, idea_count, idea_title, content_style } = await req.json();
-    if (!user_id || !business_name || !mode) {
-      return new Response(JSON.stringify({ error: "user_id, business_name e mode são obrigatórios." }), {
+    const auth = await requireAuth(req, corsHeaders);
+    if (auth.response) return auth.response;
+    const user_id = auth.userId;
+
+    const { business_name, mode, topic, idea_count, idea_title, content_style } = await req.json();
+    if (!business_name || !mode) {
+      return new Response(JSON.stringify({ error: "business_name e mode são obrigatórios." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
