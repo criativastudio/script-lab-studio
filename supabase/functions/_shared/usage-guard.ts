@@ -1,4 +1,51 @@
 // Shared usage guard module for all AI edge functions
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/**
+ * Validates the JWT in the Authorization header and returns the authenticated user_id.
+ * NEVER trust a user_id supplied in the request body — always derive it from the JWT.
+ */
+export async function requireAuth(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): Promise<{ userId: string; response?: undefined } | { userId?: undefined; response: Response }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return {
+      response: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
+    };
+  }
+  try {
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error } = await supabaseAuth.auth.getClaims(token);
+    const userId = data?.claims?.sub as string | undefined;
+    if (error || !userId) {
+      return {
+        response: new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }),
+      };
+    }
+    return { userId };
+  } catch (_e) {
+    return {
+      response: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
+    };
+  }
+}
+
 
 export const PLAN_LIMITS: Record<string, {
   briefings: number;
