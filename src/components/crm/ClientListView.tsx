@@ -93,7 +93,7 @@ export function ClientListView({
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Adicionar Novo Cliente</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
             {generatedLink ? (
               <div className="space-y-4">
@@ -102,7 +102,7 @@ export function ClientListView({
                   <Input value={generatedLink} readOnly className="flex-1 text-xs" />
                   <Button size="sm" onClick={() => { navigator.clipboard.writeText(generatedLink); toast({ title: "Link copiado!" }); }}><Copy className="h-4 w-4" /></Button>
                 </div>
-                <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3", city: "", niche: "" }); }}>Fechar</Button>
+                <Button className="w-full" variant="outline" onClick={() => { setBriefingOpen(false); setGeneratedLink(null); setBriefingFormState({ business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "", project_name: "", video_quantity: "3", city: "", niche: "", content_type: "", content_style: "", editorial_lines: [], editorial_mode: "auto" }); }}>Fechar</Button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -113,8 +113,13 @@ export function ClientListView({
                   <div><Label>WhatsApp</Label><Input value={briefingForm.contact_whatsapp} onChange={(e) => setBriefingFormState({ ...briefingForm, contact_whatsapp: e.target.value })} /></div>
                 </div>
                 <div><Label>Nome do Projeto *</Label><Input value={briefingForm.project_name} onChange={(e) => setBriefingFormState({ ...briefingForm, project_name: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label>Cidade</Label><Input value={briefingForm.city} onChange={(e) => setBriefingFormState({ ...briefingForm, city: e.target.value })} placeholder="Ex: São Paulo" /></div>
+                  <div><Label>Nicho</Label><Input value={briefingForm.niche} onChange={(e) => setBriefingFormState({ ...briefingForm, niche: e.target.value })} placeholder="Ex: Advocacia" /></div>
+                </div>
+
                 <div>
-                  <Label>Quantidade de Vídeos</Label>
+                  <Label>Quantidade de Conteúdos</Label>
                   <Select value={briefingForm.video_quantity} onValueChange={(v) => {
                     if (maxVideos && parseInt(v) > maxVideos) {
                       setBriefingFormState({ ...briefingForm, video_quantity: String(maxVideos) });
@@ -125,15 +130,82 @@ export function ClientListView({
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["1","3","5","10","15"].map(v => <SelectItem key={v} value={v}>{v} vídeo{v !== "1" ? "s" : ""}</SelectItem>)}
+                      {VIDEO_QUANTITIES.map(v => <SelectItem key={v} value={v}>{v} conteúdo{v !== "1" ? "s" : ""}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Cidade</Label><Input value={briefingForm.city} onChange={(e) => setBriefingFormState({ ...briefingForm, city: e.target.value })} placeholder="Ex: São Paulo" /></div>
-                  <div><Label>Nicho</Label><Input value={briefingForm.niche} onChange={(e) => setBriefingFormState({ ...briefingForm, niche: e.target.value })} placeholder="Ex: Advocacia" /></div>
+
+                <div>
+                  <Label>Tipo de Conteúdo *</Label>
+                  <Select value={briefingForm.content_type} onValueChange={(v) => setBriefingFormState({ ...briefingForm, content_type: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Roteiro">Roteiro (vídeo)</SelectItem>
+                      <SelectItem value="Carrossel">Carrossel (Instagram)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button className="w-full" onClick={handleCreateClient} disabled={!briefingForm.business_name || !briefingForm.project_name}>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Linha Editorial</Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {briefingForm.editorial_mode === "auto" || !briefingForm.editorial_lines?.length
+                        ? "Automático (IA define)"
+                        : `${briefingForm.editorial_lines.length} selecionada${briefingForm.editorial_lines.length > 1 ? "s" : ""}`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBriefingFormState({ ...briefingForm, editorial_lines: [], editorial_mode: "auto" })}
+                    className={`w-full mb-2 flex items-center justify-center gap-1.5 text-xs rounded-lg px-3 py-2 border transition-colors ${
+                      briefingForm.editorial_mode === "auto" || !briefingForm.editorial_lines?.length
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <Sparkle className="h-3 w-3" /> Automático (IA define)
+                  </button>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                    {EDITORIAL_LINES.map((line) => {
+                      const selected = (briefingForm.editorial_lines || []).includes(line);
+                      return (
+                        <button
+                          key={line}
+                          type="button"
+                          onClick={() => {
+                            const current: string[] = briefingForm.editorial_lines || [];
+                            const next = selected ? current.filter((l) => l !== line) : [...current, line];
+                            setBriefingFormState({
+                              ...briefingForm,
+                              editorial_lines: next,
+                              editorial_mode: next.length === 0 ? "auto" : "manual",
+                            });
+                          }}
+                          className={`text-[11px] rounded-lg px-2 py-1.5 border transition-colors text-left ${
+                            selected
+                              ? "border-primary bg-primary/15 text-primary font-medium"
+                              : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {line}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Estilo de Conteúdo</Label>
+                  <Select value={briefingForm.content_style} onValueChange={(v) => setBriefingFormState({ ...briefingForm, content_style: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um estilo" /></SelectTrigger>
+                    <SelectContent>
+                      {CONTENT_STYLES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button className="w-full" onClick={handleCreateClient} disabled={!briefingForm.business_name || !briefingForm.project_name || !briefingForm.content_type}>
                   <LinkIcon className="h-4 w-4 mr-2" />Registrar e Gerar Link
                 </Button>
               </div>
