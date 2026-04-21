@@ -116,7 +116,7 @@ serve(async (req) => {
       const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration }));
       const cached = await checkCache(supabase, pHash);
       if (cached) {
-        if (user_id) await logUsage(supabase, user_id, "generate-script", "script", 0, pHash);
+        await logUsage(supabase, user_id, "generate-script", "script", 0, pHash);
         if (idea_id) await supabase.from("content_ideas").update({ status: "used" }).eq("id", idea_id);
         return new Response(JSON.stringify(cached), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -374,7 +374,7 @@ ${args.recording_style}`;
       }
 
       // Save to client_content_memory
-      if (structured && ctx?.id && user_id) {
+      if (structured && ctx?.id) {
         try {
           await supabase.from("client_content_memory").insert({
             user_id,
@@ -394,10 +394,8 @@ ${args.recording_style}`;
       const responseData = { script: scriptContent, title: ideaText, structured };
 
       // Log usage and cache
-      if (user_id) {
-        const tokens = estimateTokens(scriptContent);
-        await logUsage(supabase, user_id, "generate-script", "script", tokens, pHash);
-      }
+      const tokens = estimateTokens(scriptContent);
+      await logUsage(supabase, user_id, "generate-script", "script", tokens, pHash);
       await saveCache(supabase, pHash, "generate-script", responseData);
 
       return new Response(JSON.stringify(responseData), {
@@ -422,11 +420,9 @@ ${args.recording_style}`;
     }
 
     // Usage guards for legacy mode
-    if (user_id) {
-      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
-      if (guardResponse) return guardResponse;
-    }
+    const supabaseLegacy = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const guardResponseLegacy = await runGuards(supabaseLegacy, user_id, "script", corsHeaders);
+    if (guardResponseLegacy) return guardResponseLegacy;
 
     const systemPrompt = `Você é um roteirista profissional especializado em vídeos de marketing para redes sociais.
 Seu objetivo é criar roteiros envolventes, persuasivos e otimizados para a plataforma indicada.
