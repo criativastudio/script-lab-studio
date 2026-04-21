@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +16,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { context_id, topic, platform, audience, tone, content_type, user_id } = await req.json();
+    const auth = await requireAuth(req, corsHeaders);
+    if (auth.response) return auth.response;
+    const user_id = auth.userId;
+
+    const { context_id, topic, platform, audience, tone, content_type } = await req.json();
 
     if (!context_id || !topic) {
       return new Response(JSON.stringify({ error: "context_id and topic are required" }), {
@@ -40,16 +44,14 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Usage guards
-    if (user_id) {
-      const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
-      if (guardResponse) return guardResponse;
-    }
+    const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+    if (guardResponse) return guardResponse;
 
     // Cache check
     const pHash = await hashPrompt(JSON.stringify({ context_id, topic, platform, content_type }));
     const cached = await checkCache(supabase, pHash);
     if (cached) {
-      if (user_id) await logUsage(supabase, user_id, "generate-hooks", "script", 0, pHash);
+      await logUsage(supabase, user_id, "generate-hooks", "script", 0, pHash);
       return new Response(JSON.stringify({ success: true, hooks: cached.hooks || cached }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -211,10 +213,8 @@ Cada gancho deve usar um dos seguintes gatilhos psicológicos (use cada um exata
     const hooks = parsed.hooks || [];
 
     // Log usage and cache
-    if (user_id) {
-      const tokens = estimateTokens(JSON.stringify(parsed));
-      await logUsage(supabase, user_id, "generate-hooks", "script", tokens, pHash);
-    }
+    const tokens = estimateTokens(JSON.stringify(parsed));
+    await logUsage(supabase, user_id, "generate-hooks", "script", tokens, pHash);
     await saveCache(supabase, pHash, "generate-hooks", parsed);
 
     return new Response(JSON.stringify({ success: true, hooks }), {
