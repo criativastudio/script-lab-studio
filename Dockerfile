@@ -16,7 +16,7 @@ ENV VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Copiar código fonte
 COPY . .
