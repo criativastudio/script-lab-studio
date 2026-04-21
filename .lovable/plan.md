@@ -1,103 +1,79 @@
 
 
-# Kanban de Leads no Diagnóstico CRM
+# Adicionar preferências estratégicas no cadastro inicial de cliente (CRM)
 
-Transformar a tabela atual de `/admin/diagnostico` em um board kanban com 4 colunas e drag-and-drop, mantendo a tabela como visualização alternativa opcional.
+Replicar no diálogo **"Adicionar Novo Cliente"** (CRM) os campos estratégicos já existentes em **"Novo Projeto"**, garantindo consistência total e reaproveitando o módulo `editorial-lines.ts`. Tudo é salvo no primeiro `briefing_request` do cliente, em `form_answers`, exatamente como já é feito em projetos subsequentes.
 
-## 1. Schema (migration)
+## Campos novos no diálogo "Novo Cliente"
 
-Tabela `diagnostic_leads` hoje não tem campo de status do pipeline e não permite `UPDATE`. Mudanças:
+Adicionados após o bloco existente (após Cidade/Nicho), na mesma ordem visual de "Novo Projeto":
 
-```sql
--- Nova coluna para o estágio do kanban
-ALTER TABLE public.diagnostic_leads
-  ADD COLUMN pipeline_stage text NOT NULL DEFAULT 'cold';
--- Valores: 'cold' | 'warm' | 'hot' | 'contacted'
+| Campo | Tipo | Obrigatório | Comportamento |
+|---|---|---|---|
+| **Quantidade de Conteúdos** | Select com `VIDEO_QUANTITIES` | — | Substitui o select limitado atual `["1","3","5","10","15"]`. Mantém respeito ao `maxVideos` do plano. |
+| **Tipo de Conteúdo** | Select (`Roteiro` / `Carrossel`) | **Sim** | Mesma lista do `ProjectsTab`. Botão "Registrar" desabilitado se vazio. |
+| **Linha Editorial** | Multi-select com botão "Automático (IA define)" | — | Reutiliza `EDITORIAL_LINES` + lógica `editorial_mode: "auto" \| "manual"` (auto quando vazio). Visual idêntico ao de projetos. |
+| **Estilo de Conteúdo** | Select com `CONTENT_STYLES` | — | Mesma lista. |
 
--- Trigger updated_at opcional + nova coluna para registrar contato
-ALTER TABLE public.diagnostic_leads
-  ADD COLUMN contacted_at timestamptz,
-  ADD COLUMN stage_updated_at timestamptz DEFAULT now();
+Removido: nada. Os campos atuais (Empresa, Contato, Email, WhatsApp, Nome do Projeto, Cidade, Nicho) permanecem.
 
--- Política UPDATE para admins (hoje só existe SELECT/DELETE/INSERT)
-CREATE POLICY "Admins update diagnostic leads"
-  ON public.diagnostic_leads FOR UPDATE TO authenticated
-  USING (has_role(auth.uid(), 'admin'));
+## Estado e propagação (`src/pages/CRM.tsx`)
+
+Expandir `briefingForm`:
+
+```ts
+{
+  business_name, contact_name, contact_email, contact_whatsapp,
+  project_name, video_quantity, city, niche,
+  // novos:
+  content_type: "",
+  content_style: "",
+  editorial_lines: [] as string[],
+  editorial_mode: "auto" as "auto" | "manual",
+}
 ```
 
-Backfill: leads existentes ficam em `cold` por padrão.
+Em `handleCreateClient`, ao inserir o `briefing_request` inicial, popular `form_answers` com a mesma estrutura usada em `handleCreateProject`:
 
-## 2. Componente Kanban (`src/pages/AdminDiagnostic.tsx`)
-
-### Layout
-
-- Toggle no topo: **Kanban** (default) / **Tabela** (mantém UI atual intacta).
-- Filtros existentes (busca + tipo) continuam aplicáveis às duas views.
-- Stats cards permanecem inalterados.
-
-### Board
-
-Grid horizontal com 4 colunas (scroll vertical interno por coluna, scroll horizontal no mobile):
-
-```
-┌─ Lead Frio ──┐ ┌─ Lead Morno ─┐ ┌─ Lead Quente ┐ ┌─ Contatado ─┐
-│ contagem  N  │ │ contagem  N  │ │ contagem  N  │ │ contagem N  │
-│ ┌──────────┐ │ │              │ │              │ │             │
-│ │ card     │ │ │              │ │              │ │             │
-│ └──────────┘ │ │              │ │              │ │             │
-└──────────────┘ └──────────────┘ └──────────────┘ └─────────────┘
+```ts
+form_answers: {
+  content_type: briefingForm.content_type,
+  content_style: briefingForm.content_style,
+  editorial_lines: briefingForm.editorial_lines,
+  editorial_mode: briefingForm.editorial_mode,
+  funnel_stage: deriveFunnelStage(briefingForm.editorial_lines),
+}
 ```
 
-Cada coluna tem cor de borda/header semântica (cold=azul, warm=âmbar, hot=vermelho/peach, contacted=verde) usando tokens do design system (sem cores hardcoded fora do tema).
+Reset do form ao fechar o diálogo inclui os novos campos.
 
-### Card de lead (informações essenciais)
+## Componente `ClientListView.tsx`
 
-- Nome + badge do tipo de diagnóstico
-- Empresa · Cidade
-- Score (badge `X/10` colorida por faixa)
-- Data relativa ("há 2 dias")
-- Telefone/email com botões de ação rápida (📞 wa.me, ✉️ mailto)
-- Click no card → abre o `Dialog` existente com respostas + resultado IA
-- Botão `…` no canto: marcar como contatado, excluir
+- Importar `EDITORIAL_LINES`, `CONTENT_STYLES`, `VIDEO_QUANTITIES` de `@/lib/editorial-lines` e o ícone `Sparkle`.
+- Atualizar a interface `ClientListViewProps['briefingForm']` com os 4 novos campos.
+- Renderizar os blocos copiados do padrão visual de `ProjectsTab` (mesmas classes Tailwind, mesmo botão "Automático", mesma grade `grid-cols-2 md:grid-cols-3` para linhas editoriais).
+- Botão "Registrar e Gerar Link" exige agora `business_name`, `project_name` **e** `content_type`.
+- Adicionar `className="max-h-[90vh] overflow-y-auto"` ao `DialogContent` (igual ao Novo Projeto) para acomodar a altura extra.
 
-### Drag & drop
+## Reuso e consistência
 
-Usar `@dnd-kit/core` + `@dnd-kit/sortable` (leve, performático, acessível, já é o padrão moderno do ecossistema React). Adicionar como dependência.
-
-- `DndContext` envolvendo as 4 `SortableContext` (uma por coluna).
-- `onDragEnd`: optimistic update no estado local + `supabase.update({ pipeline_stage, stage_updated_at, contacted_at? })`.
-- Se mover para "Contatado", preencher `contacted_at = now()` automaticamente.
-- Em caso de erro do Supabase: rollback do estado + toast destrutivo.
-
-### Realtime
-
-Subscrever canal Supabase realtime na tabela `diagnostic_leads` (eventos INSERT/UPDATE/DELETE) → atualizar estado local automaticamente. Garante que se outro admin mover um card, o board sincroniza sem refresh.
-
-### Performance
-
-- Memoizar agrupamento por estágio com `useMemo`.
-- `pointer-events: none` durante drag para evitar reflows desnecessários.
-- Animações via CSS transforms (`@dnd-kit` já faz por padrão).
-
-## 3. Fallback Tabela
-
-Manter toda a UI atual de tabela acessível via toggle, com nova coluna **Estágio** (Select inline para mudar sem drag). Reaproveita o mesmo update.
+- **Zero duplicação**: usa o mesmo `editorial-lines.ts` (constantes + `deriveFunnelStage`).
+- **Mesma UX**: botão "Automático", contador de selecionadas, marcação visual idêntica.
+- **Mesma persistência**: `form_answers` no `briefing_requests`, lido pelas mesmas edge functions (`process-briefing`, `manual-generate`) — sem mudanças de backend.
+- **Sem migration**: `form_answers` é `jsonb` nullable que já recebe esses campos hoje em projetos subsequentes.
 
 ## Arquivos
 
 | Arquivo | Mudança |
 |---|---|
-| Migration SQL | Nova — adiciona `pipeline_stage`, `contacted_at`, `stage_updated_at`, política UPDATE para admins |
-| `src/pages/AdminDiagnostic.tsx` | Refatorar — adicionar toggle, board kanban, drag-and-drop, realtime sync; manter tabela como alternativa |
-| `src/components/admin/LeadKanbanCard.tsx` | **NOVO** — card visual do lead (memoizado) |
-| `src/components/admin/LeadKanbanColumn.tsx` | **NOVO** — coluna droppable com header colorido + contagem |
-| `package.json` | Adicionar `@dnd-kit/core` e `@dnd-kit/sortable` |
+| `src/components/crm/ClientListView.tsx` | Adicionar 4 campos no diálogo "Novo Cliente" + ampliar tipo `briefingForm` + scroll no DialogContent |
+| `src/pages/CRM.tsx` | Estender `briefingForm` state, popular `form_answers` em `handleCreateClient`, atualizar resets |
 
 ## O que NÃO muda
 
-- Diagnostic quiz público (`/diagnostico`) — captação continua igual
-- Edge function `generate-diagnostic` — não mexe
-- RLS de SELECT/INSERT/DELETE existentes
-- Stats, filtros, dialog de visualização detalhada do lead
-- Acesso continua restrito a `isAdmin`
+- Edge functions (`process-briefing`, `manual-generate`) — já leem esses campos de `form_answers`.
+- Schema do banco / RLS.
+- Diálogo de "Novo Projeto" em `ProjectsTab` — permanece idêntico.
+- Limites de plano (`usePlanLimits`) — `maxVideos` continua aplicado no select de quantidade.
+- Fluxo do briefing público (`/briefing/:token`) — o cliente final ainda preenche o briefing completo; esses campos atuam como pré-configuração estratégica do agente.
 
