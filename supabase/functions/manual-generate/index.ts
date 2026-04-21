@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,8 +12,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await requireAuth(req, corsHeaders);
+    if (auth.response) return auth.response;
+    const user_id = auth.userId;
+
     const {
-      objective, target_audience, platform, hook, duration, notes, video_quantity, user_id, business_name, niche,
+      objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche,
       customer_persona, tone_of_voice, market_positioning, communication_style,
       products_services, pain_points, differentiators, marketing_objectives,
       content_type, content_style, editorial_lines, editorial_mode,
@@ -38,21 +42,19 @@ serve(async (req) => {
     }
 
     // Usage guards
-    if (user_id) {
-      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const guardResponse = await runGuards(supabase, user_id, "briefing", corsHeaders);
-      if (guardResponse) return guardResponse;
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const guardResponse = await runGuards(supabase, user_id, "briefing", corsHeaders);
+    if (guardResponse) return guardResponse;
 
-      // Cache check
-      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
-      const pHash = await hashPrompt(promptContent);
-      const cached = await checkCache(supabase, pHash);
-      if (cached) {
-        await logUsage(supabase, user_id, "manual-generate", "briefing", 0, pHash);
-        return new Response(JSON.stringify(cached), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Cache check
+    const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
+    const pHash = await hashPrompt(promptContent);
+    const cached = await checkCache(supabase, pHash);
+    if (cached) {
+      await logUsage(supabase, user_id, "manual-generate", "briefing", 0, pHash);
+      return new Response(JSON.stringify(cached), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const qty = video_quantity || 1;
@@ -224,14 +226,11 @@ Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}
     const result = JSON.parse(toolCall.function.arguments);
 
     // Log usage and cache
-    if (user_id) {
-      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
-      const pHash = await hashPrompt(promptContent);
-      const tokens = estimateTokens(JSON.stringify(result));
-      await logUsage(supabase, user_id, "manual-generate", "briefing", tokens, pHash);
-      await saveCache(supabase, pHash, "manual-generate", result);
-    }
+    const promptContentLog = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
+    const pHashLog = await hashPrompt(promptContentLog);
+    const tokens = estimateTokens(JSON.stringify(result));
+    await logUsage(supabase, user_id, "manual-generate", "briefing", tokens, pHashLog);
+    await saveCache(supabase, pHashLog, "manual-generate", result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

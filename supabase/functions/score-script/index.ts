@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +11,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { script_text, context_id, platform, user_id } = await req.json();
+    const auth = await requireAuth(req, corsHeaders);
+    if (auth.response) return auth.response;
+    const user_id = auth.userId;
+
+    const { script_text, context_id, platform } = await req.json();
     if (!script_text) {
       return new Response(JSON.stringify({ error: "script_text is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -35,18 +39,16 @@ serve(async (req) => {
     );
 
     // Usage guards
-    if (user_id) {
-      const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
-      if (guardResponse) return guardResponse;
+    const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
+    if (guardResponse) return guardResponse;
 
-      const pHash = await hashPrompt(script_text + (context_id || "") + (platform || ""));
-      const cached = await checkCache(supabase, pHash);
-      if (cached) {
-        await logUsage(supabase, user_id, "score-script", "script", 0, pHash);
-        return new Response(JSON.stringify({ success: true, ...cached }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const pHash = await hashPrompt(script_text + (context_id || "") + (platform || ""));
+    const cached = await checkCache(supabase, pHash);
+    if (cached) {
+      await logUsage(supabase, user_id, "score-script", "script", 0, pHash);
+      return new Response(JSON.stringify({ success: true, ...cached }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     let contextBlock = "";
@@ -163,12 +165,9 @@ Seja criterioso mas justo. Roteiros excelentes ficam entre 75-90. Apenas roteiro
       : toolCall.function.arguments;
 
     // Log usage and cache
-    if (user_id) {
-      const pHash = await hashPrompt(script_text + (context_id || "") + (platform || ""));
-      const tokens = estimateTokens(JSON.stringify(args));
-      await logUsage(supabase, user_id, "score-script", "script", tokens, pHash);
-      await saveCache(supabase, pHash, "score-script", args);
-    }
+    const tokens = estimateTokens(JSON.stringify(args));
+    await logUsage(supabase, user_id, "score-script", "script", tokens, pHash);
+    await saveCache(supabase, pHash, "score-script", args);
 
     return new Response(JSON.stringify({ success: true, ...args }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,9 +13,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { context_id, project_id, count = 10, user_id } = await req.json();
-    if (!context_id || !user_id) {
-      return new Response(JSON.stringify({ error: "context_id and user_id are required" }), {
+    const auth = await requireAuth(req, corsHeaders);
+    if (auth.response) return auth.response;
+    const user_id = auth.userId;
+
+    const { context_id, project_id, count = 10 } = await req.json();
+    if (!context_id) {
+      return new Response(JSON.stringify({ error: "context_id is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
