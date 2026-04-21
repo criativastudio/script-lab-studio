@@ -499,13 +499,10 @@ Gere o roteiro completo e otimizado.`;
     const scriptContent = data.choices?.[0]?.message?.content || "";
 
     // Log usage for legacy mode
-    if (user_id) {
-      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const tokens = estimateTokens(scriptContent);
-      const pHash = await hashPrompt(JSON.stringify({ briefing, target_audience, platform, video_duration }));
-      await logUsage(supabase, user_id, "generate-script", "script", tokens, pHash);
-      await saveCache(supabase, pHash, "generate-script", { script: scriptContent });
-    }
+    const tokens = estimateTokens(scriptContent);
+    const pHash = await hashPrompt(JSON.stringify({ briefing, target_audience, platform, video_duration }));
+    await logUsage(supabaseLegacy, user_id, "generate-script", "script", tokens, pHash);
+    await saveCache(supabaseLegacy, pHash, "generate-script", { script: scriptContent });
 
     return new Response(JSON.stringify({ script: scriptContent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
