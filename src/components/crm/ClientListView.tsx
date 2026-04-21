@@ -9,8 +9,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
   Plus, Link as LinkIcon, Copy, Users, FileText, Video,
-  Search, X, Filter, Brain, Hash, Lightbulb,
+  Search, X, Filter, Brain, Hash, Lightbulb, Sparkle,
 } from "lucide-react";
+import { EDITORIAL_LINES, CONTENT_STYLES, VIDEO_QUANTITIES } from "@/lib/editorial-lines";
 
 interface BriefingRequest {
   id: string; business_name: string; contact_name: string | null; contact_email: string | null;
