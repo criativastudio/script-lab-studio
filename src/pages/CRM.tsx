@@ -71,9 +71,11 @@ const CRM = () => {
 
   // New client dialog
   const [briefingOpen, setBriefingOpen] = useState(false);
-  const [briefingForm, setBriefingFormState] = useState({
+  const [briefingForm, setBriefingFormState] = useState<any>({
     business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "",
     project_name: "", video_quantity: "3", city: "", niche: "",
+    content_type: "", content_style: "",
+    editorial_lines: [] as string[], editorial_mode: "auto" as "auto" | "manual",
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
