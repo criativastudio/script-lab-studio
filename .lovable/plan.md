@@ -1,79 +1,42 @@
 
 
-# Adicionar preferências estratégicas no cadastro inicial de cliente (CRM)
+# Kanban não aparece no site publicado
 
-Replicar no diálogo **"Adicionar Novo Cliente"** (CRM) os campos estratégicos já existentes em **"Novo Projeto"**, garantindo consistência total e reaproveitando o módulo `editorial-lines.ts`. Tudo é salvo no primeiro `briefing_request` do cliente, em `form_answers`, exatamente como já é feito em projetos subsequentes.
+## Diagnóstico
 
-## Campos novos no diálogo "Novo Cliente"
+Verifiquei o código e está tudo correto:
 
-Adicionados após o bloco existente (após Cidade/Nicho), na mesma ordem visual de "Novo Projeto":
+- `src/pages/AdminDiagnostic.tsx` já tem o kanban completo (4 colunas: Frio, Morno, Quente, Contatado) com `DndContext` e drag-and-drop
+- `@dnd-kit/core`, `@dnd-kit/sortable` e `@dnd-kit/utilities` estão no `package.json`
+- A tabela `diagnostic_leads` no banco já tem as colunas `pipeline_stage`, `contacted_at`, `stage_updated_at`
+- A rota `/admin/diagnostico` está registrada em `App.tsx` (admin-only)
+- No **preview** (que você está vendo agora) tudo funciona
 
-| Campo | Tipo | Obrigatório | Comportamento |
-|---|---|---|---|
-| **Quantidade de Conteúdos** | Select com `VIDEO_QUANTITIES` | — | Substitui o select limitado atual `["1","3","5","10","15"]`. Mantém respeito ao `maxVideos` do plano. |
-| **Tipo de Conteúdo** | Select (`Roteiro` / `Carrossel`) | **Sim** | Mesma lista do `ProjectsTab`. Botão "Registrar" desabilitado se vazio. |
-| **Linha Editorial** | Multi-select com botão "Automático (IA define)" | — | Reutiliza `EDITORIAL_LINES` + lógica `editorial_mode: "auto" \| "manual"` (auto quando vazio). Visual idêntico ao de projetos. |
-| **Estilo de Conteúdo** | Select com `CONTENT_STYLES` | — | Mesma lista. |
+## Causa
 
-Removido: nada. Os campos atuais (Empresa, Contato, Email, WhatsApp, Nome do Projeto, Cidade, Nicho) permanecem.
+No Lovable, **mudanças de frontend não vão automaticamente para o site publicado**. O preview (`id-preview--*.lovable.app`) sempre mostra a versão mais recente, mas o site publicado (`scriptlabstudio.lovable.app`) continua na versão da última publicação.
 
-## Estado e propagação (`src/pages/CRM.tsx`)
+O kanban, drag-and-drop, colunas coloridas, fix de segurança do realtime, novos campos do formulário CRM — tudo isso está **só no preview**. O site publicado ainda roda a versão anterior, que não tinha o kanban.
 
-Expandir `briefingForm`:
+Mudanças de **backend** (edge functions, migrations do banco) já foram para produção automaticamente — por isso a coluna `pipeline_stage` existe no banco. Só o **bundle JS do frontend** está defasado.
 
-```ts
-{
-  business_name, contact_name, contact_email, contact_whatsapp,
-  project_name, video_quantity, city, niche,
-  // novos:
-  content_type: "",
-  content_style: "",
-  editorial_lines: [] as string[],
-  editorial_mode: "auto" as "auto" | "manual",
-}
-```
+## Solução
 
-Em `handleCreateClient`, ao inserir o `briefing_request` inicial, popular `form_answers` com a mesma estrutura usada em `handleCreateProject`:
+Não há nada para corrigir no código. Você precisa **republicar o site**:
 
-```ts
-form_answers: {
-  content_type: briefingForm.content_type,
-  content_style: briefingForm.content_style,
-  editorial_lines: briefingForm.editorial_lines,
-  editorial_mode: briefingForm.editorial_mode,
-  funnel_stage: deriveFunnelStage(briefingForm.editorial_lines),
-}
-```
+1. Clique no botão **Publish** no canto superior direito do editor
+2. Clique em **Update** no diálogo que abrir
+3. Aguarde ~30s o build terminar
+4. Acesse `https://scriptlabstudio.lovable.app/admin/diagnostico` (precisa estar logado como admin) — o kanban aparecerá
 
-Reset do form ao fechar o diálogo inclui os novos campos.
+## Verificação após publicar
 
-## Componente `ClientListView.tsx`
+- A página deve abrir com o toggle Kanban / Tabela no topo
+- Por padrão a visão **Kanban** é exibida com 4 colunas coloridas
+- Leads existentes sem `pipeline_stage` definido entram automaticamente na coluna **Lead Frio** (default no banco é `cold`)
+- Arrastar um card entre colunas atualiza o estágio no Supabase em tempo real
 
-- Importar `EDITORIAL_LINES`, `CONTENT_STYLES`, `VIDEO_QUANTITIES` de `@/lib/editorial-lines` e o ícone `Sparkle`.
-- Atualizar a interface `ClientListViewProps['briefingForm']` com os 4 novos campos.
-- Renderizar os blocos copiados do padrão visual de `ProjectsTab` (mesmas classes Tailwind, mesmo botão "Automático", mesma grade `grid-cols-2 md:grid-cols-3` para linhas editoriais).
-- Botão "Registrar e Gerar Link" exige agora `business_name`, `project_name` **e** `content_type`.
-- Adicionar `className="max-h-[90vh] overflow-y-auto"` ao `DialogContent` (igual ao Novo Projeto) para acomodar a altura extra.
+## Se mesmo após publicar continuar não aparecendo
 
-## Reuso e consistência
-
-- **Zero duplicação**: usa o mesmo `editorial-lines.ts` (constantes + `deriveFunnelStage`).
-- **Mesma UX**: botão "Automático", contador de selecionadas, marcação visual idêntica.
-- **Mesma persistência**: `form_answers` no `briefing_requests`, lido pelas mesmas edge functions (`process-briefing`, `manual-generate`) — sem mudanças de backend.
-- **Sem migration**: `form_answers` é `jsonb` nullable que já recebe esses campos hoje em projetos subsequentes.
-
-## Arquivos
-
-| Arquivo | Mudança |
-|---|---|
-| `src/components/crm/ClientListView.tsx` | Adicionar 4 campos no diálogo "Novo Cliente" + ampliar tipo `briefingForm` + scroll no DialogContent |
-| `src/pages/CRM.tsx` | Estender `briefingForm` state, popular `form_answers` em `handleCreateClient`, atualizar resets |
-
-## O que NÃO muda
-
-- Edge functions (`process-briefing`, `manual-generate`) — já leem esses campos de `form_answers`.
-- Schema do banco / RLS.
-- Diálogo de "Novo Projeto" em `ProjectsTab` — permanece idêntico.
-- Limites de plano (`usePlanLimits`) — `maxVideos` continua aplicado no select de quantidade.
-- Fluxo do briefing público (`/briefing/:token`) — o cliente final ainda preenche o briefing completo; esses campos atuam como pré-configuração estratégica do agente.
+Apenas nesse caso, abra o site publicado, faça **Ctrl+Shift+R** (hard refresh) para invalidar o cache do navegador. Se ainda assim falhar, abra o console (F12) na aba publicada e me envie o erro — aí investigo.
 
