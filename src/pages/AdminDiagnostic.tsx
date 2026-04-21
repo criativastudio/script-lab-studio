@@ -96,27 +96,6 @@ export default function AdminDiagnostic() {
 
   useEffect(() => {
     fetchLeads();
-    const channel = supabase
-      .channel("diagnostic_leads_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "diagnostic_leads" },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            setLeads((prev) =>
-              prev.find((l) => l.id === (payload.new as any).id) ? prev : [payload.new as any, ...prev],
-            );
-          } else if (payload.eventType === "UPDATE") {
-            setLeads((prev) => prev.map((l) => (l.id === (payload.new as any).id ? (payload.new as any) : l)));
-          } else if (payload.eventType === "DELETE") {
-            setLeads((prev) => prev.filter((l) => l.id !== (payload.old as any).id));
-          }
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const handleDelete = async (id: string) => {
