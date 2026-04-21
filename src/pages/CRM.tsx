@@ -71,9 +71,11 @@ const CRM = () => {
 
   // New client dialog
   const [briefingOpen, setBriefingOpen] = useState(false);
-  const [briefingForm, setBriefingFormState] = useState({
+  const [briefingForm, setBriefingFormState] = useState<any>({
     business_name: "", contact_name: "", contact_email: "", contact_whatsapp: "",
     project_name: "", video_quantity: "3", city: "", niche: "",
+    content_type: "", content_style: "",
+    editorial_lines: [] as string[], editorial_mode: "auto" as "auto" | "manual",
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
@@ -325,7 +327,7 @@ const CRM = () => {
   };
 
   const handleCreateClient = async () => {
-    if (!user || !briefingForm.business_name || !briefingForm.project_name) return;
+    if (!user || !briefingForm.business_name || !briefingForm.project_name || !briefingForm.content_type) return;
 
     // Check client limit
     const clientCount = await getClientCount();
@@ -344,12 +346,23 @@ const CRM = () => {
       return;
     }
 
+    const { deriveFunnelStage } = await import("@/lib/editorial-lines");
+    const editorialLines: string[] = briefingForm.editorial_lines || [];
+    const editorialMode = editorialLines.length === 0 ? "auto" : (briefingForm.editorial_mode || "manual");
+
     const { data, error } = await supabase.from("briefing_requests").insert({
       user_id: user.id, business_name: briefingForm.business_name,
       contact_name: briefingForm.contact_name || null, contact_email: briefingForm.contact_email || null,
       contact_whatsapp: briefingForm.contact_whatsapp || null, project_name: briefingForm.project_name,
       video_quantity: parseInt(briefingForm.video_quantity),
       city: briefingForm.city || null, niche: briefingForm.niche || null,
+      form_answers: {
+        content_type: briefingForm.content_type,
+        content_style: briefingForm.content_style,
+        editorial_lines: editorialLines,
+        editorial_mode: editorialMode,
+        funnel_stage: deriveFunnelStage(editorialLines),
+      },
     } as any).select("token").single();
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     const link = `${window.location.origin}/briefing/${data.token}`;
