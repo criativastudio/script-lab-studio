@@ -60,6 +60,8 @@ interface ClientListViewProps {
   briefingForm: {
     business_name: string; contact_name: string; contact_email: string; contact_whatsapp: string;
     project_name: string; video_quantity: string; city: string; niche: string;
+    content_type: string; content_style: string;
+    editorial_lines: string[]; editorial_mode: "auto" | "manual";
   };
   setBriefingFormState: (v: any) => void;
   generatedLink: string | null;
