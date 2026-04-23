@@ -1,15 +1,21 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   ArrowLeft, Trash2, Download, Power, Users, Mail, Phone,
-  Brain, Hash, Lightbulb, Calendar, LayoutList,
+  Brain, Hash, Lightbulb, Calendar, LayoutList, Pencil,
 } from "lucide-react";
 import { StepIndicator } from "./StepIndicator";
 
@@ -35,6 +41,7 @@ interface ClientDetailViewProps {
   isGroupInactive: (g: ClientGroup) => boolean;
   handleToggleActive: (g: ClientGroup) => void;
   handleDeleteClient: (g: ClientGroup) => void;
+  handleRenameClient: (g: ClientGroup, newName: string) => void | Promise<void>;
   downloadAllPdf: () => void;
   contentIdeasCount: number;
   carouselsCount: number;
@@ -50,10 +57,22 @@ interface ClientDetailViewProps {
 
 export function ClientDetailView({
   selectedGroup, activeTab, setActiveTab, onBack,
-  isGroupInactive, handleToggleActive, handleDeleteClient, downloadAllPdf,
+  isGroupInactive, handleToggleActive, handleDeleteClient, handleRenameClient, downloadAllPdf,
   contentIdeasCount, carouselsCount, strategicContextCompleted, children,
 }: ClientDetailViewProps) {
   const first = selectedGroup.projects[0];
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [newName, setNewName] = useState(selectedGroup.business_name);
+
+  const openRename = () => {
+    setNewName(selectedGroup.business_name);
+    setRenameOpen(true);
+  };
+
+  const submitRename = async () => {
+    await handleRenameClient(selectedGroup, newName);
+    setRenameOpen(false);
+  };
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -86,6 +105,9 @@ export function ClientDetailView({
               {first.contact_whatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-primary/60" />{first.contact_whatsapp}</span>}
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={openRename}>
+                <Pencil className="h-4 w-4 mr-1.5" />Renomear
+              </Button>
               <Button variant="outline" size="sm" onClick={downloadAllPdf}>
                 <Download className="h-4 w-4 mr-1.5" />PDF
               </Button>
@@ -151,6 +173,41 @@ export function ClientDetailView({
         <TabsContent value="calendar" className="space-y-4 mt-4">{children.calendarTab}</TabsContent>
         <TabsContent value="carousels" className="space-y-4 mt-4">{children.carouselsTab}</TabsContent>
       </Tabs>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear empresa</DialogTitle>
+            <DialogDescription>
+              Atualiza o nome em todos os projetos, contexto estratégico e relatórios deste cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Nome atual</Label>
+              <p className="text-sm font-medium">{selectedGroup.business_name}</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="new-business-name">Novo nome</Label>
+              <Input
+                id="new-business-name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                maxLength={120}
+                onKeyDown={(e) => { if (e.key === "Enter") submitRename(); }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameOpen(false)}>Cancelar</Button>
+            <Button onClick={submitRename} disabled={!newName.trim() || newName.trim() === selectedGroup.business_name}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
