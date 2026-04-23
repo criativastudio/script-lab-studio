@@ -74,6 +74,7 @@ interface ClientListViewProps {
   onRetryPending?: () => void;
   retryingPending?: boolean;
   pendingCount?: number;
+  onToggleActive?: (group: ClientGroup) => void;
 }
 
 export function ClientListView({
