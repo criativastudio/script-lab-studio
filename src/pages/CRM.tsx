@@ -1030,7 +1030,7 @@ const CRM = () => {
             projectsTab: (
               <ProjectsTab
                 projects={selectedGroup.projects}
-                businessName={selectedGroup.projects[0].business_name}
+                businessName={selectedGroup.projects[0]?.business_name || selectedGroup.business_name}
                 openProjects={openProjects}
                 toggleProject={toggleProject}
                 projectBriefings={projectBriefings}
@@ -1057,6 +1057,26 @@ const CRM = () => {
                 toast={toast}
                 maxVideos={limits.scriptsPerBriefing}
                 onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
+                hasStrategicContext={!!strategicContext}
+                onGenerateNewLink={() => {
+                  setBriefingFormState({
+                    business_name: selectedGroup.business_name,
+                    contact_name: selectedGroup.contact_name || "",
+                    contact_email: selectedGroup.contact_email || "",
+                    contact_whatsapp: selectedGroup.contact_whatsapp || "",
+                    project_name: "",
+                    video_quantity: "3",
+                    city: selectedGroup.projects[0]?.city || "",
+                    niche: selectedGroup.projects[0]?.niche || strategicContext?.business_niche || "",
+                    content_type: "",
+                    content_style: "",
+                    editorial_lines: [],
+                    editorial_mode: "auto",
+                  });
+                  setSelectedBusinessName(null);
+                  setOpenProjects(new Set());
+                  setBriefingOpen(true);
+                }}
               />
             ),
             ideasTab: (
