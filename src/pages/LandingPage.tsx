@@ -251,7 +251,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto max-w-3xl text-base md:text-lg font-light text-muted-foreground mb-12"
           >
-            Crie conteúdos de forma rápida e pronto para gravação, alinhados ao posicionamento do seu negócio.
+            Transforme ideias em roteiros prontos para gravar, com estratégia e foco em resultado..
           </motion.p>
 
           {/* CTA */}
