@@ -143,6 +143,9 @@ const CRM = () => {
   // Client carousels
   const [clientCarousels, setClientCarousels] = useState<Script[]>([]);
 
+  // Pending briefings retry state
+  const [retryingPending, setRetryingPending] = useState(false);
+
   // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
     const map = new Map<string, BriefingRequest[]>();
@@ -931,6 +934,33 @@ const CRM = () => {
     setActiveTab(action);
   };
 
+  // Pending briefings (submitted/processing without persona) — count and retry handler
+  const pendingCount = useMemo(
+    () => clients.filter(c => (c.status === "submitted" || c.status === "processing") && !c.persona && c.form_answers).length,
+    [clients]
+  );
+
+  const handleRetryPending = async () => {
+    setRetryingPending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("retry-pending-briefings");
+      if (error) throw error;
+      const n = data?.reprocessed ?? 0;
+      toast({
+        title: "Reprocessamento iniciado",
+        description: n === 0
+          ? "Nenhum briefing pendente há mais de 5 minutos."
+          : `${n} briefing(s) enviados para reprocessamento. Atualize em alguns instantes.`,
+      });
+      // Refresh after a short delay so the user sees updated statuses
+      setTimeout(() => fetchClients(), 3000);
+    } catch (e: any) {
+      toast({ title: "Erro ao reprocessar", description: e?.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setRetryingPending(false);
+    }
+  };
+
   // ── Detail View ──────────────────────────────────────────────
   if (selectedGroup) {
     return (
@@ -1158,6 +1188,9 @@ const CRM = () => {
         onQuickAction={handleQuickAction}
         maxVideos={limits.scriptsPerBriefing}
         onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
+        onRetryPending={handleRetryPending}
+        retryingPending={retryingPending}
+        pendingCount={pendingCount}
       />
 
       {/* Plan Limit Modal */}
