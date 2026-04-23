@@ -106,8 +106,8 @@ export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
             <p className="text-muted-foreground text-base md:text-lg font-light mb-4 max-w-2xl mx-auto">
               Diga à IA o seu segmento e receba roteiros sob medida.
             </p>
-            <p className="text-xs font-light text-muted-foreground mb-12">
-              Descreva seu nicho e a IA gera o roteiro ideal.
+            <p className="text-sm font-light text-muted-foreground mb-12">
+              Descreva seu nicho e receba um roteiro estratégico pronto para gravar.
             </p>
           </motion.div>
 
