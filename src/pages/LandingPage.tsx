@@ -239,7 +239,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-2xl sm:text-4xl md:text-4xl lg:text-9xl font-semibold leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
+            className="font-display text-2xl sm:text-4xl md:text-4xl lg:text-6xl font-semibold leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
             Roteiros estratégicos que geram resultado, <span className="text-gradient-primary"> em Segundos</span>
           </motion.h1>
@@ -283,7 +283,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-base font-light text-muted-foreground mt-6"
+            className="text-lg font-light text-muted-foreground mt-6"
           >
             Cadastro rápido • Setup em 30 segundos
           </motion.p>
