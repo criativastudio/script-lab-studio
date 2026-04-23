@@ -39,7 +39,7 @@ export default function SocialProof() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight mb-6">
+          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6">
             Quem usa, <span className="text-gradient-primary">recomenda</span>
           </h2>
           <p className="text-muted-foreground text-base md:text-lg font-light max-w-1xl mx-auto">
