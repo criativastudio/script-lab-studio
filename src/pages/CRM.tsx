@@ -53,6 +53,7 @@ interface ClientGroup {
   contact_email: string | null;
   contact_whatsapp: string | null;
   projects: BriefingRequest[];
+  is_active: boolean;
 }
 
 const briefingStatusLabels: Record<string, string> = { pending: "Pendente", submitted: "Enviado", processing: "Processando", completed: "Concluído" };
