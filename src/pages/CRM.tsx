@@ -956,6 +956,10 @@ const CRM = () => {
 
   const downloadAllPdf = () => {
     if (!selectedGroup) return;
+    if (selectedGroup.projects.length === 0) {
+      toast({ title: "Nada para exportar", description: "Este cliente ainda não tem projetos." });
+      return;
+    }
     const allBriefings = selectedGroup.projects.flatMap(p => projectBriefings[p.id] || []);
     const allScripts = selectedGroup.projects.flatMap(p => projectScripts[p.id] || []);
     buildCrmPdf(selectedGroup.projects[0], allBriefings[0], allScripts);
