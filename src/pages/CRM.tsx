@@ -234,11 +234,11 @@ const CRM = () => {
         .order("created_at", { ascending: false }),
       supabase
         .from("client_strategic_contexts")
-        .select("business_name")
+        .select("business_name, is_active")
         .eq("user_id", user.id),
     ]);
     setClients((briefings as BriefingRequest[]) || []);
-    setAllContexts((contexts as { business_name: string }[]) || []);
+    setAllContexts((contexts as { business_name: string; is_active: boolean }[]) || []);
   };
 
   const fetchProjectDetails = async (project: BriefingRequest) => {
