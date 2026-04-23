@@ -100,7 +100,7 @@ export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light mb-6 tracking-tight">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-6 tracking-tight">
               Qual nicho você quer <span className="text-gradient-primary">transformar?</span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg font-light mb-4 max-w-2xl mx-auto">
