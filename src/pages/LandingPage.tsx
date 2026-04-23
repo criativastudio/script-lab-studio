@@ -239,7 +239,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-2x2 sm:text-4xl md:text-4xl lg:text-6xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
+            className="font-display text-2x1 sm:text-4xl md:text-4xl lg:text-6xl font-light leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
             Roteiros estratégicos que geram resultado, <span className="text-gradient-primary"> em Segundos</span>
           </motion.h1>
