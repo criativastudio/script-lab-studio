@@ -106,9 +106,6 @@ export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
             <p className="text-muted-foreground text-base md:text-lg font-light mb-4 max-w-2xl mx-auto">
               Transforme suas ideias em conteúdo estratégico que atrai, engaja e gera resultados.
             </p>
-            <p className="text-sm font-light text-muted-foreground mb-12">
-              Informe seu segmento e receba roteiros sob medida, prontos para gravar.
-            </p>
           </motion.div>
 
           <motion.div
