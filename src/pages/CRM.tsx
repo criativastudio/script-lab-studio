@@ -67,7 +67,7 @@ const CRM = () => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
-  const [allContexts, setAllContexts] = useState<{ business_name: string }[]>([]);
+  const [allContexts, setAllContexts] = useState<{ business_name: string; is_active: boolean }[]>([]);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string | null>(null);
 
   // New client dialog
