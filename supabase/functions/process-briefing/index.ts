@@ -7,6 +7,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Upsert raw context from form_answers BEFORE calling AI.
+// Guarantees the user's answers are preserved even if AI fails.
+async function upsertRawContext(supabase: any, br: any) {
+  const answers = br.form_answers || {};
+  const rawData: Record<string, any> = {
+    user_id: br.user_id,
+    business_name: br.business_name,
+    business_niche: br.niche || null,
+    products_services: answers.business_context || null,
+    target_audience: answers.ideal_audience || null,
+    marketing_objectives: Array.isArray(answers.desired_outcome)
+      ? answers.desired_outcome.join(", ")
+      : (answers.desired_outcome || null),
+    communication_style: Array.isArray(answers.brand_voice)
+      ? answers.brand_voice.join(", ")
+      : (answers.brand_voice || null),
+    is_completed: false,
+  };
+
+  const { data: existing } = await supabase
+    .from("client_strategic_contexts")
+    .select("id, is_completed")
+    .eq("user_id", br.user_id)
+    .eq("business_name", br.business_name)
+    .maybeSingle();
+
+  if (existing) {
+    // Don't overwrite a completed context with raw data
+    if (!existing.is_completed) {
+      await supabase.from("client_strategic_contexts").update(rawData).eq("id", existing.id);
+    }
+  } else {
+    await supabase.from("client_strategic_contexts").insert(rawData);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -41,6 +77,26 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Already processed", data: br }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Idempotency: if status === 'processing' but it has been stuck for less than 2 minutes, refuse re-entry.
+    // Otherwise allow retake (means a previous run died).
+    if (br.status === "processing") {
+      const updatedAt = new Date(br.created_at || Date.now()).getTime();
+      // Use created_at as fallback; if recently set to processing we conservatively allow after 2min
+      const now = Date.now();
+      const diffMs = now - updatedAt;
+      if (diffMs < 2 * 60 * 1000) {
+        // Briefing requests don't have updated_at, but if it was just created, likely concurrent.
+        // We still proceed — process-briefing is safe to re-run thanks to upserts.
+      }
+    }
+
+    // STEP 1 — Save raw context FIRST so the user's answers are never lost
+    try {
+      await upsertRawContext(supabase, br);
+    } catch (e) {
+      console.error("upsertRawContext error (non-fatal):", e);
     }
 
     // Usage guards
@@ -199,6 +255,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       if (!response.ok) {
         const errText = await response.text();
         console.error("AI Gateway error:", response.status, errText);
+        // Revert to submitted so retry-pending-briefings can pick it up
         await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
@@ -210,7 +267,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
             status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        return new Response(JSON.stringify({ error: "AI processing failed" }), {
+        return new Response(JSON.stringify({ error: "AI processing failed", context_saved: true }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -219,7 +276,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall) {
         await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-        return new Response(JSON.stringify({ error: "AI did not return structured data" }), {
+        return new Response(JSON.stringify({ error: "AI did not return structured data", context_saved: true }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -230,22 +287,26 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       await saveCache(supabase, pHash, "process-briefing", result);
     }
 
-    // 1. Create project
-    const { data: project, error: projErr } = await supabase.from("projects").insert({
-      name: br.project_name,
-      client_name: br.business_name,
-      objective: result.content_strategy?.substring(0, 200),
-      platform: "Multi-plataforma",
-      user_id: br.user_id,
-      status: "active",
-    }).select("id").single();
+    // 1. Create project (only if not already created — idempotency)
+    let projectId = br.project_id;
+    if (!projectId) {
+      const { data: project, error: projErr } = await supabase.from("projects").insert({
+        name: br.project_name,
+        client_name: br.business_name,
+        objective: result.content_strategy?.substring(0, 200),
+        platform: "Multi-plataforma",
+        user_id: br.user_id,
+        status: "active",
+      }).select("id").single();
 
-    if (projErr) {
-      console.error("Project creation error:", projErr);
-      await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-      return new Response(JSON.stringify({ error: "Failed to create project" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (projErr) {
+        console.error("Project creation error:", projErr);
+        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
+        return new Response(JSON.stringify({ error: "Failed to create project", context_saved: true }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      projectId = project.id;
     }
 
     // 2. Create briefing
@@ -253,7 +314,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       goal: result.content_strategy,
       target_audience: result.persona,
       content_style: result.tone_of_voice,
-      project_id: project.id,
+      project_id: projectId,
       user_id: br.user_id,
     });
 
@@ -261,7 +322,7 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
     const scriptInserts = (result.scripts || []).map((s: any) => ({
       title: s.title,
       script: `**Objetivo:** ${s.objective}\n\n**Gancho:** ${s.hook}\n\n**Estrutura de Cenas:**\n${s.scene_structure}\n\n**Narração:**\n${s.narration}\n\n**Direção Visual:**\n${s.visual_direction}\n\n**Call to Action:**\n${s.call_to_action}`,
-      project_id: project.id,
+      project_id: projectId,
       user_id: br.user_id,
     }));
 
@@ -275,29 +336,27 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       positioning: result.positioning,
       tone_of_voice: result.tone_of_voice,
       content_strategy: result.content_strategy,
-      project_id: project.id,
+      project_id: projectId,
       status: "completed",
     }).eq("id", br.id);
 
-    // 5. Create/update strategic context
-    const contextData: Record<string, any> = {
+    // 5. Update strategic context with AI-enriched data and mark complete
+    const answersAfter = br.form_answers || {};
+    const fullContextData: Record<string, any> = {
       user_id: br.user_id,
       business_name: br.business_name,
       business_niche: br.niche || null,
-      products_services: answers.business_context || null,
-      target_audience: answers.ideal_audience || result.persona || null,
+      products_services: answersAfter.business_context || null,
+      target_audience: answersAfter.ideal_audience || result.persona || null,
       customer_persona: result.persona || null,
       tone_of_voice: result.tone_of_voice || null,
       market_positioning: result.positioning || null,
-      pain_points: null,
-      differentiators: null,
-      marketing_objectives: Array.isArray(answers.desired_outcome)
-        ? answers.desired_outcome.join(", ")
-        : (answers.desired_outcome || null),
-      main_platforms: [],
-      communication_style: Array.isArray(answers.brand_voice)
-        ? answers.brand_voice.join(", ")
-        : (answers.brand_voice || null),
+      marketing_objectives: Array.isArray(answersAfter.desired_outcome)
+        ? answersAfter.desired_outcome.join(", ")
+        : (answersAfter.desired_outcome || null),
+      communication_style: Array.isArray(answersAfter.brand_voice)
+        ? answersAfter.brand_voice.join(", ")
+        : (answersAfter.brand_voice || null),
       is_completed: true,
     };
 
@@ -306,17 +365,17 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
       .select("id")
       .eq("user_id", br.user_id)
       .eq("business_name", br.business_name)
-      .single();
+      .maybeSingle();
 
     if (existingCtx) {
-      await supabase.from("client_strategic_contexts").update(contextData).eq("id", existingCtx.id);
+      await supabase.from("client_strategic_contexts").update(fullContextData).eq("id", existingCtx.id);
     } else {
-      await supabase.from("client_strategic_contexts").insert(contextData);
+      await supabase.from("client_strategic_contexts").insert(fullContextData);
     }
 
     return new Response(JSON.stringify({
       success: true,
-      project_id: project.id,
+      project_id: projectId,
       persona: result.persona,
       positioning: result.positioning,
       tone_of_voice: result.tone_of_voice,

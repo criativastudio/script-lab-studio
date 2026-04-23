@@ -197,6 +197,7 @@ const ClientBriefingForm = () => {
     if (!briefing || !token) return;
     setSubmitting(true);
 
+    // 1. Persist raw answers FIRST — guarantees nothing is lost even if everything else fails
     const { error: updateErr } = await supabase
       .from("briefing_requests")
       .update({ form_answers: answers, status: "submitted" })
@@ -208,14 +209,14 @@ const ClientBriefingForm = () => {
       return;
     }
 
-    const { error: fnErr } = await supabase.functions.invoke("process-briefing", {
-      body: { token },
-    });
+    // 2. Fire-and-forget the AI processing — don't block the UI on a 30-60s call.
+    // The edge function continues server-side even if the client closes the tab.
+    // The retry-pending-briefings function picks up anything that falls through.
+    supabase.functions
+      .invoke("process-briefing", { body: { token } })
+      .catch((e) => console.error("Process error (background):", e));
 
-    if (fnErr) {
-      console.error("Process error:", fnErr);
-    }
-
+    // 3. Show success immediately
     setSubmitted(true);
     setSubmitting(false);
   };
