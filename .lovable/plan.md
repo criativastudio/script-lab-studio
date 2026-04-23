@@ -1,65 +1,85 @@
 
 
-# Garantir entrega do contexto estratégico em escala
+# Controle manual de status + Cliente sem projetos sempre acessível
 
-## Diagnóstico
+## Diagnóstico atual
 
-Investiguei o fluxo completo (`ClientBriefingForm.tsx` → `process-briefing/index.ts`) e o banco. Encontrei **4 falhas reais** que fazem o contexto se perder silenciosamente quando vários clientes preenchem o formulário ao mesmo tempo:
+1. **Cliente "fica inativo" sem projetos**: hoje `isGroupInactive` checa se `group.projects.every(p => p.is_active === false)`. Quando todos os projetos são apagados, o grupo só sobrevive porque o `client_strategic_contexts` (orphan context) é injetado em `clientGroups` — mas como `projects.length === 0`, o filtro `matchesActive` em `filteredGroups` (`group.projects.some(p => p.is_active !== false)`) retorna **false**, escondendo o cliente a menos que "Mostrar inativos" esteja ligado.
 
-### Falha 1 — Erro silencioso no front
-Em `ClientBriefingForm.tsx` (linhas 211–220), quando `process-briefing` falha, o código apenas faz `console.error` e mostra **"Obrigado!"** ao cliente. O briefing fica em `status: 'submitted'` para sempre, sem contexto, sem projeto, sem scripts. Ex.: registro `Criativa Studio` (23/04) está exatamente nesse estado.
+2. **Status atrelado a projetos**: `handleToggleActive` atualiza `is_active` em todos os `briefing_requests` do grupo. Sem projetos, não há onde gravar status.
 
-### Falha 2 — Função não dispara reprocessamento
-Se o cliente recarrega a página depois de submeter, `setSubmitted(true)` impede nova tentativa. Não existe rota de retry.
+3. **Cliente sem projetos abre normalmente** já (via `selectedGroup`), mas o `ProjectsTab` mostra empty state genérico. Falta atalho explícito para "gerar novo link" ou "recriar projeto com último contexto".
 
-### Falha 3 — Timeout do AI Gateway derruba a request
-`process-briefing` chama o AI Gateway de forma síncrona (pode levar 30–60s). Se o cliente fechar a aba ou a conexão cair, a Edge Function continua, mas o front nunca recebe a resposta — e como o cache só é salvo no caminho de sucesso após o AI responder, em escala o usuário fica sem feedback.
+## Solução
 
-### Falha 4 — Falta criação parcial em caso de falha do AI
-Se a chamada ao AI falhar (429/402/500), o código reverte status para `submitted` mas **não cria** `client_strategic_contexts` mínimo com as respostas brutas. O contexto preenchido pelo cliente literalmente se perde.
+### A. Persistir status no `client_strategic_contexts` (sem migration de schema)
 
-## Correções
+Adicionar coluna `is_active boolean DEFAULT true` em `client_strategic_contexts` via migration. Esta tabela é a única que **sempre existe** para qualquer cliente (criada já no `process-briefing` antes mesmo da IA rodar). Vira a fonte de verdade do status.
 
-### A. `supabase/functions/process-briefing/index.ts`
+| Estado | Onde lê | Onde grava |
+|---|---|---|
+| Status manual ATIVO/INATIVO | `client_strategic_contexts.is_active` | mesmo |
+| `briefing_requests.is_active` | mantido para retrocompat (não mais usado para status do cliente) | continua existindo |
 
-1. **Salvar contexto bruto ANTES de chamar IA**: assim que a função recebe o token e valida, fazer `upsert` em `client_strategic_contexts` com os dados brutos de `form_answers` (business_context → products_services, ideal_audience → target_audience, desired_outcome → marketing_objectives, brand_voice → communication_style). `is_completed: false`. Isso garante que **mesmo se o AI falhar**, o contexto preenchido pelo cliente está salvo.
+### B. Mudanças em `src/pages/CRM.tsx`
 
-2. **Atualizar contexto APÓS sucesso do AI** com persona, positioning, tone_of_voice e marcar `is_completed: true` (o upsert atual no fim da função vira um `update`).
+1. **Tipo `ClientGroup`**: adicionar campo `is_active: boolean` derivado do contexto.
+2. **`fetchClients`**: trazer `is_active` no SELECT de `client_strategic_contexts` (já busca a tabela).
+3. **`clientGroups` useMemo**: para cada grupo, casar com `allContexts` por `business_name` e setar `is_active` (default `true` se não houver contexto).
+4. **`isGroupInactive`**: simplificar para `group.is_active === false`.
+5. **`filteredGroups`**: trocar `matchesActive` para `showInactive || group.is_active !== false` — **sem depender de projetos**.
+6. **`handleToggleActive`**: gravar em `client_strategic_contexts.is_active` via update por `user_id + business_name`. Se o contexto ainda não existe (cliente criado direto pelo "Adicionar Novo Cliente" sem briefing), fazer upsert com defaults.
+7. **Remover** o `setSelectedBusinessName(null)` ao desativar — cliente inativo continua acessível.
 
-3. **Idempotência**: detectar `status === 'processing'` no início e permitir retomada se o registro estiver "preso" há mais de 2 minutos (evita travar se o usuário reenviar).
+### C. Empty state do `ProjectsTab` (cliente sem projetos)
 
-### B. `src/pages/ClientBriefingForm.tsx`
+Substituir o empty card atual por dois CTAs lado a lado:
 
-1. **Tratar erro de `process-briefing` como falha visível**: se `fnErr` ocorrer, mostrar mensagem "Recebemos seu briefing, mas a análise estratégica está em fila. Você pode fechar esta página." em vez de "Obrigado" enganoso. Manter `status: 'submitted'` (o reprocessador pega depois).
+```
+┌──────────────────────────────────────────────────────┐
+│  Este cliente ainda não tem projetos                 │
+│                                                      │
+│  ┌────────────────────┐   ┌────────────────────┐     │
+│  │ 🔗 Gerar novo link │   │ ♻ Recriar projeto  │     │
+│  │   de formulário    │   │ com último contexto│     │
+│  └────────────────────┘   └────────────────────┘     │
+└──────────────────────────────────────────────────────┘
+```
 
-2. **Aumentar timeout / não bloquear UI**: chamar `process-briefing` em modo "fire-and-forget" (sem `await`) e mostrar tela de sucesso imediatamente. A função roda no servidor independentemente do cliente ter fechado a aba.
+- **"Gerar novo link"**: abre o mesmo `Dialog` do "Adicionar Novo Cliente" (em CRM.tsx) já com `business_name` pré-preenchido e travado. Reaproveita `handleCreateClient`.
+- **"Recriar projeto com último contexto"**: só aparece se `strategicContext` existir. Abre o dialog "Novo Projeto" existente; ao submeter, `handleCreateProject` já reaproveita o `original.form_answers`. Quando não há `original` (sem nenhum briefing antigo), monta `mergedAnswers` a partir do `strategicContext` (`products_services`, `target_audience`, `communication_style`, etc.).
 
-3. **Permitir reabrir formulário enviado se status ≠ completed**: se o cliente abrir o link e o status for `submitted` mas faltam campos (`persona is null`), oferecer botão "Reprocessar análise" que invoca `process-briefing` novamente.
+### D. UI de controle de status
 
-### C. Nova Edge Function `retry-pending-briefings`
+1. **No card da lista (`ClientListView`)**: adicionar `Switch` pequeno no canto inferior do card mostrando "Ativo/Inativo" — clique propaga `stopPropagation` e chama `handleToggleActive(group)`. Substitui o botão atual no header de detalhes (que continua existindo).
+2. **No `ClientDetailView`**: o botão "Reativar/Desativar" já existe — mantém. Apenas garante que o estado vem do novo campo.
+3. **Badge "Inativo"** nos cards continua, mas agora reflete o status manual, não o derivado de projetos.
 
-Função leve invocável manualmente (ou via cron futuro) que:
-- Busca `briefing_requests` com `status IN ('submitted','processing')` e `persona IS NULL` há mais de 5 minutos.
-- Reinvoca `process-briefing` para cada um.
-- Retorna lista do que foi reprocessado.
+### E. Handler de delete de projeto
 
-Botão "Reprocessar briefings pendentes" no painel CRM (visível só para o owner/admin) chama essa função.
+Em `handleDeleteProject` (linha 602): **remover qualquer lógica que afete `is_active`**. Já não há — só garantir que o cliente continua visível mesmo após deletar o último projeto (resolvido pelo item B5).
 
-### D. Fix imediato dos registros já órfãos
+## Tabelas afetadas
 
-Migration única (apenas dados, sem schema): para cada `briefing_requests` com `form_answers` preenchido mas sem `client_strategic_contexts` correspondente, criar o contexto bruto com os campos disponíveis e `is_completed: false`. O usuário verá o contexto no CRM e pode "Editar" ou clicar em "Reprocessar" para gerar persona/positioning via IA.
+| Tabela | Mudança | Tipo |
+|---|---|---|
+| `client_strategic_contexts` | `+ is_active boolean DEFAULT true NOT NULL` | Migration de schema |
+| `briefing_requests.is_active` | sem mudança (legado preservado) | — |
+
+RLS já cobre UPDATE para owner.
 
 ## O que NÃO muda
 
-- Schema do banco (`client_strategic_contexts`, `briefing_requests`).
-- UI do formulário do cliente (só mensagens de erro).
-- Geração de scripts, hooks, carousels.
-- RLS, auth, planos.
+- Schema de `briefing_requests`, `projects`, `briefings`, `scripts`.
+- `process-briefing` Edge Function (raw upsert continua igual; novo campo herda default `true`).
+- Geração de scripts, PDFs, hooks, carrosséis.
+- Auth, planos, limites.
 
 ## Resultado esperado
 
-1. **Contexto sempre chega**: mesmo se IA falhar/timeout, as respostas do cliente já estão em `client_strategic_contexts` com `is_completed: false`.
-2. **Visibilidade de falha**: front mostra mensagem real em vez de "Obrigado" falso.
-3. **Recuperação**: botão de reprocessar resolve casos travados sem precisar pedir o cliente para preencher de novo.
-4. **Escala**: fire-and-forget no front + idempotência no backend evita perdas em alto volume.
+1. Excluir todos os projetos de um cliente **não** o esconde nem inativa.
+2. Clicar num cliente sem projetos abre o detalhe com 2 CTAs claros (novo link / recriar projeto).
+3. "Recriar projeto" usa o último `strategic_context` automaticamente — sem refazer briefing.
+4. Switch ATIVO/INATIVO em cada card, controle 100% manual, persistente.
+5. Cliente inativo: aparece com opacidade reduzida + badge, mas continua clicável e editável.
 
