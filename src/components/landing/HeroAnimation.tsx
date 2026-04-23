@@ -120,22 +120,22 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
     },
   },
 
-  Odontologia: {
-    persona: "Mulheres e homens 25-45 anos que buscam melhorar o sorriso e autoestima.",
+  "Clínica Odontológica": {
+    persona: "Mulheres e homens 25-45 anos que buscam melhorar o sorriso e a autoestima.",
     posicionamento: "Clínica odontológica especialista em estética dental e saúde bucal.",
     tomDeVoz: ["Profissional", "Inspirador", "Acessível"],
     roteiro: {
       gancho: "Você tem vergonha de sorrir nas fotos?",
       desenvolvimento:
-        "Problemas como manchas e desalinhamentos são comuns, mas hoje existem soluções rápidas e seguras para transformar o sorriso.",
-      cta: "Agende sua avaliação.",
+        "Manchas, desalinhamento e desgaste são comuns, mas hoje existem tratamentos rápidos e seguros que transformam o sorriso em poucas sessões.",
+      cta: "Agende sua avaliação na clínica.",
     },
     carrossel: [
       { label: "S1 — Hook", text: "Você esconde o sorriso nas fotos?" },
-      { label: "S2 — Problema", text: "Manchas e desalinhamento afetam autoestima." },
-      { label: "S3 — Solução", text: "Tratamentos estéticos modernos resolvem isso." },
+      { label: "S2 — Problema", text: "Manchas e desalinhamento afetam a autoestima." },
+      { label: "S3 — Solução", text: "Lentes, clareamento e alinhadores resolvem isso." },
       { label: "S4 — Resultado", text: "Transformações reais de pacientes." },
-      { label: "S5 — Benefício", text: "Mais confiança e autoestima." },
+      { label: "S5 — Benefício", text: "Mais confiança no dia a dia." },
       { label: "S6 — CTA", text: "Agende sua avaliação." },
     ],
     formAnswers: {
@@ -172,78 +172,55 @@ const demoDataMap: Record<string, Partial<DemoStepData>> = {
     },
   },
 
-  "Loja de Carros": {
-    persona: "Homens 25-50 interessados em comprar ou trocar de carro.",
-    posicionamento: "Loja especializada em carros de qualidade e confiança.",
-    tomDeVoz: ["Direto", "Confiante", "Vendedor"],
+  "Clínica de Estética": {
+    persona: "Mulheres 25-50 anos que buscam autoestima, beleza e bem-estar.",
+    posicionamento: "Clínica de estética avançada com protocolos seguros e resultados reais.",
+    tomDeVoz: ["Sofisticado", "Acolhedor", "Inspirador"],
     roteiro: {
-      gancho: "Esse carro custa menos do que você imagina.",
-      desenvolvimento: "Mostrar benefícios, diferenciais e condições facilita a decisão do comprador.",
-      cta: "Fale conosco e agende um test drive.",
+      gancho: "Você se olha no espelho e não se reconhece mais?",
+      desenvolvimento:
+        "Flacidez, manchas e gordura localizada incomodam, mas hoje existem protocolos não invasivos que devolvem a autoestima sem tempo de recuperação.",
+      cta: "Agende sua avaliação personalizada.",
     },
     carrossel: [
-      { label: "S1 — Hook", text: "Carro completo por preço surpreendente." },
-      { label: "S2 — Destaque", text: "Design, conforto e tecnologia." },
-      { label: "S3 — Benefícios", text: "Economia e desempenho." },
-      { label: "S4 — Condições", text: "Facilidade no financiamento." },
-      { label: "S5 — Confiança", text: "Veículos revisados." },
-      { label: "S6 — CTA", text: "Agende um test drive." },
+      { label: "S1 — Hook", text: "Recupere a autoestima em poucas sessões." },
+      { label: "S2 — Problema", text: "Flacidez e manchas afetam a confiança." },
+      { label: "S3 — Solução", text: "Protocolos modernos e não invasivos." },
+      { label: "S4 — Resultado", text: "Antes e depois de pacientes reais." },
+      { label: "S5 — Benefício", text: "Autoestima renovada sem cirurgia." },
+      { label: "S6 — CTA", text: "Agende sua avaliação gratuita." },
     ],
     formAnswers: {
-      contexto: "Loja de veículos seminovos e novos.",
-      publico: "Pessoas que desejam comprar ou trocar de carro.",
-      resultado: "Gerar visitas na loja.",
-      voz: "Confiante e direto",
+      contexto: "Clínica de estética avançada focada em beleza e bem-estar.",
+      publico: "Mulheres 25-50 que buscam autoestima e cuidados estéticos.",
+      resultado: "Gerar avaliações e novos tratamentos.",
+      voz: "Sofisticado e acolhedor",
     },
   },
 
-  Confeitaria: {
-    persona: "Mulheres 20-45 que gostam de doces e buscam produtos artesanais.",
-    posicionamento: "Confeitaria artesanal especializada em doces premium.",
-    tomDeVoz: ["Delicioso", "Acolhedor", "Criativo"],
+  "Loja de Material de Construção": {
+    persona: "Pedreiros, mestres de obra, engenheiros e proprietários reformando ou construindo.",
+    posicionamento: "Loja de materiais de construção com preço justo, entrega rápida e variedade completa.",
+    tomDeVoz: ["Direto", "Confiável", "Próximo"],
     roteiro: {
-      gancho: "Esse doce está fazendo sucesso na cidade.",
-      desenvolvimento: "Mostrar textura, preparo e exclusividade aumenta desejo no público.",
-      cta: "Peça agora pelo WhatsApp.",
+      gancho: "Vai começar a obra? Não cometa esse erro.",
+      desenvolvimento:
+        "Comprar material errado ou na quantidade errada atrasa a obra e estoura o orçamento. Mostrar dicas práticas e produtos certos gera confiança e fideliza o cliente.",
+      cta: "Faça seu orçamento com a gente.",
     },
     carrossel: [
-      { label: "S1 — Hook", text: "O doce mais pedido da semana." },
-      { label: "S2 — Visual", text: "Feito artesanalmente." },
-      { label: "S3 — Ingredientes", text: "Ingredientes selecionados." },
-      { label: "S4 — Experiência", text: "Uma explosão de sabor." },
-      { label: "S5 — Prova", text: "Clientes apaixonados." },
-      { label: "S6 — CTA", text: "Faça seu pedido." },
+      { label: "S1 — Hook", text: "Vai construir? Evite esse erro caro." },
+      { label: "S2 — Problema", text: "Material errado atrasa a obra." },
+      { label: "S3 — Dica", text: "Como calcular a quantidade certa." },
+      { label: "S4 — Variedade", text: "Tudo para sua obra em um só lugar." },
+      { label: "S5 — Vantagem", text: "Entrega rápida e preço justo." },
+      { label: "S6 — CTA", text: "Solicite seu orçamento." },
     ],
     formAnswers: {
-      contexto: "Confeitaria artesanal especializada em doces premium.",
-      publico: "Pessoas que gostam de doces e sobremesas.",
-      resultado: "Aumentar pedidos.",
-      voz: "Criativo e acolhedor",
-    },
-  },
-
-  "Loja de Roupas": {
-    persona: "Mulheres 18-40 interessadas em moda e tendências.",
-    posicionamento: "Loja que ajuda clientes a se vestir com estilo.",
-    tomDeVoz: ["Inspirador", "Moderno", "Estiloso"],
-    roteiro: {
-      gancho: "Esse look está dominando as tendências.",
-      desenvolvimento: "Mostrar combinações e estilo ajuda o cliente a se imaginar usando o produto.",
-      cta: "Confira na loja ou no site.",
-    },
-    carrossel: [
-      { label: "S1 — Hook", text: "O look tendência da temporada." },
-      { label: "S2 — Estilo", text: "Elegante e moderno." },
-      { label: "S3 — Combinação", text: "Perfeito para várias ocasiões." },
-      { label: "S4 — Detalhes", text: "Conforto e qualidade." },
-      { label: "S5 — Inspiração", text: "Monte seu look." },
-      { label: "S6 — CTA", text: "Disponível na loja." },
-    ],
-    formAnswers: {
-      contexto: "Loja de roupas focada em moda e tendências.",
-      publico: "Mulheres 18-40 interessadas em estilo.",
-      resultado: "Aumentar vendas.",
-      voz: "Inspirador e moderno",
+      contexto: "Loja de materiais de construção com variedade e entrega rápida.",
+      publico: "Profissionais da construção e proprietários em obra.",
+      resultado: "Aumentar orçamentos e vendas na loja.",
+      voz: "Direto e confiável",
     },
   },
 };
