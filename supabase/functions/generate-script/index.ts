@@ -18,6 +18,64 @@ const toneRules: Record<string, string> = {
 
 const CONTENT_CATEGORIES = ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"];
 
+const ADVERTISING_STRUCTURE_GUIDE = `
+ESTRUTURA VISUAL DE ROTEIRO PUBLICITÁRIO (OBRIGATÓRIA quando aplicável):
+Organize o roteiro de fala (speaking_script) em blocos visuais claros, no formato exato:
+
+[CENA N – NOME]
+• Objetivo: ...
+• Visual: enquadramento (close, médio, plano aberto) + movimento (corte rápido, zoom, reação) + expressão/personagem
+• Fala: texto principal, em linha separada, com respiro visual
+• Intenção: curiosidade / impacto / conexão / humor / venda
+
+Sequência base de 6 cenas (ajustar conforme duração):
+1. [CENA 1 – HOOK] Prender atenção em 0–3s. Curiosidade ou impacto.
+2. [CENA 2 – SITUAÇÃO] Contexto cotidiano, gerar identificação.
+3. [CENA 3 – ESCALADA] Evoluir o problema, aumentar retenção.
+4. [CENA 4 – QUEBRA] Twist/punchline. Surpresa, humor ou impacto.
+5. [CENA 5 – PRODUTO/SERVIÇO] Inserção orgânica: solução, parte da piada ou gatilho da situação. NUNCA forçada.
+6. [CENA 6 – CTA] Final limpo, pergunta ou chamada leve.
+
+REGRAS DE TOM (mapeie a partir do estilo de comunicação do cliente):
+- CÔMICO: exagero, ironia, situações inesperadas, punchlines com linguagem brasileira.
+- PROFISSIONAL: clareza, autoridade, benefício direto.
+- SÉRIO: emocional, direto, reflexivo.
+
+DIREÇÃO DE CENA (sempre pensar visualmente):
+- Cenas simples de gravar, poucos elementos, clareza de ação.
+- Evitar complexidade desnecessária.
+- Sempre indicar enquadramento + movimento + expressão dentro de "Visual".
+
+DIRETRIZES FINAIS:
+- Linguagem simples e conversacional. Frases curtas. Ritmo dinâmico.
+- Destacar falas principais com quebra de linha (respiro visual).
+- Evitar blocos densos de texto.
+- Foco total em retenção em qualquer duração.
+`;
+
+function getDurationProfile(duration: string | undefined | null): string {
+  if (!duration) return "60 segundos — 6 cenas completas. Contexto + payoff.";
+  const d = String(duration).toLowerCase();
+  if (d.includes("15")) return "15 segundos — Use APENAS [CENA 1 – HOOK] + [CENA 4 – QUEBRA/PUNCHLINE] + [CENA 5 – PRODUTO]. Máximo impacto, sem enrolação.";
+  if (d.includes("30")) return "30 segundos — Estrutura completa resumida (4 cenas). Ritmo rápido. Falas curtas.";
+  if (d.includes("60") || d.includes("1 min") || d.includes("1min")) return "60 segundos — 6 cenas completas. Contexto + payoff. Ritmo dinâmico.";
+  if (d.includes("90") || d.includes("3 min") || d.includes("3min") || d.includes("5")) return "Narrativa estendida — 6 cenas com maior construção emocional ou humor. Desenvolva contexto antes do payoff.";
+  return `${duration} — adapte número de cenas mantendo retenção total.`;
+}
+
+function isShortVideoPlatform(platform: string | undefined | null): boolean {
+  if (!platform) return false;
+  const p = String(platform).toLowerCase();
+  return p.includes("reels") || p.includes("tiktok") || p.includes("tik tok") || p.includes("shorts");
+}
+
+function shouldUseAdvertisingStructure(contentType: string | undefined | null, platform: string | undefined | null): boolean {
+  const ct = (contentType || "").toLowerCase();
+  if (ct.includes("carrossel") || ct.includes("carousel")) return false;
+  if (!contentType || ct.includes("roteiro") || ct.includes("video") || ct.includes("vídeo")) return true;
+  return isShortVideoPlatform(platform);
+}
+
 function getToneInstructions(communicationStyle: string | null): string {
   if (!communicationStyle) return "";
   const key = communicationStyle.toLowerCase().replace(/[^a-zà-ú_]/g, "_");
