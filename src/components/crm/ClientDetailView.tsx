@@ -74,6 +74,11 @@ export function ClientDetailView({
     setRenameOpen(false);
   };
 
+  const businessName = first?.business_name || selectedGroup.business_name;
+  const contactName = first?.contact_name || null;
+  const contactEmail = first?.contact_email || null;
+  const contactWhatsapp = first?.contact_whatsapp || null;
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Step Indicator */}
@@ -86,11 +91,11 @@ export function ClientDetailView({
         </Button>
         <Avatar className="h-14 w-14">
           <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-            {first.business_name.charAt(0).toUpperCase()}
+            {businessName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{first.business_name}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{businessName}</h1>
           <p className="text-sm text-muted-foreground">{selectedGroup.projects.length} projeto{selectedGroup.projects.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
@@ -100,9 +105,9 @@ export function ClientDetailView({
         <CardContent className="p-5">
           <div className="flex flex-wrap gap-6 items-center justify-between">
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              {first.contact_name && <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary/60" />{first.contact_name}</span>}
-              {first.contact_email && <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary/60" />{first.contact_email}</span>}
-              {first.contact_whatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-primary/60" />{first.contact_whatsapp}</span>}
+              {contactName && <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary/60" />{contactName}</span>}
+              {contactEmail && <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary/60" />{contactEmail}</span>}
+              {contactWhatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-primary/60" />{contactWhatsapp}</span>}
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={openRename}>
@@ -127,7 +132,7 @@ export function ClientDetailView({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Isso removerá permanentemente todos os projetos, briefings e roteiros de <strong>{first.business_name}</strong>.
+                      Isso removerá permanentemente todos os projetos, briefings e roteiros de <strong>{businessName}</strong>.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

@@ -74,6 +74,7 @@ interface ClientListViewProps {
   onRetryPending?: () => void;
   retryingPending?: boolean;
   pendingCount?: number;
+  onToggleActive?: (group: ClientGroup) => void;
 }
 
 export function ClientListView({
@@ -85,6 +86,7 @@ export function ClientListView({
   generatedLink, setGeneratedLink, handleCreateClient, toast, onQuickAction,
   maxVideos, onVideoLimitExceeded,
   onRetryPending, retryingPending, pendingCount = 0,
+  onToggleActive,
 }: ClientListViewProps) {
   return (
     <div className="space-y-6">
@@ -339,6 +341,20 @@ export function ClientListView({
                       <Button variant="ghost" size="sm" className="h-7 text-xs flex-1" onClick={(e) => { e.stopPropagation(); onQuickAction(group, "ideas"); }}>
                         <Lightbulb className="h-3 w-3 mr-1" />Ideias
                       </Button>
+                    </div>
+                  )}
+                  {onToggleActive && (
+                    <div
+                      className="flex items-center justify-between mt-4 pt-3 border-t border-border/50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Label className="text-xs text-muted-foreground cursor-pointer">
+                        {inactive ? "Inativo (standby)" : "Ativo"}
+                      </Label>
+                      <Switch
+                        checked={!inactive}
+                        onCheckedChange={() => onToggleActive(group)}
+                      />
                     </div>
                   )}
                 </CardContent>

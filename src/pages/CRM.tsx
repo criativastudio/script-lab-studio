@@ -53,6 +53,7 @@ interface ClientGroup {
   contact_email: string | null;
   contact_whatsapp: string | null;
   projects: BriefingRequest[];
+  is_active: boolean;
 }
 
 const briefingStatusLabels: Record<string, string> = { pending: "Pendente", submitted: "Enviado", processing: "Processando", completed: "Concluído" };
@@ -66,7 +67,7 @@ const CRM = () => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [clients, setClients] = useState<BriefingRequest[]>([]);
-  const [allContexts, setAllContexts] = useState<{ business_name: string }[]>([]);
+  const [allContexts, setAllContexts] = useState<{ business_name: string; is_active: boolean }[]>([]);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string | null>(null);
 
   // New client dialog
@@ -148,13 +149,18 @@ const CRM = () => {
 
   // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
+    const contextMap = new Map<string, boolean>();
+    allContexts.forEach((ctx) => {
+      contextMap.set(ctx.business_name.trim().toLowerCase(), ctx.is_active !== false);
+    });
+
     const map = new Map<string, BriefingRequest[]>();
     clients.forEach((c) => {
       const key = c.business_name.trim().toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(c);
     });
-    const groups: ClientGroup[] = Array.from(map.values()).map((projects) => {
+    const groups: ClientGroup[] = Array.from(map.entries()).map(([key, projects]) => {
       const first = projects[0];
       return {
         business_name: first.business_name,
@@ -162,6 +168,7 @@ const CRM = () => {
         contact_email: first.contact_email,
         contact_whatsapp: first.contact_whatsapp,
         projects: projects.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        is_active: contextMap.has(key) ? contextMap.get(key)! : true,
       };
     });
     // Merge orphan strategic contexts (clients with 0 projects) so the card stays visible
@@ -175,6 +182,7 @@ const CRM = () => {
           contact_email: null,
           contact_whatsapp: null,
           projects: [],
+          is_active: ctx.is_active !== false,
         });
         existingKeys.add(key);
       }
@@ -202,14 +210,13 @@ const CRM = () => {
         (group.contact_name && group.contact_name.toLowerCase().includes(term));
       const matchesCity = !filterCity || group.projects.some(p => p.city === filterCity);
       const matchesNiche = !filterNiche || group.projects.some(p => p.niche === filterNiche);
-      const matchesActive = showInactive || group.projects.some(p => p.is_active !== false);
+      const matchesActive = showInactive || group.is_active !== false;
       return matchesSearch && matchesCity && matchesNiche && matchesActive;
     });
   }, [clientGroups, searchTerm, filterCity, filterNiche, showInactive]);
 
   const hasActiveFilters = searchTerm || filterCity || filterNiche;
-  const isGroupInactive = (group: ClientGroup) =>
-    group.projects.length > 0 && group.projects.every(p => p.is_active === false);
+  const isGroupInactive = (group: ClientGroup) => group.is_active === false;
 
   const selectedGroup = useMemo(() => {
     if (!selectedBusinessName) return null;
@@ -227,11 +234,11 @@ const CRM = () => {
         .order("created_at", { ascending: false }),
       supabase
         .from("client_strategic_contexts")
-        .select("business_name")
+        .select("business_name, is_active")
         .eq("user_id", user.id),
     ]);
     setClients((briefings as BriefingRequest[]) || []);
-    setAllContexts((contexts as { business_name: string }[]) || []);
+    setAllContexts((contexts as { business_name: string; is_active: boolean }[]) || []);
   };
 
   const fetchProjectDetails = async (project: BriefingRequest) => {
@@ -388,10 +395,19 @@ const CRM = () => {
     const original = selectedGroup.projects.find(
       (p) => (p.form_answers && Object.keys(p.form_answers).length > 0) || p.persona
     );
-    if (!original) {
+
+    // Fallback: build base answers from strategicContext if no original briefing exists
+    const fallbackAnswers = strategicContext ? {
+      business_context: strategicContext.products_services || "",
+      ideal_audience: strategicContext.target_audience || "",
+      desired_outcome: strategicContext.marketing_objectives || "",
+      brand_voice: strategicContext.communication_style || strategicContext.tone_of_voice || "",
+    } : null;
+
+    if (!original && !fallbackAnswers) {
       toast({
         title: "Briefing inicial pendente",
-        description: "Este cliente ainda não preencheu o briefing inicial.",
+        description: "Este cliente ainda não possui briefing nem contexto estratégico. Gere um link de formulário para o cliente preencher.",
         variant: "destructive",
       });
       return;
@@ -408,8 +424,9 @@ const CRM = () => {
         : editorialLines.includes("Fundo de Funil")
         ? "bottom"
         : (newProjectForm.funnel_stage || "");
+      const baseAnswers = original?.form_answers || fallbackAnswers || {};
       const mergedAnswers = {
-        ...(original.form_answers || {}),
+        ...baseAnswers,
         content_type: newProjectForm.content_type,
         content_style: newProjectForm.content_style,
         campaign_objective: newProjectForm.campaign_objective,
@@ -420,20 +437,20 @@ const CRM = () => {
       };
       const { data, error } = await supabase.from("briefing_requests").insert({
         user_id: user.id,
-        business_name: original.business_name,
-        contact_name: original.contact_name,
-        contact_email: original.contact_email,
-        contact_whatsapp: original.contact_whatsapp,
+        business_name: original?.business_name || selectedGroup.business_name,
+        contact_name: original?.contact_name || null,
+        contact_email: original?.contact_email || null,
+        contact_whatsapp: original?.contact_whatsapp || null,
         project_name: newProjectForm.project_name,
         video_quantity: parseInt(newProjectForm.video_quantity),
         form_answers: mergedAnswers,
         status: "submitted",
-        persona: original.persona,
-        positioning: original.positioning,
-        tone_of_voice: original.tone_of_voice,
-        content_strategy: original.content_strategy,
-        niche: original.niche,
-        city: original.city,
+        persona: original?.persona || strategicContext?.customer_persona || null,
+        positioning: original?.positioning || strategicContext?.market_positioning || null,
+        tone_of_voice: original?.tone_of_voice || strategicContext?.tone_of_voice || null,
+        content_strategy: original?.content_strategy || null,
+        niche: original?.niche || strategicContext?.business_niche || null,
+        city: original?.city || null,
       }).select("token").single();
       if (error) {
         toast({ title: "Erro ao criar projeto", description: error.message, variant: "destructive" });
@@ -635,14 +652,30 @@ const CRM = () => {
   };
 
   const handleToggleActive = async (group: ClientGroup) => {
-    const allInactive = group.projects.every(p => p.is_active === false);
-    const newValue = allInactive;
-    const ids = group.projects.map(p => p.id);
-    const { error } = await supabase.from("briefing_requests").update({ is_active: newValue } as any).in("id", ids);
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    if (!user) return;
+    const newValue = group.is_active === false; // toggle
+    // Try update first
+    const { data: updated, error: updErr } = await supabase
+      .from("client_strategic_contexts")
+      .update({ is_active: newValue } as any)
+      .eq("user_id", user.id)
+      .eq("business_name", group.business_name)
+      .select("id");
+    if (updErr) { toast({ title: "Erro", description: updErr.message, variant: "destructive" }); return; }
+    // If no row exists yet, insert minimal context
+    if (!updated || updated.length === 0) {
+      const { error: insErr } = await supabase
+        .from("client_strategic_contexts")
+        .insert({
+          user_id: user.id,
+          business_name: group.business_name,
+          is_active: newValue,
+          is_completed: false,
+        } as any);
+      if (insErr) { toast({ title: "Erro", description: insErr.message, variant: "destructive" }); return; }
+    }
     await fetchClients();
     toast({ title: newValue ? "Cliente reativado!" : "Cliente desativado!" });
-    if (!newValue) { setSelectedBusinessName(null); setOpenProjects(new Set()); }
   };
 
   const handleRenameClient = async (group: ClientGroup, newName: string) => {
@@ -923,6 +956,10 @@ const CRM = () => {
 
   const downloadAllPdf = () => {
     if (!selectedGroup) return;
+    if (selectedGroup.projects.length === 0) {
+      toast({ title: "Nada para exportar", description: "Este cliente ainda não tem projetos." });
+      return;
+    }
     const allBriefings = selectedGroup.projects.flatMap(p => projectBriefings[p.id] || []);
     const allScripts = selectedGroup.projects.flatMap(p => projectScripts[p.id] || []);
     buildCrmPdf(selectedGroup.projects[0], allBriefings[0], allScripts);
@@ -989,15 +1026,15 @@ const CRM = () => {
                 contextForm={contextForm}
                 setContextForm={setContextForm}
                 saveStrategicContext={saveStrategicContext}
-                businessName={selectedGroup.projects[0].business_name}
-                firstToken={selectedGroup.projects[0].token}
+                businessName={selectedGroup.business_name}
+                firstToken={selectedGroup.projects[0]?.token || ""}
                 toast={toast}
               />
             ),
             projectsTab: (
               <ProjectsTab
                 projects={selectedGroup.projects}
-                businessName={selectedGroup.projects[0].business_name}
+                businessName={selectedGroup.projects[0]?.business_name || selectedGroup.business_name}
                 openProjects={openProjects}
                 toggleProject={toggleProject}
                 projectBriefings={projectBriefings}
@@ -1024,6 +1061,26 @@ const CRM = () => {
                 toast={toast}
                 maxVideos={limits.scriptsPerBriefing}
                 onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
+                hasStrategicContext={!!strategicContext}
+                onGenerateNewLink={() => {
+                  setBriefingFormState({
+                    business_name: selectedGroup.business_name,
+                    contact_name: selectedGroup.contact_name || "",
+                    contact_email: selectedGroup.contact_email || "",
+                    contact_whatsapp: selectedGroup.contact_whatsapp || "",
+                    project_name: "",
+                    video_quantity: "3",
+                    city: selectedGroup.projects[0]?.city || "",
+                    niche: selectedGroup.projects[0]?.niche || strategicContext?.business_niche || "",
+                    content_type: "",
+                    content_style: "",
+                    editorial_lines: [],
+                    editorial_mode: "auto",
+                  });
+                  setSelectedBusinessName(null);
+                  setOpenProjects(new Set());
+                  setBriefingOpen(true);
+                }}
               />
             ),
             ideasTab: (
@@ -1057,7 +1114,7 @@ const CRM = () => {
             carouselsTab: (
               <CarouselsTab
                 carousels={clientCarousels}
-                onRefresh={() => fetchClientCarousels(selectedGroup.projects[0].business_name)}
+                onRefresh={() => fetchClientCarousels(selectedGroup.business_name)}
                 toast={toast}
               />
             ),
@@ -1186,6 +1243,7 @@ const CRM = () => {
         handleCreateClient={handleCreateClient}
         toast={toast}
         onQuickAction={handleQuickAction}
+        onToggleActive={handleToggleActive}
         maxVideos={limits.scriptsPerBriefing}
         onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
         onRetryPending={handleRetryPending}
