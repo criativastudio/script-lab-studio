@@ -92,6 +92,7 @@ export function ProjectsTab({
   newProjectOpen, setNewProjectOpen, newProjectForm, setNewProjectForm,
   creatingProject, handleCreateProject, toast,
   maxVideos, onVideoLimitExceeded, handleRenameProject,
+  hasStrategicContext, onGenerateNewLink,
 }: ProjectsTabProps) {
   const [renamingProject, setRenamingProject] = useState<BriefingRequest | null>(null);
   const [renameValue, setRenameValue] = useState("");
