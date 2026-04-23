@@ -15,7 +15,7 @@ import { EDITORIAL_LINES, CONTENT_STYLES, VIDEO_QUANTITIES, deriveFunnelStage } 
 import { Sparkle } from "lucide-react";
 import {
   FolderPlus, Hash, Video, Calendar, ChevronDown, Bot, Sparkles, Download,
-  BookOpen, FileText, Edit2, Trash2, Eye, Loader2, Target, Megaphone, MessageSquare, Lightbulb, Copy,
+  BookOpen, FileText, Edit2, Trash2, Eye, Loader2, Target, Megaphone, MessageSquare, Lightbulb, Copy, Link as LinkIcon, RefreshCcw,
 } from "lucide-react";
 
 interface BriefingRequest {
