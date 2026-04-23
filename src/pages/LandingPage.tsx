@@ -249,7 +249,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto max-w-3xl text-base md:text-lg font-light text-muted-foreground mb-12"
+            className="mx-auto max-w-3xl text-base md:text-xl font-light text-muted-foreground mb-12"
           >
             Transforme ideias em roteiros prontos para gravar, com estratégia e foco em resultado..
           </motion.p>
