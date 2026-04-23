@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
   Plus, Link as LinkIcon, Copy, Users, FileText, Video,
-  Search, X, Filter, Brain, Hash, Lightbulb, Sparkle,
+  Search, X, Filter, Brain, Hash, Lightbulb, Sparkle, RefreshCw,
 } from "lucide-react";
 import { EDITORIAL_LINES, CONTENT_STYLES, VIDEO_QUANTITIES } from "@/lib/editorial-lines";
 
@@ -71,6 +71,9 @@ interface ClientListViewProps {
   onQuickAction?: (group: ClientGroup, action: "context" | "projects" | "ideas") => void;
   maxVideos?: number;
   onVideoLimitExceeded?: () => void;
+  onRetryPending?: () => void;
+  retryingPending?: boolean;
+  pendingCount?: number;
 }
 
 export function ClientListView({
@@ -81,6 +84,7 @@ export function ClientListView({
   briefingOpen, setBriefingOpen, briefingForm, setBriefingFormState,
   generatedLink, setGeneratedLink, handleCreateClient, toast, onQuickAction,
   maxVideos, onVideoLimitExceeded,
+  onRetryPending, retryingPending, pendingCount = 0,
 }: ClientListViewProps) {
   return (
     <div className="space-y-6">
@@ -89,12 +93,24 @@ export function ClientListView({
           <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
           <p className="text-muted-foreground text-sm">Gerencie seus clientes e produções</p>
         </div>
-        <Dialog open={briefingOpen} onOpenChange={(v) => { setBriefingOpen(v); if (!v) setGeneratedLink(null); }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" />Adicionar Novo Cliente</Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
+        <div className="flex items-center gap-2">
+          {onRetryPending && pendingCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={onRetryPending}
+              disabled={retryingPending}
+              title="Reprocessa briefings que ficaram travados sem análise estratégica"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${retryingPending ? "animate-spin" : ""}`} />
+              Reprocessar pendentes ({pendingCount})
+            </Button>
+          )}
+          <Dialog open={briefingOpen} onOpenChange={(v) => { setBriefingOpen(v); if (!v) setGeneratedLink(null); }}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-2" />Adicionar Novo Cliente</Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
             {generatedLink ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Cliente registrado! Envie o link para o cliente preencher o briefing:</p>
