@@ -173,6 +173,41 @@ export function ClientDetailView({
         <TabsContent value="calendar" className="space-y-4 mt-4">{children.calendarTab}</TabsContent>
         <TabsContent value="carousels" className="space-y-4 mt-4">{children.carouselsTab}</TabsContent>
       </Tabs>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear empresa</DialogTitle>
+            <DialogDescription>
+              Atualiza o nome em todos os projetos, contexto estratégico e relatórios deste cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Nome atual</Label>
+              <p className="text-sm font-medium">{selectedGroup.business_name}</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="new-business-name">Novo nome</Label>
+              <Input
+                id="new-business-name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                maxLength={120}
+                onKeyDown={(e) => { if (e.key === "Enter") submitRename(); }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameOpen(false)}>Cancelar</Button>
+            <Button onClick={submitRename} disabled={!newName.trim() || newName.trim() === selectedGroup.business_name}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
