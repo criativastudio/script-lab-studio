@@ -642,14 +642,30 @@ const CRM = () => {
   };
 
   const handleToggleActive = async (group: ClientGroup) => {
-    const allInactive = group.projects.every(p => p.is_active === false);
-    const newValue = allInactive;
-    const ids = group.projects.map(p => p.id);
-    const { error } = await supabase.from("briefing_requests").update({ is_active: newValue } as any).in("id", ids);
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    if (!user) return;
+    const newValue = group.is_active === false; // toggle
+    // Try update first
+    const { data: updated, error: updErr } = await supabase
+      .from("client_strategic_contexts")
+      .update({ is_active: newValue } as any)
+      .eq("user_id", user.id)
+      .eq("business_name", group.business_name)
+      .select("id");
+    if (updErr) { toast({ title: "Erro", description: updErr.message, variant: "destructive" }); return; }
+    // If no row exists yet, insert minimal context
+    if (!updated || updated.length === 0) {
+      const { error: insErr } = await supabase
+        .from("client_strategic_contexts")
+        .insert({
+          user_id: user.id,
+          business_name: group.business_name,
+          is_active: newValue,
+          is_completed: false,
+        } as any);
+      if (insErr) { toast({ title: "Erro", description: insErr.message, variant: "destructive" }); return; }
+    }
     await fetchClients();
     toast({ title: newValue ? "Cliente reativado!" : "Cliente desativado!" });
-    if (!newValue) { setSelectedBusinessName(null); setOpenProjects(new Set()); }
   };
 
   const handleRenameClient = async (group: ClientGroup, newName: string) => {
