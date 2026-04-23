@@ -228,6 +228,7 @@ export function ClientListView({
             )}
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}
