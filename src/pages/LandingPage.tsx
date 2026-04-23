@@ -328,7 +328,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="flex flex-col items-center gap-4"
               >
-                <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light leading-[1.1] tracking-tight">
+                <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.1] tracking-tight">
                   Veja a plataforma <span className="text-gradient-primary">em ação</span>
                 </h2>
                 <p className="max-w-lg text-lg md:text-xl font-normal leading-relaxed text-muted-foreground">
