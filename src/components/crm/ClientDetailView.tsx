@@ -41,6 +41,7 @@ interface ClientDetailViewProps {
   isGroupInactive: (g: ClientGroup) => boolean;
   handleToggleActive: (g: ClientGroup) => void;
   handleDeleteClient: (g: ClientGroup) => void;
+  handleRenameClient: (g: ClientGroup, newName: string) => void | Promise<void>;
   downloadAllPdf: () => void;
   contentIdeasCount: number;
   carouselsCount: number;
@@ -56,10 +57,22 @@ interface ClientDetailViewProps {
 
 export function ClientDetailView({
   selectedGroup, activeTab, setActiveTab, onBack,
-  isGroupInactive, handleToggleActive, handleDeleteClient, downloadAllPdf,
+  isGroupInactive, handleToggleActive, handleDeleteClient, handleRenameClient, downloadAllPdf,
   contentIdeasCount, carouselsCount, strategicContextCompleted, children,
 }: ClientDetailViewProps) {
   const first = selectedGroup.projects[0];
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [newName, setNewName] = useState(selectedGroup.business_name);
+
+  const openRename = () => {
+    setNewName(selectedGroup.business_name);
+    setRenameOpen(true);
+  };
+
+  const submitRename = async () => {
+    await handleRenameClient(selectedGroup, newName);
+    setRenameOpen(false);
+  };
 
   return (
     <div className="space-y-6 max-w-5xl">
