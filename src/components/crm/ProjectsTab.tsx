@@ -67,6 +67,8 @@ interface ProjectsTabProps {
   maxVideos?: number;
   onVideoLimitExceeded?: () => void;
   handleRenameProject: (projectId: string, newName: string) => Promise<void>;
+  hasStrategicContext?: boolean;
+  onGenerateNewLink?: () => void;
 }
 
 function StrategicCard({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) {
