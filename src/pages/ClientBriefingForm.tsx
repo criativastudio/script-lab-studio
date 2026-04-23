@@ -256,10 +256,10 @@ const ClientBriefingForm = () => {
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center space-y-4">
             <CheckCircle className="h-16 w-16 text-accent mx-auto" />
-            <h2 className="text-2xl font-bold text-foreground">Obrigado!</h2>
+            <h2 className="text-2xl font-bold text-foreground">Recebemos seu briefing!</h2>
             <p className="text-muted-foreground">
-              Suas respostas foram enviadas com sucesso. Sua estratégia de conteúdo e roteiros estão sendo gerados
-              automaticamente.
+              Suas respostas foram salvas com sucesso. Sua estratégia de conteúdo e roteiros estão sendo gerados
+              automaticamente — esse processo leva alguns minutos e continua mesmo se você fechar esta página.
             </p>
             <p className="text-sm text-muted-foreground">
               A equipe de produção entrará em contato com os próximos passos.
