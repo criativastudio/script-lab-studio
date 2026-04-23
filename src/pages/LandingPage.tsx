@@ -239,7 +239,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-2x1 sm:text-4xl md:text-4xl lg:text-6xl font-semibold leading-[1.05] tracking-tight text-zinc-900 mb-8 max-w-3xl mx-auto"
+            className="font-display text-2xl sm:text-4xl md:text-4xl lg:text-6xl font-semibold leading-[1.05] tracking-tight text-foreground mb-8 max-w-3xl mx-auto"
           >
             Roteiros estratégicos que geram resultado, <span className="text-gradient-primary"> em Segundos</span>
           </motion.h1>
@@ -249,7 +249,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto max-w-3x2 text-sm md:text-base font-light text-muted-foreground mb-12"
+            className="mx-auto max-w-3xl text-base md:text-lg font-light text-muted-foreground mb-12"
           >
             Crie conteudos de forma rápida e pronto para gravação, alinhados ao posicionamento do seu negócio.
           </motion.p>
@@ -328,10 +328,10 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="flex flex-col items-center gap-4"
               >
-                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-light leading-[1.1] tracking-tight">
+                <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light leading-[1.1] tracking-tight">
                   Veja a plataforma <span className="text-gradient-primary">em ação</span>
                 </h2>
-                <p className="max-w-lg text-sm md:text-base font-light text-muted-foreground">
+                <p className="max-w-lg text-lg md:text-xl font-normal leading-relaxed text-muted-foreground">
                   Interface intuitiva para criar roteiros profissionais.
                 </p>
               </motion.div>
@@ -361,10 +361,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               A solução
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 tracking-tight leading-[1.1]">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
+            <p className="mx-auto mb-10 max-w-2xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
               Transforme informações do cliente em conteúdo estratégico em segundos.
             </p>
           </motion.div>
@@ -403,10 +403,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               O problema
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 tracking-tight leading-[1.1]">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-base md:text-lg font-light leading-relaxed">
+            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
               A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
             </p>
           </motion.div>
@@ -452,10 +452,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Exemplo
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 tracking-tight leading-[1.1]">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base md:text-lg font-light">
+            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
               Veja como um roteiro é estruturado cena a cena.
             </p>
           </motion.div>
@@ -501,7 +501,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Benefícios
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-14 tracking-tight max-w-xl mx-auto">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-14 tracking-tight leading-[1.1] max-w-3xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
@@ -549,10 +549,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Planos
             </Badge>
-            <h2 className="font-display text-3xl font-light md:text-4xl mb-6 tracking-tight">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 tracking-tight leading-[1.1]">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-base md:text-lg font-light">
+            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
               Do criador solo à agência, temos o plano certo.
             </p>
           </motion.div>
@@ -623,10 +623,10 @@ export default function LandingPage() {
           className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-10 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-2xl font-light md:text-4xl mb-6 text-foreground tracking-tight max-w-md mx-auto">
+          <h2 className="relative z-10 font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 text-foreground tracking-tight leading-[1.1] max-w-2xl mx-auto">
             Comece a Criar Roteiros Estratégicos <span className="text-gradient-primary">Hoje</span>
           </h2>
-          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base md:text-lg font-light">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg md:text-xl font-normal leading-relaxed">
             Roteiros profissionais prontos para gravação em segundos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
