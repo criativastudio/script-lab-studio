@@ -149,13 +149,18 @@ const CRM = () => {
 
   // ── Derived data ──────────────────────────────────────────
   const clientGroups = useMemo<ClientGroup[]>(() => {
+    const contextMap = new Map<string, boolean>();
+    allContexts.forEach((ctx) => {
+      contextMap.set(ctx.business_name.trim().toLowerCase(), ctx.is_active !== false);
+    });
+
     const map = new Map<string, BriefingRequest[]>();
     clients.forEach((c) => {
       const key = c.business_name.trim().toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(c);
     });
-    const groups: ClientGroup[] = Array.from(map.values()).map((projects) => {
+    const groups: ClientGroup[] = Array.from(map.entries()).map(([key, projects]) => {
       const first = projects[0];
       return {
         business_name: first.business_name,
@@ -163,6 +168,7 @@ const CRM = () => {
         contact_email: first.contact_email,
         contact_whatsapp: first.contact_whatsapp,
         projects: projects.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        is_active: contextMap.has(key) ? contextMap.get(key)! : true,
       };
     });
     // Merge orphan strategic contexts (clients with 0 projects) so the card stays visible
@@ -176,6 +182,7 @@ const CRM = () => {
           contact_email: null,
           contact_whatsapp: null,
           projects: [],
+          is_active: ctx.is_active !== false,
         });
         existingKeys.add(key);
       }
@@ -203,14 +210,13 @@ const CRM = () => {
         (group.contact_name && group.contact_name.toLowerCase().includes(term));
       const matchesCity = !filterCity || group.projects.some(p => p.city === filterCity);
       const matchesNiche = !filterNiche || group.projects.some(p => p.niche === filterNiche);
-      const matchesActive = showInactive || group.projects.some(p => p.is_active !== false);
+      const matchesActive = showInactive || group.is_active !== false;
       return matchesSearch && matchesCity && matchesNiche && matchesActive;
     });
   }, [clientGroups, searchTerm, filterCity, filterNiche, showInactive]);
 
   const hasActiveFilters = searchTerm || filterCity || filterNiche;
-  const isGroupInactive = (group: ClientGroup) =>
-    group.projects.length > 0 && group.projects.every(p => p.is_active === false);
+  const isGroupInactive = (group: ClientGroup) => group.is_active === false;
 
   const selectedGroup = useMemo(() => {
     if (!selectedBusinessName) return null;
