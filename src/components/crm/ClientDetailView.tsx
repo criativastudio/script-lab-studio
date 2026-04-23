@@ -74,6 +74,11 @@ export function ClientDetailView({
     setRenameOpen(false);
   };
 
+  const businessName = first?.business_name || selectedGroup.business_name;
+  const contactName = first?.contact_name || null;
+  const contactEmail = first?.contact_email || null;
+  const contactWhatsapp = first?.contact_whatsapp || null;
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Step Indicator */}
@@ -86,11 +91,11 @@ export function ClientDetailView({
         </Button>
         <Avatar className="h-14 w-14">
           <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-            {first.business_name.charAt(0).toUpperCase()}
+            {businessName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{first.business_name}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{businessName}</h1>
           <p className="text-sm text-muted-foreground">{selectedGroup.projects.length} projeto{selectedGroup.projects.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
