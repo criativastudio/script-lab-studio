@@ -521,8 +521,9 @@ ${shouldUseAdvertisingStructure(content_type, platform) ? ADVERTISING_STRUCTURE_
 **Público-alvo:** ${target_audience}
 **Plataforma:** ${platform}
 **Duração do vídeo:** ${video_duration}
+${shouldUseAdvertisingStructure(content_type, platform) ? `**Perfil de duração:** ${getDurationProfile(video_duration)}` : ""}
 
-Gere o roteiro completo e otimizado.`;
+Gere o roteiro completo e otimizado.${shouldUseAdvertisingStructure(content_type, platform) ? " Use a ESTRUTURA VISUAL [CENA N – NOME] descrita no system prompt." : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
