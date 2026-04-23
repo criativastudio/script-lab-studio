@@ -202,6 +202,7 @@ export type Database = {
           customer_persona: string | null
           differentiators: string | null
           id: string
+          is_active: boolean
           is_completed: boolean | null
           main_platforms: string[] | null
           market_positioning: string | null
@@ -221,6 +222,7 @@ export type Database = {
           customer_persona?: string | null
           differentiators?: string | null
           id?: string
+          is_active?: boolean
           is_completed?: boolean | null
           main_platforms?: string[] | null
           market_positioning?: string | null
@@ -240,6 +242,7 @@ export type Database = {
           customer_persona?: string | null
           differentiators?: string | null
           id?: string
+          is_active?: boolean
           is_completed?: boolean | null
           main_platforms?: string[] | null
           market_positioning?: string | null
