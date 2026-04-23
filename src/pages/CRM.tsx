@@ -395,10 +395,19 @@ const CRM = () => {
     const original = selectedGroup.projects.find(
       (p) => (p.form_answers && Object.keys(p.form_answers).length > 0) || p.persona
     );
-    if (!original) {
+
+    // Fallback: build base answers from strategicContext if no original briefing exists
+    const fallbackAnswers = strategicContext ? {
+      business_context: strategicContext.products_services || "",
+      ideal_audience: strategicContext.target_audience || "",
+      desired_outcome: strategicContext.marketing_objectives || "",
+      brand_voice: strategicContext.communication_style || strategicContext.tone_of_voice || "",
+    } : null;
+
+    if (!original && !fallbackAnswers) {
       toast({
         title: "Briefing inicial pendente",
-        description: "Este cliente ainda não preencheu o briefing inicial.",
+        description: "Este cliente ainda não possui briefing nem contexto estratégico. Gere um link de formulário para o cliente preencher.",
         variant: "destructive",
       });
       return;
@@ -415,8 +424,9 @@ const CRM = () => {
         : editorialLines.includes("Fundo de Funil")
         ? "bottom"
         : (newProjectForm.funnel_stage || "");
+      const baseAnswers = original?.form_answers || fallbackAnswers || {};
       const mergedAnswers = {
-        ...(original.form_answers || {}),
+        ...baseAnswers,
         content_type: newProjectForm.content_type,
         content_style: newProjectForm.content_style,
         campaign_objective: newProjectForm.campaign_objective,
@@ -427,20 +437,20 @@ const CRM = () => {
       };
       const { data, error } = await supabase.from("briefing_requests").insert({
         user_id: user.id,
-        business_name: original.business_name,
-        contact_name: original.contact_name,
-        contact_email: original.contact_email,
-        contact_whatsapp: original.contact_whatsapp,
+        business_name: original?.business_name || selectedGroup.business_name,
+        contact_name: original?.contact_name || null,
+        contact_email: original?.contact_email || null,
+        contact_whatsapp: original?.contact_whatsapp || null,
         project_name: newProjectForm.project_name,
         video_quantity: parseInt(newProjectForm.video_quantity),
         form_answers: mergedAnswers,
         status: "submitted",
-        persona: original.persona,
-        positioning: original.positioning,
-        tone_of_voice: original.tone_of_voice,
-        content_strategy: original.content_strategy,
-        niche: original.niche,
-        city: original.city,
+        persona: original?.persona || strategicContext?.customer_persona || null,
+        positioning: original?.positioning || strategicContext?.market_positioning || null,
+        tone_of_voice: original?.tone_of_voice || strategicContext?.tone_of_voice || null,
+        content_strategy: original?.content_strategy || null,
+        niche: original?.niche || strategicContext?.business_niche || null,
+        city: original?.city || null,
       }).select("token").single();
       if (error) {
         toast({ title: "Erro ao criar projeto", description: error.message, variant: "destructive" });
