@@ -343,6 +343,20 @@ export function ClientListView({
                       </Button>
                     </div>
                   )}
+                  {onToggleActive && (
+                    <div
+                      className="flex items-center justify-between mt-4 pt-3 border-t border-border/50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Label className="text-xs text-muted-foreground cursor-pointer">
+                        {inactive ? "Inativo (standby)" : "Ativo"}
+                      </Label>
+                      <Switch
+                        checked={!inactive}
+                        onCheckedChange={() => onToggleActive(group)}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
