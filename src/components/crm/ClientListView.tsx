@@ -86,6 +86,7 @@ export function ClientListView({
   generatedLink, setGeneratedLink, handleCreateClient, toast, onQuickAction,
   maxVideos, onVideoLimitExceeded,
   onRetryPending, retryingPending, pendingCount = 0,
+  onToggleActive,
 }: ClientListViewProps) {
   return (
     <div className="space-y-6">
