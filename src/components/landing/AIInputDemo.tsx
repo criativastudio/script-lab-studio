@@ -14,12 +14,11 @@ const placeholderExamples = [
 ];
 
 const chips = [
-  "Reels para Instagram",
-  "Vídeos para YouTube",
-  "TikTok virais",
-  "Ads para Meta",
-  "Conteúdo educacional",
-  "Storytelling de marca",
+  "Advogados",
+  "Clínica Odontológica",
+  "Médicos",
+  "Clínica de Estética",
+  "Loja de Material de Construção",
 ];
 
 interface AIInputDemoProps {
