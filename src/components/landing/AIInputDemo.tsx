@@ -104,7 +104,7 @@ export default function AIInputDemo({ onChipSelected }: AIInputDemoProps) {
               Qual nicho você quer <span className="text-gradient-primary">transformar?</span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg font-light mb-4 max-w-2xl mx-auto">
-              Diga à IA o seu segmento e receba roteiros sob medida.
+              Informe seu segmento e receba roteiros sob medida, prontos para gravar.
             </p>
             <p className="text-sm font-light text-muted-foreground mb-12">
               Descreva seu nicho e receba um roteiro estratégico pronto para gravar.
