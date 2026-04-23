@@ -1243,6 +1243,7 @@ const CRM = () => {
         handleCreateClient={handleCreateClient}
         toast={toast}
         onQuickAction={handleQuickAction}
+        onToggleActive={handleToggleActive}
         maxVideos={limits.scriptsPerBriefing}
         onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
         onRetryPending={handleRetryPending}
