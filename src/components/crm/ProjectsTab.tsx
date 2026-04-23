@@ -224,17 +224,42 @@ export function ProjectsTab({
 
       {projects.length === 0 ? (
         <Card className="rounded-2xl border-dashed border-border/60">
-          <CardContent className="p-10 text-center space-y-4">
-            <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-              <FolderPlus className="h-7 w-7" />
+          <CardContent className="p-8 space-y-5">
+            <div className="text-center space-y-2">
+              <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                <FolderPlus className="h-7 w-7" />
+              </div>
+              <p className="text-base font-semibold text-foreground">Este cliente ainda não tem projetos</p>
+              <p className="text-sm text-muted-foreground">
+                {hasStrategicContext
+                  ? "O contexto estratégico está preservado. Você pode recriar um projeto reaproveitando-o ou enviar um novo formulário ao cliente."
+                  : "Envie um link de formulário para o cliente preencher o briefing inicial."}
+              </p>
             </div>
-            <div className="space-y-1">
-              <p className="text-base font-semibold text-foreground">Nenhum projeto ainda</p>
-              <p className="text-sm text-muted-foreground">O contexto estratégico do cliente foi preservado e está pronto para um novo projeto.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {onGenerateNewLink && (
+                <button
+                  type="button"
+                  onClick={onGenerateNewLink}
+                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-colors p-5 text-center"
+                >
+                  <LinkIcon className="h-6 w-6 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Gerar novo link de formulário</span>
+                  <span className="text-[11px] text-muted-foreground">Cliente preenche um briefing novo</span>
+                </button>
+              )}
+              {hasStrategicContext && (
+                <button
+                  type="button"
+                  onClick={() => setNewProjectOpen(true)}
+                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors p-5 text-center"
+                >
+                  <RefreshCcw className="h-6 w-6 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Recriar projeto com último contexto</span>
+                  <span className="text-[11px] text-muted-foreground">Usa o contexto estratégico já salvo</span>
+                </button>
+              )}
             </div>
-            <Button onClick={() => setNewProjectOpen(true)}>
-              <FolderPlus className="h-4 w-4 mr-2" />Criar Primeiro Projeto
-            </Button>
           </CardContent>
         </Card>
       ) : (
