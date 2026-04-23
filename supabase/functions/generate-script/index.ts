@@ -322,8 +322,9 @@ Ideia de Conteúdo (Layer 3): ${ideaText}
 ${ideaDesc ? `Descrição da ideia: ${ideaDesc}` : ""}
 Plataforma: ${platform || "Instagram Reels"}
 Duração: ${video_duration || "60s"}
+${shouldUseAdvertisingStructure(content_type, platform) ? `Perfil de duração: ${getDurationProfile(video_duration)}` : ""}
 
-Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.`;
+Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.${shouldUseAdvertisingStructure(content_type, platform) ? " O campo speaking_script DEVE seguir a estrutura visual [CENA N – NOME] descrita no system prompt." : ""}`;
 
       const tools = [
         {
