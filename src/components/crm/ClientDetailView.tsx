@@ -105,6 +105,9 @@ export function ClientDetailView({
               {first.contact_whatsapp && <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-primary/60" />{first.contact_whatsapp}</span>}
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={openRename}>
+                <Pencil className="h-4 w-4 mr-1.5" />Renomear
+              </Button>
               <Button variant="outline" size="sm" onClick={downloadAllPdf}>
                 <Download className="h-4 w-4 mr-1.5" />PDF
               </Button>
