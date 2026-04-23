@@ -943,6 +943,7 @@ const CRM = () => {
           isGroupInactive={isGroupInactive}
           handleToggleActive={handleToggleActive}
           handleDeleteClient={handleDeleteClient}
+          handleRenameClient={handleRenameClient}
           downloadAllPdf={downloadAllPdf}
           contentIdeasCount={contentIdeas.length}
           carouselsCount={clientCarousels.length}
