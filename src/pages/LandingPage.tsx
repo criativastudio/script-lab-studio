@@ -283,7 +283,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-lg font-light text-muted-foreground mt-6"
+            className="text-base font-light text-muted-foreground mt-6"
           >
             Cadastro rápido • Setup em 30 segundos
           </motion.p>
