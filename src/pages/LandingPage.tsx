@@ -229,7 +229,7 @@ export default function LandingPage() {
             className="mb-6"
           >
             <span className="inline-flex items-center rounded-full border border-[hsl(var(--hero-blue)/0.3)] bg-[hsl(var(--hero-blue)/0.08)] px-4 py-1.5 text-xs font-medium text-[hsl(var(--hero-blue))]">
-              Usado por +10.000 criadores de conteúdo
+              Usado por +5.000 criadores de conteúdo
               <ChevronRight className="ml-1 h-3 w-3" />
             </span>
           </motion.div>
