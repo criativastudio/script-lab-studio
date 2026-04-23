@@ -1,87 +1,48 @@
 
 
-# Camada Estratégica de Roteiro Publicitário
+# Editar nome da empresa em Clientes
 
 ## Objetivo
 
-Adicionar uma camada complementar ao prompt da edge function `generate-script` para que os roteiros gerados sigam a estrutura visual de blocos (CENA 1 – HOOK até CENA 6 – CTA), com controle de duração, variação de tom, inserção estratégica do produto e direção de cena. A lógica atual (3 camadas de contexto, memory blocks, tone instructions, schema da function call) é **preservada integralmente**.
+Permitir renomear o `business_name` de um cliente diretamente no CRM. Como o nome é a chave de agrupamento (não há tabela `clients` separada para esses registros — o agrupamento é feito por `business_name` em `briefing_requests`), a edição precisa atualizar **todos** os registros relacionados em cascata.
 
-## Onde alterar
+## Onde editar
 
-Apenas **`supabase/functions/generate-script/index.ts`**. Nenhum outro arquivo é tocado — schema do banco, UI, hooks, fluxo de geração e cache continuam idênticos.
+- **`src/components/crm/ClientDetailView.tsx`** — adicionar botão "Editar nome" no header do cliente (ao lado dos botões de PDF/ativar/excluir) que abre um `Dialog` com input simples.
+- **`src/pages/CRM.tsx`** — adicionar handler `handleRenameClient(oldName, newName)` que:
+  1. Valida que `newName` não está vazio nem duplicado em outros grupos.
+  2. Atualiza em paralelo:
+     - `briefing_requests` → `business_name` onde `business_name = oldName` AND `user_id = auth.uid()`
+     - `client_strategic_contexts` → `business_name` onde `business_name = oldName`
+     - `strategic_reports` → `business_name` onde `business_name = oldName`
+  3. Atualiza `selectedGroup.business_name` no estado local e refaz `fetchClients()`.
+  4. Mostra toast de sucesso/erro.
 
-## O que muda no prompt
+## Tabelas afetadas (apenas data updates, sem migration)
 
-### 1. Novo bloco `ADVERTISING_STRUCTURE_GUIDE` (constante no topo do arquivo)
+| Tabela | Coluna | Ação |
+|---|---|---|
+| `briefing_requests` | `business_name` | UPDATE em cascata |
+| `client_strategic_contexts` | `business_name` | UPDATE em cascata |
+| `strategic_reports` | `business_name` | UPDATE em cascata |
 
-Texto compacto (aprox. 60 linhas, ~700 tokens) injetado no `systemPrompt` **após** as instruções de tom existentes, contendo:
+RLS já permite `UPDATE` para o owner via `user_id = auth.uid()`, então não precisa criar nada novo.
 
-- **Estrutura visual obrigatória em 6 cenas** com formato fixo:
-  ```
-  [CENA N – NOME]
-  • Objetivo: ...
-  • Visual: ...
-  • Fala: ...
-  • Intenção: ...
-  ```
-- **Regras de duração** (15s / 30s / 60s / 90s) com mapeamento de quantas cenas usar e onde cortar.
-- **Variação de tom** (Cômico / Profissional / Sério) — mapeada a partir do `communication_style` já existente no contexto estratégico, sem campo novo.
-- **Inserção estratégica do produto** (solução, piada ou gatilho — nunca forçado).
-- **Direção de cena** (enquadramento, movimento, expressão) como sugestão obrigatória dentro de "Visual".
+## UI
 
-### 2. Lógica de duração
+Botão `Edit2` (lucide) no header do `ClientDetailView`, abrindo:
 
-A função já recebe `video_duration` no body. Acrescentar um helper local `getDurationProfile(duration)` que retorna instrução curta como:
-- `"15 segundos"` → "Use apenas CENA 1 (Hook) + CENA 4 (Punchline) + CENA 5 (Produto). Máximo impacto."
-- `"30 segundos"` → "Estrutura completa resumida. Ritmo rápido. Falas curtas."
-- `"60 segundos"` → "6 cenas completas. Contexto + payoff."
-- `"90 segundos" / "3 minutos" / "5+ minutos"` → "Narrativa estendida. Maior construção emocional."
-
-Esse perfil é injetado no `userPrompt` próximo ao `target_audience`.
-
-### 3. Aplicação condicional
-
-O guia de estrutura publicitária é injetado **somente quando**:
-- `content_type` for `roteiro` (ou ausente — default), OU
-- a `platform` for de vídeo curto (Reels, TikTok, Shorts).
-
-Para `content_type === "carrossel"` ou outros formatos não-vídeo, **nada muda** — o prompt segue exatamente como hoje. Isso evita poluir geradores que não são publicitários.
-
-### 4. Schema da function call
-
-O schema `generate_strategic_script` permanece idêntico (campos `script`, `hook`, `scenes`, etc.). A IA já produz texto estruturado em `script` — o novo guia apenas instrui o **formato visual** desse texto, não muda o JSON de saída. `ScriptViewer.tsx` continua parseando normalmente porque o regex de cenas (`sectionPatterns`) já reconhece "CENA N".
-
-## Detalhes técnicos
-
-| Item | Decisão |
-|---|---|
-| Tokens adicionais | ~700 tokens fixos, só quando aplicável |
-| Cache | `hashPrompt` continua válido — prompts diferentes geram hashes diferentes naturalmente |
-| Modo legacy (linha 406+) | Recebe versão **simplificada** do guia (sem camadas de contexto), pois é fallback |
-| Compatibilidade reversa | Roteiros antigos no banco não são afetados; só novas gerações usam a estrutura |
-| `communication_style` | Reaproveitado para escolher tom (Cômico/Profissional/Sério) — sem nova coluna |
+```
+┌─ Renomear empresa ─────────┐
+│ Nome atual: Acme Ltda      │
+│ Novo nome: [_____________] │
+│         [Cancelar] [Salvar]│
+└────────────────────────────┘
+```
 
 ## O que NÃO muda
 
-- UI do `ScriptGenerator.tsx`, `ContentGenerator.tsx`, `CRM.tsx`
-- Tabela `scripts`, `client_strategic_contexts`, `briefing_requests`
-- `ScriptViewer` (parser já compatível com `[CENA N – NOME]`)
-- Sistema de Viral Score, Hook Generator, Carousel Generator
-- Auth, RLS, usage guards, plan limits
-
-## Resultado esperado
-
-Roteiros gerados pelo agente passam a vir com blocos visuais limpos no formato:
-
-```
-[CENA 1 – HOOK]
-• Visual: close no rosto da personagem em choque
-• Fala: "Ninguém te contou isso ainda."
-• Intenção: curiosidade imediata
-
-[CENA 2 – SITUAÇÃO]
-...
-```
-
-Pronto para leitura rápida em set de gravação, com retenção, humor e CTA já embutidos conforme duração e tom escolhidos.
+- Nenhuma migration de schema.
+- `ideas`, `content_ideas`, `scripts`, `briefings` não têm coluna `business_name` — são ligadas via `project_id`/`user_id`, então herdam automaticamente.
+- Lista de clientes (`ClientListView`) continua intacta — basta o `fetchClients()` final para reagrupar.
 
