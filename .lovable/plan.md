@@ -1,64 +1,87 @@
 
 
-# Build Docker falhando — `package-lock.json` desatualizado
+# Camada Estratégica de Roteiro Publicitário
 
-## Causa
+## Objetivo
 
-O log mostra claramente:
+Adicionar uma camada complementar ao prompt da edge function `generate-script` para que os roteiros gerados sigam a estrutura visual de blocos (CENA 1 – HOOK até CENA 6 – CTA), com controle de duração, variação de tom, inserção estratégica do produto e direção de cena. A lógica atual (3 camadas de contexto, memory blocks, tone instructions, schema da function call) é **preservada integralmente**.
 
-```
-npm error `npm ci` can only install packages when your package.json
-and package-lock.json or npm-shrinkwrap.json are in sync.
-npm error Missing: @dnd-kit/core@6.3.1 from lock file
-npm error Missing: @dnd-kit/sortable@10.0.0 from lock file
-npm error Missing: @dnd-kit/utilities@3.2.2 from lock file
-npm error Missing: @dnd-kit/accessibility@3.1.1 from lock file
-```
+## Onde alterar
 
-Quando adicionei o Kanban (drag-and-drop), os pacotes `@dnd-kit/*` entraram no `package.json` mas o `package-lock.json` no repositório GitHub **não foi atualizado** com eles. O Dokploy usa `npm ci`, que exige sincronia exata entre os dois arquivos e falha imediatamente.
+Apenas **`supabase/functions/generate-script/index.ts`**. Nenhum outro arquivo é tocado — schema do banco, UI, hooks, fluxo de geração e cache continuam idênticos.
 
-Aviso secundário no log (`VITE_SUPABASE_PUBLISHABLE_KEY ... is not set`) é só um warning — só vira problema depois que o build passar.
+## O que muda no prompt
 
-## Solução
+### 1. Novo bloco `ADVERTISING_STRUCTURE_GUIDE` (constante no topo do arquivo)
 
-Trocar `npm ci --legacy-peer-deps` por `npm install --legacy-peer-deps` no Dockerfile. O `npm install` regenera o lockfile automaticamente quando há divergência, em vez de abortar.
+Texto compacto (aprox. 60 linhas, ~700 tokens) injetado no `systemPrompt` **após** as instruções de tom existentes, contendo:
 
-### Mudança em `Dockerfile` (linha 19)
+- **Estrutura visual obrigatória em 6 cenas** com formato fixo:
+  ```
+  [CENA N – NOME]
+  • Objetivo: ...
+  • Visual: ...
+  • Fala: ...
+  • Intenção: ...
+  ```
+- **Regras de duração** (15s / 30s / 60s / 90s) com mapeamento de quantas cenas usar e onde cortar.
+- **Variação de tom** (Cômico / Profissional / Sério) — mapeada a partir do `communication_style` já existente no contexto estratégico, sem campo novo.
+- **Inserção estratégica do produto** (solução, piada ou gatilho — nunca forçado).
+- **Direção de cena** (enquadramento, movimento, expressão) como sugestão obrigatória dentro de "Visual".
 
-```diff
-- RUN npm ci --legacy-peer-deps
-+ RUN npm install --legacy-peer-deps
-```
+### 2. Lógica de duração
 
-Nada mais muda. Multi-stage build, preview server, healthcheck e variáveis ARG continuam iguais.
+A função já recebe `video_duration` no body. Acrescentar um helper local `getDurationProfile(duration)` que retorna instrução curta como:
+- `"15 segundos"` → "Use apenas CENA 1 (Hook) + CENA 4 (Punchline) + CENA 5 (Produto). Máximo impacto."
+- `"30 segundos"` → "Estrutura completa resumida. Ritmo rápido. Falas curtas."
+- `"60 segundos"` → "6 cenas completas. Contexto + payoff."
+- `"90 segundos" / "3 minutos" / "5+ minutos"` → "Narrativa estendida. Maior construção emocional."
 
-## Por que essa abordagem
+Esse perfil é injetado no `userPrompt` próximo ao `target_audience`.
 
-- **Resolve agora sem depender do GitHub**: o lockfile do repo é gerenciado pelo Lovable e nem sempre é commitado em sincronia perfeita com `package.json` quando dependências novas são adicionadas via editor.
-- **Não quebra reprodutibilidade significativamente**: as versões em `package.json` já têm ranges fixos (`@dnd-kit/core: ^6.3.1`, etc.), então o resolver vai escolher as mesmas versões.
-- **Alternativa rejeitada**: tentar regerar e commitar o lockfile não é viável daqui — o Lovable não tem controle sobre o repo GitHub conectado, e mesmo um push de Lovable→GitHub pode não atualizar o lock se ele não foi tocado nesta sessão.
+### 3. Aplicação condicional
 
-## Aviso sobre variáveis de ambiente
+O guia de estrutura publicitária é injetado **somente quando**:
+- `content_type` for `roteiro` (ou ausente — default), OU
+- a `platform` for de vídeo curto (Reels, TikTok, Shorts).
 
-O warning `VITE_SUPABASE_PUBLISHABLE_KEY is not set` indica que o Dokploy não está injetando essa variável no build. Após corrigir o Dockerfile, se o app subir mas não conseguir falar com o Supabase, configure no painel do Dokploy (Environment Variables do serviço):
+Para `content_type === "carrossel"` ou outros formatos não-vídeo, **nada muda** — o prompt segue exatamente como hoje. Isso evita poluir geradores que não são publicitários.
 
-```
-VITE_SUPABASE_URL=https://nxmsdrnxrpgmrzprpzij.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<anon key>
-VITE_SUPABASE_PROJECT_ID=nxmsdrnxrpgmrzprpzij
-```
+### 4. Schema da function call
 
-Esses valores estão no `.env` do projeto. Não trato isso agora porque o build sequer chega nessa etapa — primeiro o `npm install` precisa passar.
+O schema `generate_strategic_script` permanece idêntico (campos `script`, `hook`, `scenes`, etc.). A IA já produz texto estruturado em `script` — o novo guia apenas instrui o **formato visual** desse texto, não muda o JSON de saída. `ScriptViewer.tsx` continua parseando normalmente porque o regex de cenas (`sectionPatterns`) já reconhece "CENA N".
 
-## Arquivos
+## Detalhes técnicos
 
-| Arquivo | Mudança |
+| Item | Decisão |
 |---|---|
-| `Dockerfile` | Trocar `npm ci` por `npm install` na linha 19 |
+| Tokens adicionais | ~700 tokens fixos, só quando aplicável |
+| Cache | `hashPrompt` continua válido — prompts diferentes geram hashes diferentes naturalmente |
+| Modo legacy (linha 406+) | Recebe versão **simplificada** do guia (sem camadas de contexto), pois é fallback |
+| Compatibilidade reversa | Roteiros antigos no banco não são afetados; só novas gerações usam a estrutura |
+| `communication_style` | Reaproveitado para escolher tom (Cômico/Profissional/Sério) — sem nova coluna |
 
 ## O que NÃO muda
 
-- `docker-compose.yml`, `.dockerignore`, `vite.config.ts`, `package.json` — intactos.
-- Estágio de produção (preview server na porta 8080) — idêntico.
-- Nenhum código da aplicação React/Supabase é tocado.
+- UI do `ScriptGenerator.tsx`, `ContentGenerator.tsx`, `CRM.tsx`
+- Tabela `scripts`, `client_strategic_contexts`, `briefing_requests`
+- `ScriptViewer` (parser já compatível com `[CENA N – NOME]`)
+- Sistema de Viral Score, Hook Generator, Carousel Generator
+- Auth, RLS, usage guards, plan limits
+
+## Resultado esperado
+
+Roteiros gerados pelo agente passam a vir com blocos visuais limpos no formato:
+
+```
+[CENA 1 – HOOK]
+• Visual: close no rosto da personagem em choque
+• Fala: "Ninguém te contou isso ainda."
+• Intenção: curiosidade imediata
+
+[CENA 2 – SITUAÇÃO]
+...
+```
+
+Pronto para leitura rápida em set de gravação, com retenção, humor e CTA já embutidos conforme duração e tom escolhidos.
 
