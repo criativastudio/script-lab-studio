@@ -642,6 +642,40 @@ const CRM = () => {
     if (!newValue) { setSelectedBusinessName(null); setOpenProjects(new Set()); }
   };
 
+  const handleRenameClient = async (group: ClientGroup, newName: string) => {
+    if (!user) return;
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      toast({ title: "Nome inválido", description: "Informe um nome.", variant: "destructive" });
+      return;
+    }
+    if (trimmed === group.business_name) return;
+    const duplicate = clientGroups.some(
+      g => g.business_name.toLowerCase() === trimmed.toLowerCase() && g.business_name !== group.business_name
+    );
+    if (duplicate) {
+      toast({ title: "Nome já em uso", description: "Já existe um cliente com esse nome.", variant: "destructive" });
+      return;
+    }
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supabase.from("briefing_requests").update({ business_name: trimmed })
+          .eq("user_id", user.id).eq("business_name", group.business_name),
+        supabase.from("client_strategic_contexts").update({ business_name: trimmed })
+          .eq("user_id", user.id).eq("business_name", group.business_name),
+        supabase.from("strategic_reports").update({ business_name: trimmed })
+          .eq("user_id", user.id).eq("business_name", group.business_name),
+      ]);
+      const err = r1.error || r2.error || r3.error;
+      if (err) throw err;
+      setSelectedBusinessName(trimmed.toLowerCase());
+      await fetchClients();
+      toast({ title: "Cliente renomeado!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao renomear", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleDeleteClient = async (group: ClientGroup) => {
     try {
       for (const project of group.projects) {
