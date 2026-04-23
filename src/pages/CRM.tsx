@@ -1022,8 +1022,8 @@ const CRM = () => {
                 contextForm={contextForm}
                 setContextForm={setContextForm}
                 saveStrategicContext={saveStrategicContext}
-                businessName={selectedGroup.projects[0].business_name}
-                firstToken={selectedGroup.projects[0].token}
+                businessName={selectedGroup.business_name}
+                firstToken={selectedGroup.projects[0]?.token || ""}
                 toast={toast}
               />
             ),
