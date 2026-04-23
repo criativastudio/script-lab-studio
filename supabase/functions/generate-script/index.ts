@@ -511,7 +511,9 @@ Diretrizes:
 - Adapte o tom e ritmo à duração e plataforma
 - Para vídeos curtos (15s-30s): seja direto e impactante
 - Para vídeos médios (60s): desenvolva uma mini-narrativa
-- Para vídeos longos (3min+): crie uma estrutura completa com storytelling`;
+- Para vídeos longos (3min+): crie uma estrutura completa com storytelling
+
+${shouldUseAdvertisingStructure(content_type, platform) ? ADVERTISING_STRUCTURE_GUIDE : ""}`;
 
     const userPrompt = `Crie um roteiro de vídeo de marketing com as seguintes especificações:
 
