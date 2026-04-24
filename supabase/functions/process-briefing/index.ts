@@ -9,20 +9,26 @@ const corsHeaders = {
 
 // Upsert raw context from form_answers BEFORE calling AI.
 // Guarantees the user's answers are preserved even if AI fails.
+function flat(v: any): string | null {
+  if (v == null) return null;
+  if (Array.isArray(v)) return v.join(", ") || null;
+  const s = String(v).trim();
+  return s || null;
+}
+
 async function upsertRawContext(supabase: any, br: any) {
   const answers = br.form_answers || {};
+  const objective = flat(answers.marketing_objective) || flat(answers.desired_outcome);
   const rawData: Record<string, any> = {
     user_id: br.user_id,
     business_name: br.business_name,
     business_niche: br.niche || null,
-    products_services: answers.business_context || null,
-    target_audience: answers.ideal_audience || null,
-    marketing_objectives: Array.isArray(answers.desired_outcome)
-      ? answers.desired_outcome.join(", ")
-      : (answers.desired_outcome || null),
-    communication_style: Array.isArray(answers.brand_voice)
-      ? answers.brand_voice.join(", ")
-      : (answers.brand_voice || null),
+    products_services: flat(answers.business_context),
+    target_audience: flat(answers.ideal_audience),
+    pain_points: flat(answers.pain_points),
+    differentiators: flat(answers.differentiators),
+    marketing_objectives: objective,
+    communication_style: flat(answers.brand_voice),
     is_completed: false,
   };
 
@@ -34,7 +40,6 @@ async function upsertRawContext(supabase: any, br: any) {
     .maybeSingle();
 
   if (existing) {
-    // Don't overwrite a completed context with raw data
     if (!existing.is_completed) {
       await supabase.from("client_strategic_contexts").update(rawData).eq("id", existing.id);
     }
@@ -185,18 +190,24 @@ OBJETIVO FINAL: roteiros que conectam, entretêm e vendem sem parecer venda.
 
 Responda usando a função fornecida.${stylePersonalizationBlock}`;
 
+      const objectiveAnswer = flat(answers.marketing_objective) || flat(answers.desired_outcome) || "Não informado";
       const userPrompt = `
 Cliente: ${br.business_name}
 Projeto: ${br.project_name}
+Nicho: ${nicho}
 Quantidade de vídeos: ${videoCount}
 
 Respostas do briefing estratégico:
-1. Contexto do negócio (o que faz, para quem vende, problema que resolve): ${answers.business_context || "Não informado"}
-2. Público ideal para os vídeos: ${answers.ideal_audience || "Não informado"}
-3. Resultado desejado (ação dos espectadores): ${JSON.stringify(answers.desired_outcome || [])}
-4. Voz da marca: ${JSON.stringify(answers.brand_voice || [])}
+1. Contexto do negócio: ${flat(answers.business_context) || "Não informado"}
+2. Público ideal: ${flat(answers.ideal_audience) || "Não informado"}
+3. Dores do cliente: ${flat(answers.pain_points) || "Não informado"}
+4. Diferencial da empresa: ${flat(answers.differentiators) || "Não informado"}
+5. Objetivo principal de marketing: ${objectiveAnswer}
+6. Tipo de conteúdo desejado: ${flat(answers.content_type) || "Não definido"}
+7. Voz da marca: ${flat(answers.brand_voice) || "Não informado"}
 
-A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exatamente ${videoCount} roteiros estratégicos diferentes. Cada roteiro deve ser completo e pronto para produção.
+Use OBRIGATORIAMENTE as dores e os diferenciais nos hooks e CTAs dos roteiros.
+Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e prontos para produção.
 `;
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -342,21 +353,20 @@ A partir dessas 4 respostas, infira toda a estratégia de conteúdo e gere exata
 
     // 5. Update strategic context with AI-enriched data and mark complete
     const answersAfter = br.form_answers || {};
+    const objectiveAfter = flat(answersAfter.marketing_objective) || flat(answersAfter.desired_outcome);
     const fullContextData: Record<string, any> = {
       user_id: br.user_id,
       business_name: br.business_name,
       business_niche: br.niche || null,
-      products_services: answersAfter.business_context || null,
-      target_audience: answersAfter.ideal_audience || result.persona || null,
+      products_services: flat(answersAfter.business_context),
+      target_audience: flat(answersAfter.ideal_audience) || result.persona || null,
       customer_persona: result.persona || null,
       tone_of_voice: result.tone_of_voice || null,
       market_positioning: result.positioning || null,
-      marketing_objectives: Array.isArray(answersAfter.desired_outcome)
-        ? answersAfter.desired_outcome.join(", ")
-        : (answersAfter.desired_outcome || null),
-      communication_style: Array.isArray(answersAfter.brand_voice)
-        ? answersAfter.brand_voice.join(", ")
-        : (answersAfter.brand_voice || null),
+      pain_points: flat(answersAfter.pain_points),
+      differentiators: flat(answersAfter.differentiators),
+      marketing_objectives: objectiveAfter,
+      communication_style: flat(answersAfter.brand_voice),
       is_completed: true,
     };
 
