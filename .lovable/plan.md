@@ -1,45 +1,60 @@
+# Refatoração do Formulário de Briefing do Cliente
 
+## Problemas atuais
+1. **Perguntas 3 e 4** (`desired_outcome`, `brand_voice`) são `type: "multi"` — só chips, sem texto livre obrigatório.
+2. **Sugestões poluídas**: o `suggest-briefing` injeta respostas anteriores no prompt, gerando ruído.
+3. **Persistência falha**: salva só no submit final → fechar a aba perde tudo.
+4. **Faltam perguntas estratégicas**: dores, diferencial, objetivo, tipo de conteúdo.
 
-# Ajustes de tipografia e dark mode na Landing Page
+## Mudanças
 
-## Problemas
+### 1. `src/pages/ClientBriefingForm.tsx`
 
-1. **Headline do hero preto no dark mode**: linha 242 usa `text-zinc-900` (cor fixa) em vez de `text-foreground`. Por isso o texto principal "Roteiros estratégicos que geram resultado..." continua preto quando o tema escuro é ativado.
-2. **Títulos das seções pequenos**: hoje `text-3xl md:text-4xl` deixa as seções (Problema, Solução, Exemplo, Benefícios, Planos, CTA Final) com cabeçalhos muito tímidos no desktop e mobile.
-3. **Descrições pouco legíveis**: hoje `text-base md:text-lg font-light` — fonte fina e tamanho médio dificultam leitura, principalmente no mobile.
+**7 perguntas híbridas** (todas com chips IA + textarea obrigatório):
 
-## Correções (somente em `src/pages/LandingPage.tsx`)
+| # | Chave | Pergunta |
+|---|---|---|
+| 1 | `business_context` | Conte sobre seu negócio |
+| 2 | `ideal_audience` | Quem é seu público-alvo ideal? |
+| 3 | `pain_points` | **NOVA** — Principais dores do seu cliente? |
+| 4 | `differentiators` | **NOVA** — Diferencial da sua empresa? |
+| 5 | `marketing_objective` | **NOVA** — Objetivo principal (vendas / autoridade / engajamento)? |
+| 6 | `content_type` | **NOVA** — Tipo de conteúdo desejado? |
+| 7 | `brand_voice` | Como sua marca deve soar? |
 
-### A. Hero headline — corrigir cor no dark mode
-- Linha 242: trocar `text-zinc-900` → `text-foreground`.
-- Resultado: a palavra principal acompanha o tema (preto no claro, branco no escuro), enquanto o `<span class="text-gradient-primary">` permanece colorido.
+**Padrão único de UI**:
+- Chips no topo (clicar **adiciona** texto ao textarea, não substitui).
+- `<Textarea>` sempre visível e obrigatório (mín. 10 caracteres p/ avançar).
+- Indicador "Salvando…" / "Salvo".
 
-### B. Títulos principais de cada seção — aumentar
-Aplicar nos `<h2>` das seções (linhas 331, 364, 406, 455, 504, 552, 626):
-- De: `text-3xl md:text-4xl`
-- Para: `text-4xl sm:text-5xl md:text-6xl`
-- Mantém `font-display`, `font-light`, `tracking-tight` e `leading-[1.1]`.
+**Auto-save incremental**:
+- Persiste em `briefing_requests.form_answers` a cada "Avançar".
+- Debounce 1.5s enquanto o usuário digita.
+- Toast de erro com retry se falhar.
 
-### C. Descrições de cada seção — aumentar e melhorar leitura
-Aplicar nos `<p>` de descrição logo abaixo dos títulos (linhas 334, 367, 409, 458, 555, 629):
-- De: `text-base md:text-lg font-light`
-- Para: `text-lg md:text-xl font-normal leading-relaxed`
-- Mantém `text-muted-foreground` e largura máxima atual.
+### 2. `supabase/functions/suggest-briefing/index.ts`
 
-### D. Pequenos refinamentos coerentes
-- Aumentar margem inferior dos títulos de `mb-6` → `mb-8` para dar respiro com a fonte maior.
-- Hero description (linha 252) também sobe de `text-sm md:text-base` → `text-base md:text-lg` para coerência visual.
+- **Remove** bloco `previous_answers` do prompt.
+- Usa **somente** o nicho cadastrado (busca em `client_strategic_contexts.business_niche` via `briefing_requests.user_id`) + `business_context` da pergunta 1.
+- Aceita novo parâmetro `question_key` (`audience` | `pain_points` | `differentiators` | `objective` | `content_type` | `voice`).
+- Retorna **6-8 chips curtos** (2-5 palavras) específicos da pergunta, 100% aderentes ao nicho.
+- System prompt: "Gere sugestões EXCLUSIVAMENTE para o nicho `{business_niche}`. Proibido genérico."
+
+### 3. `supabase/functions/process-briefing/index.ts`
+
+Mapear novos campos do `form_answers` para `client_strategic_contexts`:
+- `pain_points` → `pain_points`
+- `differentiators` → `differentiators`
+- `marketing_objective` → `marketing_objectives`
+- `content_type` → entra no prompt p/ gerar `content_strategy`
 
 ## O que NÃO muda
+- StepIndicator, layout, estrutura de navegação.
+- Token público, RLS, schema de `briefing_requests`.
+- Disparo do `process-briefing` em background no submit.
 
-- Estrutura, ordem das seções, animações, ícones, dados.
-- Cores de gradiente, badges, cards de problemas/benefícios/planos.
-- Componentes auxiliares (`AIInputDemo`, `FeatureTabs`, `SocialProof`, `HeroAnimation`).
-- `index.css`, tokens de tema, `tailwind.config.ts`.
-
-## Resultado esperado
-
-1. Texto principal do hero muda corretamente para branco no dark mode.
-2. Títulos das seções ocupam mais espaço visual (mais impactantes em desktop e mobile).
-3. Descrições maiores e com peso normal — leitura confortável em qualquer dispositivo.
-
+## Resultado
+1. ✅ Todas as perguntas com textarea obrigatório.
+2. ✅ Sugestões 100% aderentes ao nicho.
+3. ✅ Zero perda de dados.
+4. ✅ Briefing mais completo → melhores roteiros e carrosséis.
