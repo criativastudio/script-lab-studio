@@ -5,85 +5,55 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const QUESTION_INSTRUCTIONS: Record<string, string> = {
+  ideal_audience: "perfis de público-alvo (quem consome este nicho)",
+  pain_points: "principais dores, dúvidas e frustrações que o cliente deste nicho enfrenta",
+  differentiators: "diferenciais competitivos típicos e desejáveis para empresas deste nicho",
+  marketing_objective: "objetivos de marketing realistas para empresas deste nicho",
+  content_type: "tipos/formatos de conteúdo que performam bem para este nicho",
+  brand_voice: "tons de voz e estilos de comunicação adequados para este nicho",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { business_context, previous_answers, current_step } = await req.json();
-    
+    const { business_context, niche, question_key } = await req.json();
+
     if (!business_context?.trim()) {
       return new Response(JSON.stringify({ error: "business_context is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const step = typeof current_step === "number" ? current_step : 0;
-    const prev = previous_answers || {};
-
-    // Build context block from previous answers
-    const contextLines: string[] = [`Descrição do negócio: "${business_context}"`];
-    if (prev.ideal_audience) contextLines.push(`Público informado: "${Array.isArray(prev.ideal_audience) ? prev.ideal_audience.join(", ") : prev.ideal_audience}"`);
-    if (prev.desired_outcome) contextLines.push(`Resultado desejado: "${Array.isArray(prev.desired_outcome) ? prev.desired_outcome.join(", ") : prev.desired_outcome}"`);
-    if (prev.brand_voice) contextLines.push(`Voz da marca: "${Array.isArray(prev.brand_voice) ? prev.brand_voice.join(", ") : prev.brand_voice}"`);
-
-    // Determine which chip sets to generate based on remaining steps
-    const neededChips: string[] = [];
-    const properties: Record<string, any> = {};
-    const required: string[] = [];
-
-    if (step <= 0) {
-      neededChips.push("audience_chips (6-8 sugestões de público-alvo)");
-      properties.audience_chips = { type: "array", items: { type: "string" }, description: "6-8 audience suggestion chips in Portuguese" };
-      required.push("audience_chips");
-    }
-    if (step <= 1) {
-      neededChips.push("outcome_chips (5-6 sugestões de resultado desejado)");
-      properties.outcome_chips = { type: "array", items: { type: "string" }, description: "5-6 desired outcome chips in Portuguese" };
-      required.push("outcome_chips");
-    }
-    if (step <= 2) {
-      neededChips.push("voice_chips (5-6 sugestões de voz da marca)");
-      properties.voice_chips = { type: "array", items: { type: "string" }, description: "5-6 brand voice chips in Portuguese" };
-      required.push("voice_chips");
-    }
-
-    if (required.length === 0) {
-      return new Response(JSON.stringify({}), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!question_key || !QUESTION_INSTRUCTIONS[question_key]) {
+      return new Response(JSON.stringify({ error: "valid question_key is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+    const nichoText = niche?.trim() ? niche.trim() : "não especificado";
+    const targetDescription = QUESTION_INSTRUCTIONS[question_key];
 
     const systemPrompt = `Você é um especialista em estratégia de conteúdo e marketing digital.
 
-Sua tarefa: gerar sugestões contextuais (chips) para um formulário de briefing de vídeos. As sugestões devem ser em Português (Brasil), concisas (2-6 palavras cada).
+Sua tarefa: gerar 6 a 8 sugestões CURTAS (2 a 5 palavras cada) em Português (Brasil) que sejam ESPECÍFICAS para o nicho informado.
 
 REGRAS OBRIGATÓRIAS:
-1. Analise TODAS as informações já fornecidas pelo cliente antes de gerar sugestões.
-2. As sugestões devem ser específicas e coerentes com o nicho/segmento do negócio descrito.
-3. Priorize perfis de público que realmente consumiriam o produto ou serviço.
-4. Se houver informação de localização ou região, inclua sugestões relacionadas ao público local.
-5. Sugira opções que o cliente talvez não tenha considerado, mas que façam sentido para o negócio.
-6. NUNCA gere sugestões genéricas como "público geral" ou "todos os públicos".
-7. Cada chip deve ser curto e objetivo (2-6 palavras).
-8. Se o cliente já informou respostas anteriores, use-as para refinar e contextualizar as próximas sugestões.
+1. As sugestões devem ser EXCLUSIVAMENTE pertinentes ao nicho "${nichoText}".
+2. PROIBIDO sugestões genéricas como "público geral", "todos os públicos", "qualidade", "preço justo".
+3. Cada chip deve ser concreto, específico e fazer sentido apenas para este nicho.
+4. NÃO use emojis. NÃO use pontuação no final.
+5. Use vocabulário nativo do nicho — termos que um profissional da área realmente usa.
+6. Retorne APENAS via a função fornecida.`;
 
-Exemplo: Para uma "Confeitaria artesanal em Curitiba", chips de público poderiam ser:
-- "Noivas planejando casamento"
-- "Empresas buscando brindes premium"  
-- "Moradores de Curitiba"
-- "Amantes de doces gourmet"
-- "Mães organizando festas infantis"
-- "Casais em datas comemorativas"`;
+    const userPrompt = `Nicho do cliente: "${nichoText}"
+Descrição breve do negócio: "${business_context}"
 
-    const userPrompt = `Contexto completo do cliente:
-${contextLines.join("\n")}
+Gere 6 a 8 sugestões curtas para: ${targetDescription}.
 
-Com base nessas informações, gere sugestões contextualizadas para:
-${neededChips.join("\n")}
-
-Lembre-se: as sugestões devem ser ESPECÍFICAS para este negócio, não genéricas.`;
+Lembre-se: específicas para o nicho "${nichoText}", proibido genérico.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -100,17 +70,23 @@ Lembre-se: as sugestões devem ser ESPECÍFICAS para este negócio, não genéri
         tools: [{
           type: "function",
           function: {
-            name: "return_suggestions",
-            description: "Return contextual chip suggestions for briefing form questions",
+            name: "return_chips",
+            description: "Return 6-8 contextual chip suggestions",
             parameters: {
               type: "object",
-              properties,
-              required,
+              properties: {
+                chips: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "6 to 8 short suggestion chips (2-5 words each) in Portuguese, specific to the niche",
+                },
+              },
+              required: ["chips"],
               additionalProperties: false,
             },
           },
         }],
-        tool_choice: { type: "function", function: { name: "return_suggestions" } },
+        tool_choice: { type: "function", function: { name: "return_chips" } },
       }),
     });
 
@@ -129,14 +105,13 @@ Lembre-se: as sugestões devem ser ESPECÍFICAS para este negócio, não genéri
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
-      return new Response(JSON.stringify({ error: "No structured response" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ chips: [] }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const suggestions = JSON.parse(toolCall.function.arguments);
-
-    return new Response(JSON.stringify(suggestions), {
+    const parsed = JSON.parse(toolCall.function.arguments);
+    return new Response(JSON.stringify({ chips: parsed.chips || [] }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
