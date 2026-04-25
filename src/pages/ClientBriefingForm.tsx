@@ -216,26 +216,42 @@ const ClientBriefingForm = () => {
   const handleSubmit = async () => {
     if (!briefing || !token) return;
     setSubmitting(true);
+    setError(null);
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
+    // 1. Persistir respostas finais + marcar como submitted (garantia de não perder dados)
     const { error: updateErr } = await supabase
       .from("briefing_requests")
       .update({ form_answers: answers, status: "submitted" })
       .eq("token", token);
 
     if (updateErr) {
-      setError("Erro ao enviar respostas. Tente novamente.");
+      console.error("[Briefing] Erro ao salvar respostas finais:", updateErr);
+      setError("Erro ao salvar respostas. Tente novamente.");
       setSubmitting(false);
       return;
     }
 
-    supabase.functions
-      .invoke("process-briefing", { body: { token } })
-      .catch((e) => console.error("Process error (background):", e));
-
+    // 2. Mostrar tela de sucesso ANTES de chamar a IA (respostas já salvas, pipeline garantido por retry-pending)
     setSubmitted(true);
-    setSubmitting(false);
+
+    // 3. Disparar IA aguardando resposta (não fire-and-forget — evita cancelamento)
+    try {
+      const { error: invokeErr } = await supabase.functions.invoke("process-briefing", {
+        body: { token },
+      });
+      if (invokeErr) {
+        console.error("[Briefing] Erro ao processar IA (será reprocessado automaticamente):", invokeErr);
+      } else {
+        console.log("[Briefing] Processamento iniciado com sucesso");
+      }
+    } catch (e) {
+      console.error("[Briefing] Falha ao invocar process-briefing:", e);
+      // Não trava o usuário — retry-pending-briefings cuidará disso
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canProceed = () => {

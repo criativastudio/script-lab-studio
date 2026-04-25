@@ -54,10 +54,13 @@ serve(async (req) => {
   try {
     const { token } = await req.json();
     if (!token) {
+      console.error("[process-briefing] Missing token in request");
       return new Response(JSON.stringify({ error: "Token is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`[process-briefing] Iniciando processamento para token=${token.slice(0, 8)}...`);
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -73,10 +76,13 @@ serve(async (req) => {
       .single();
 
     if (brError || !br) {
+      console.error("[process-briefing] Briefing not found:", brError);
       return new Response(JSON.stringify({ error: "Briefing request not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`[process-briefing] Processando: ${br.business_name} / ${br.project_name} (status atual=${br.status})`);
 
     if (br.status === "completed") {
       return new Response(JSON.stringify({ error: "Already processed", data: br }), {
@@ -217,8 +223,8 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          max_tokens: 3700,
+          model: "google/gemini-2.5-flash",
+          max_tokens: 8000,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -249,13 +255,11 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
                         call_to_action: { type: "string" },
                       },
                       required: ["title", "objective", "hook", "scene_structure", "narration", "visual_direction", "call_to_action"],
-                      additionalProperties: false,
                     },
                     description: `Exactly ${videoCount} video scripts`,
                   },
                 },
                 required: ["persona", "positioning", "tone_of_voice", "content_strategy", "scripts"],
-                additionalProperties: false,
               },
             },
           }],
@@ -286,6 +290,7 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
       const aiData = await response.json();
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall) {
+        console.error("[process-briefing] IA não retornou tool_call. Resposta:", JSON.stringify(aiData).slice(0, 1500));
         await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
         return new Response(JSON.stringify({ error: "AI did not return structured data", context_saved: true }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -321,13 +326,14 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
     }
 
     // 2. Create briefing
-    await supabase.from("briefings").insert({
+    const { error: briefingErr } = await supabase.from("briefings").insert({
       goal: result.content_strategy,
       target_audience: result.persona,
       content_style: result.tone_of_voice,
       project_id: projectId,
       user_id: br.user_id,
     });
+    if (briefingErr) console.error("[process-briefing] Erro ao salvar briefing:", briefingErr);
 
     // 3. Create scripts
     const scriptInserts = (result.scripts || []).map((s: any) => ({
@@ -338,7 +344,9 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
     }));
 
     if (scriptInserts.length > 0) {
-      await supabase.from("scripts").insert(scriptInserts);
+      const { error: scriptsErr } = await supabase.from("scripts").insert(scriptInserts);
+      if (scriptsErr) console.error("[process-briefing] Erro ao salvar scripts:", scriptsErr);
+      else console.log(`[process-briefing] ${scriptInserts.length} scripts salvos`);
     }
 
     // 4. Update briefing_requests
@@ -377,11 +385,16 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
       .eq("business_name", br.business_name)
       .maybeSingle();
 
+    let ctxErr: any = null;
     if (existingCtx) {
-      await supabase.from("client_strategic_contexts").update(fullContextData).eq("id", existingCtx.id);
+      const { error } = await supabase.from("client_strategic_contexts").update(fullContextData).eq("id", existingCtx.id);
+      ctxErr = error;
     } else {
-      await supabase.from("client_strategic_contexts").insert(fullContextData);
+      const { error } = await supabase.from("client_strategic_contexts").insert(fullContextData);
+      ctxErr = error;
     }
+    if (ctxErr) console.error("[process-briefing] Erro ao salvar contexto estratégico:", ctxErr);
+    else console.log(`[process-briefing] ✅ Concluído com sucesso: ${br.business_name}`);
 
     return new Response(JSON.stringify({
       success: true,
