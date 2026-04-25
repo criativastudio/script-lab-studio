@@ -217,68 +217,58 @@ Use OBRIGATORIAMENTE as dores e os diferenciais nos hooks e CTAs dos roteiros.
 Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e prontos para produção.
 `;
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          max_tokens: 8000,
+      let aiResult;
+      try {
+        aiResult = await callAIWithFallback({
+          functionName: "process-briefing",
+          supabase,
+          maxTokens: 12000,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          tools: [{
-            type: "function",
-            function: {
-              name: "generate_briefing_and_scripts",
-              description: "Generate strategic briefing and video scripts",
-              parameters: {
-                type: "object",
-                properties: {
-                  persona: { type: "string", description: "Detailed customer persona description" },
-                  positioning: { type: "string", description: "Brand positioning strategy" },
-                  tone_of_voice: { type: "string", description: "Recommended tone of voice for content" },
-                  content_strategy: { type: "string", description: "Overall content strategy" },
-                  scripts: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        objective: { type: "string" },
-                        hook: { type: "string" },
-                        scene_structure: { type: "string" },
-                        narration: { type: "string" },
-                        visual_direction: { type: "string" },
-                        call_to_action: { type: "string" },
-                      },
-                      required: ["title", "objective", "hook", "scene_structure", "narration", "visual_direction", "call_to_action"],
+          tool: {
+            name: "generate_briefing_and_scripts",
+            description: "Generate strategic briefing and video scripts",
+            parameters: {
+              type: "object",
+              properties: {
+                persona: { type: "string", description: "Detailed customer persona description" },
+                positioning: { type: "string", description: "Brand positioning strategy" },
+                tone_of_voice: { type: "string", description: "Recommended tone of voice for content" },
+                content_strategy: { type: "string", description: "Overall content strategy" },
+                scripts: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      objective: { type: "string" },
+                      hook: { type: "string" },
+                      scene_structure: { type: "string" },
+                      narration: { type: "string" },
+                      visual_direction: { type: "string" },
+                      call_to_action: { type: "string" },
                     },
-                    description: `Exactly ${videoCount} video scripts`,
+                    required: ["title", "objective", "hook", "scene_structure", "narration", "visual_direction", "call_to_action"],
                   },
+                  description: `Exactly ${videoCount} video scripts`,
                 },
-                required: ["persona", "positioning", "tone_of_voice", "content_strategy", "scripts"],
               },
+              required: ["persona", "positioning", "tone_of_voice", "content_strategy", "scripts"],
             },
-          }],
-          tool_choice: { type: "function", function: { name: "generate_briefing_and_scripts" } },
-        }),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("AI Gateway error:", response.status, errText);
-        // Revert to submitted so retry-pending-briefings can pick it up
+          },
+        });
+      } catch (e: any) {
+        const msg = e?.message || String(e);
+        console.error("[process-briefing] AI call failed:", msg);
         await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-        if (response.status === 429) {
+        if (msg === "RATE_LIMIT") {
           return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
             status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        if (response.status === 402) {
+        if (msg === "PAYMENT_REQUIRED") {
           return new Response(JSON.stringify({ error: "Payment required for AI processing." }), {
             status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -288,18 +278,9 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
         });
       }
 
-      const aiData = await response.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      if (!toolCall) {
-        console.error("[process-briefing] IA não retornou tool_call. Resposta:", JSON.stringify(aiData).slice(0, 1500));
-        await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
-        return new Response(JSON.stringify({ error: "AI did not return structured data", context_saved: true }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      result = JSON.parse(toolCall.function.arguments);
-      const tokens = estimateTokens(JSON.stringify(result));
+      result = aiResult.toolArguments;
+      console.log(`[process-briefing] AI ok via ${aiResult.provider}, scripts=${result.scripts?.length || 0}`);
+      const tokens = aiResult.rawTokens || estimateTokens(JSON.stringify(result));
       await logUsage(supabase, br.user_id, "process-briefing", "briefing", tokens, pHash);
       await saveCache(supabase, pHash, "process-briefing", result);
     }
