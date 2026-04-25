@@ -292,6 +292,7 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
       const aiData = await response.json();
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall) {
+        console.error("[process-briefing] IA não retornou tool_call. Resposta:", JSON.stringify(aiData).slice(0, 1500));
         await supabase.from("briefing_requests").update({ status: "submitted" }).eq("id", br.id);
         return new Response(JSON.stringify({ error: "AI did not return structured data", context_saved: true }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
