@@ -224,7 +224,7 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
         aiResult = await callAIWithFallback({
           functionName: "process-briefing",
           supabase,
-          maxTokens: 12000,
+          maxTokens: 6000,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
