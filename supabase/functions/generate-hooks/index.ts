@@ -188,6 +188,7 @@ Cada gancho deve usar um dos seguintes gatilhos psicológicos (use cada um exata
     });
 
     if (!response.ok) {
+      await recordGatewayError(supabase, "generate-hooks", response.status).catch(()=>{});
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },

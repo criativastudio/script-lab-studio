@@ -141,6 +141,7 @@ Seja criterioso mas justo. Roteiros excelentes ficam entre 75-90. Apenas roteiro
     });
 
     if (!response.ok) {
+      await recordGatewayError(supabase, "score-script", response.status).catch(()=>{});
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
