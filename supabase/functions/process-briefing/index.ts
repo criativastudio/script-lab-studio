@@ -327,13 +327,14 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
     }
 
     // 2. Create briefing
-    await supabase.from("briefings").insert({
+    const { error: briefingErr } = await supabase.from("briefings").insert({
       goal: result.content_strategy,
       target_audience: result.persona,
       content_style: result.tone_of_voice,
       project_id: projectId,
       user_id: br.user_id,
     });
+    if (briefingErr) console.error("[process-briefing] Erro ao salvar briefing:", briefingErr);
 
     // 3. Create scripts
     const scriptInserts = (result.scripts || []).map((s: any) => ({
@@ -344,7 +345,9 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
     }));
 
     if (scriptInserts.length > 0) {
-      await supabase.from("scripts").insert(scriptInserts);
+      const { error: scriptsErr } = await supabase.from("scripts").insert(scriptInserts);
+      if (scriptsErr) console.error("[process-briefing] Erro ao salvar scripts:", scriptsErr);
+      else console.log(`[process-briefing] ${scriptInserts.length} scripts salvos`);
     }
 
     // 4. Update briefing_requests
