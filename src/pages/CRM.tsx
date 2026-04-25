@@ -1061,7 +1061,7 @@ const CRM = () => {
                 creatingProject={creatingProject}
                 handleCreateProject={handleCreateProject}
                 toast={toast}
-                maxVideos={limits.scriptsPerBriefing}
+                maxVideos={Math.min(limits.scriptsPerBriefing, 12)}
                 onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
                 hasStrategicContext={!!strategicContext}
                 onGenerateNewLink={() => {
@@ -1246,7 +1246,7 @@ const CRM = () => {
         toast={toast}
         onQuickAction={handleQuickAction}
         onToggleActive={handleToggleActive}
-        maxVideos={limits.scriptsPerBriefing}
+        maxVideos={Math.min(limits.scriptsPerBriefing, 12)}
         onVideoLimitExceeded={() => setPlanLimitModalOpen(true)}
         onRetryPending={handleRetryPending}
         retryingPending={retryingPending}
