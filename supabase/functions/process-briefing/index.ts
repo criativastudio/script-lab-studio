@@ -130,7 +130,7 @@ serve(async (req) => {
       result = cached;
       await logUsage(supabase, br.user_id, "process-briefing", "briefing", 0, pHash);
     } else {
-      const videoCount = br.video_quantity || 3;
+      const videoCount = Math.min(br.video_quantity || 3, 12);
 
       const nicho = br.niche || "não especificado";
       const contentType = answers.content_type || null;
