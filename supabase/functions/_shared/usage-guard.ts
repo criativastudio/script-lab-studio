@@ -207,6 +207,23 @@ export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
+export async function recordGatewayError(
+  supabase: any,
+  functionName: string,
+  statusCode: number,
+  message?: string,
+): Promise<void> {
+  try {
+    await supabase.from("ai_gateway_errors").insert({
+      function_name: functionName,
+      status_code: statusCode,
+      message: message ?? null,
+    });
+  } catch (e) {
+    console.error("Failed to record gateway error:", e);
+  }
+}
+
 // Run all guards in sequence. Returns error response or null if all pass.
 export async function runGuards(
   supabase: any,

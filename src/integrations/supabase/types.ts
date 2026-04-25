@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_gateway_errors: {
+        Row: {
+          function_name: string
+          id: string
+          message: string | null
+          occurred_at: string
+          status_code: number
+        }
+        Insert: {
+          function_name: string
+          id?: string
+          message?: string | null
+          occurred_at?: string
+          status_code: number
+        }
+        Update: {
+          function_name?: string
+          id?: string
+          message?: string | null
+          occurred_at?: string
+          status_code?: number
+        }
+        Relationships: []
+      }
+      ai_settings: {
+        Row: {
+          id: string
+          last_check_at: string | null
+          last_check_result: Json | null
+          monthly_token_quota: number | null
+          openai_enabled: boolean
+          updated_at: string
+          warning_threshold_percent: number
+        }
+        Insert: {
+          id?: string
+          last_check_at?: string | null
+          last_check_result?: Json | null
+          monthly_token_quota?: number | null
+          openai_enabled?: boolean
+          updated_at?: string
+          warning_threshold_percent?: number
+        }
+        Update: {
+          id?: string
+          last_check_at?: string | null
+          last_check_result?: Json | null
+          monthly_token_quota?: number | null
+          openai_enabled?: boolean
+          updated_at?: string
+          warning_threshold_percent?: number
+        }
+        Relationships: []
+      }
       briefing_requests: {
         Row: {
           business_name: string
