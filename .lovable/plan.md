@@ -1,55 +1,65 @@
 ## Diagnóstico
 
-Verifiquei o banco de dados e confirmei o problema:
+Os logs do Edge Function confirmam o erro real:
 
-| Cliente | Data | Status | Persona | Project |
-|---|---|---|---|---|
-| **Vonixx** | 2026-04-25 | `submitted` | ❌ | ❌ |
-| **Criativa Studio** | 2026-04-24 | `submitted` | ❌ | ❌ |
-| Vitoria Motoparts | 2026-04-23 | `completed` | ✅ | ✅ |
-
-Os 2 briefings mais recentes ficaram travados em `submitted` — respostas salvas, mas IA nunca rodou. **Logs do `process-briefing` estão vazios**, ou seja, a Edge Function nem chegou a ser invocada.
-
-## Causa raiz
-
-No `ClientBriefingForm.tsx` (linhas 233–238), o submit faz:
-
-```ts
-supabase.functions
-  .invoke("process-briefing", { body: { token } })
-  .catch((e) => console.error(...));   // sem await
-setSubmitted(true);                     // re-renderiza imediatamente
+```
+finish_reason: "error"
+native_finish_reason: "MALFORMED_FUNCTION_CALL"
+usage: { prompt_tokens: 0, completion_tokens: 0 }
 ```
 
-Como `setSubmitted(true)` desmonta o componente do formulário antes do `fetch` ser concluído, o navegador **cancela a requisição em voo**. Resultado: o servidor nunca recebe o gatilho, o briefing fica em `submitted` para sempre, e o erro é engolido silenciosamente pelo `.catch()`.
+**3 chamadas seguidas** ao `process-briefing` falharam com **0 tokens consumidos** — o `google/gemini-2.5-flash` está rejeitando o tool schema antes mesmo de gerar resposta. Isso explica o "Edge Function returned non-2xx" e a tela travada.
+
+### Duas funções com problemas distintos
+
+| Função | Quando usado | Problema |
+|---|---|---|
+| `process-briefing` | Cliente envia formulário público | `gemini-2.5-flash` retorna MALFORMED em 100% — schema com array de 7 campos obrigatórios é complexo demais |
+| `manual-generate` | Botão "Criar Projeto" no card do cliente | Usa `gemini-3-flash-preview` (modelo experimental instável) **e** tem `additionalProperties: false` (proibido em function calling do Gemini) |
 
 ## Plano de correção
 
-### 1. `src/pages/ClientBriefingForm.tsx` — submit confiável
-- **Aguardar** o invoke antes de marcar como enviado (com timeout de segurança).
-- Mostrar estado "processando" enquanto a IA roda (em vez de marcar como "submitted" e abandonar).
-- Capturar e exibir erros reais (não apenas logar no console).
-- Adicionar retry manual caso a chamada falhe.
+### 1. `supabase/functions/manual-generate/index.ts`
+- **Trocar modelo**: `google/gemini-3-flash-preview` → `google/gemini-2.5-pro` (mais confiável para function calling complexo)
+- **Remover `additionalProperties: false`** do schema (linhas 185 e 190) — comprovadamente causa MALFORMED_FUNCTION_CALL no Gemini
+- **Adicionar fallback automático para OpenAI** quando o Lovable Gateway retornar erro estrutural (já temos `OPENAI_API_KEY` configurada)
+- **Adicionar `recordGatewayError`** para rastrear no painel Admin
 
-### 2. `supabase/functions/process-briefing/index.ts` — robustez
-- Atualizar `status='processing'` **antes** de chamar a IA (já faz, mas mover para mais cedo).
-- Em qualquer caminho de erro, garantir reverter para `submitted` (já faz na maioria — auditar todos os returns).
-- Adicionar `console.log` no início (token + business_name) para rastreamento.
-- Garantir que `briefings` e `scripts` insert tenham seus erros logados (atualmente são silenciosos).
+### 2. `supabase/functions/process-briefing/index.ts`
+- **Trocar modelo**: `google/gemini-2.5-flash` → `google/gemini-2.5-pro` (resolve MALFORMED em schemas complexos)
+- **Adicionar fallback OpenAI** com mesmo schema quando o Gateway falhar 2× seguidas
+- **Reduzir prompt**: o systemPrompt tem ~3000 chars, vou consolidar regras críticas mantendo qualidade
+- **Aumentar `max_tokens`** para 12000 (Pro suporta mais)
 
-### 3. Reprocessar os 2 briefings travados
-- Disparar manualmente o `process-briefing` para `Vonixx` e `Criativa Studio` para destravar os clientes existentes (via SQL/insert tool ou retry-pending).
+### 3. Helper compartilhado de fallback (`supabase/functions/_shared/ai-fallback.ts` — novo)
+- Função `callAIWithFallback(messages, tools, options)` que:
+  1. Tenta Lovable Gateway (Gemini 2.5 Pro)
+  2. Se falhar com MALFORMED ou 5xx → tenta OpenAI (`gpt-4o-mini` com mesmas tools)
+  3. Registra erro de cada tentativa via `recordGatewayError`
+- Reusa em `process-briefing`, `manual-generate`, `generate-script`, `generate-carousel`
 
-### 4. Hook de fallback no CRM
-- O CRM já tem botão "Reprocessar pending" (`handleRetryPending`). Verificar que ele aparece sempre que houver briefings com `status in ('submitted','processing')` e `persona IS NULL` há mais de 30s.
+### 4. UX no `src/pages/CRM.tsx`
+- O botão "Criar Projeto" mostra erro mas **não permite retry direto**. Adicionar:
+  - Mensagem clara: "Geração em andamento... isso pode levar até 60s"
+  - Botão "Tentar novamente" no toast de erro (que invoca `manual-generate` de novo)
+  - Não fechar o modal até confirmar sucesso ou falha definitiva
 
-### 5. Validação de exibição na dashboard
-- Confirmar que `StrategicContextTab` renderiza corretamente quando o contexto existe (já testado em clientes completos).
+### 5. Reprocessar briefings travados
+Os briefings recentes "Criativa Studio - Maio 2026" e "Vonixx" continuam em `submitted` sem persona/project. Após o fix, disparar manualmente o `process-briefing` para destravar.
 
 ## Arquivos afetados
-- `src/pages/ClientBriefingForm.tsx` (mudança principal: aguardar invoke)
-- `supabase/functions/process-briefing/index.ts` (logs + auditoria de error paths)
-- `src/pages/CRM.tsx` (verificar visibilidade do botão de retry)
-- Reprocessamento manual dos 2 briefings travados
 
-Nenhuma mudança de schema necessária — toda infraestrutura (RLS, tabelas, retry function) já existe.
+- `supabase/functions/manual-generate/index.ts` — trocar modelo, remover `additionalProperties`, fallback
+- `supabase/functions/process-briefing/index.ts` — trocar modelo, fallback, prompt mais enxuto
+- `supabase/functions/_shared/ai-fallback.ts` — **NOVO** helper compartilhado
+- `src/pages/CRM.tsx` — UX de retry no botão "Criar Projeto"
+
+## Por que isso resolve
+
+1. **`gemini-2.5-pro`** lida bem com function calling complexo (testado pelo Lovable Gateway docs)
+2. **Remoção de `additionalProperties`** elimina a causa #1 documentada de MALFORMED_FUNCTION_CALL no Gemini
+3. **Fallback OpenAI** garante que mesmo se o Gateway falhar, o usuário recebe conteúdo
+4. **UX melhorada** evita o "tela preta" — usuário sempre sabe o que está acontecendo
+5. **Sem mudanças de schema** no banco — toda infra (RLS, tabelas, retry) já existe
+
+Aprove para eu implementar.
