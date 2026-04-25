@@ -145,86 +145,65 @@ Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}
 - Notas estratégicas: ${notes || "Nenhuma"}
 - Quantidade de roteiros: ${qty}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        max_tokens: 4000,
+    let aiResult;
+    try {
+      aiResult = await callAIWithFallback({
+        functionName: "manual-generate",
+        supabase,
+        maxTokens: 8000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_briefing_and_scripts",
-              description: "Retorna briefing estratégico completo com persona, posicionamento, tom de voz, funil e roteiros.",
-              parameters: {
-                type: "object",
-                properties: {
-                  goal: { type: "string", description: "Briefing: objetivo estratégico do conteúdo" },
-                  target_audience: { type: "string", description: "Público-alvo detalhado" },
-                  content_style: { type: "string", description: "Estilo e tom do conteúdo" },
-                  persona: { type: "string", description: "Persona detalhada do público-alvo com dores, desejos e comportamento" },
-                  positioning: { type: "string", description: "Posicionamento da marca no mercado e diferenciais competitivos" },
-                  tone_of_voice: { type: "string", description: "Tom de voz e estilo de comunicação da marca" },
-                  content_funnel: { type: "string", description: "Estratégia de funil de conteúdo: Topo, Meio e Fundo" },
-                  scripts: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string", description: "Título do roteiro" },
-                        script: { type: "string", description: "Roteiro completo com GANCHO, DESENVOLVIMENTO e CTA" },
-                      },
-                      required: ["title", "script"],
-                      additionalProperties: false,
-                    },
+        tool: {
+          name: "generate_briefing_and_scripts",
+          description: "Retorna briefing estratégico completo com persona, posicionamento, tom de voz, funil e roteiros.",
+          parameters: {
+            type: "object",
+            properties: {
+              goal: { type: "string", description: "Briefing: objetivo estratégico do conteúdo" },
+              target_audience: { type: "string", description: "Público-alvo detalhado" },
+              content_style: { type: "string", description: "Estilo e tom do conteúdo" },
+              persona: { type: "string", description: "Persona detalhada do público-alvo com dores, desejos e comportamento" },
+              positioning: { type: "string", description: "Posicionamento da marca no mercado e diferenciais competitivos" },
+              tone_of_voice: { type: "string", description: "Tom de voz e estilo de comunicação da marca" },
+              content_funnel: { type: "string", description: "Estratégia de funil de conteúdo: Topo, Meio e Fundo" },
+              scripts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Título do roteiro" },
+                    script: { type: "string", description: "Roteiro completo com GANCHO, DESENVOLVIMENTO e CTA" },
                   },
+                  required: ["title", "script"],
                 },
-                required: ["goal", "target_audience", "content_style", "persona", "positioning", "tone_of_voice", "content_funnel", "scripts"],
-                additionalProperties: false,
               },
             },
+            required: ["goal", "target_audience", "content_style", "persona", "positioning", "tone_of_voice", "content_funnel", "scripts"],
           },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_briefing_and_scripts" } },
-      }),
-    });
-
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
+        },
+      });
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      console.error("[manual-generate] AI failed:", msg);
+      if (msg === "RATE_LIMIT") {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (status === 402) {
+      if (msg === "PAYMENT_REQUIRED") {
         return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const text = await response.text();
-      console.error("AI gateway error:", status, text);
-      return new Response(JSON.stringify({ error: "Erro no gateway de IA." }), {
+      return new Response(JSON.stringify({ error: "Erro na geração de IA. Tente novamente em alguns instantes." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      return new Response(JSON.stringify({ error: "Resposta inesperada da IA." }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const result = JSON.parse(toolCall.function.arguments);
+    const result = aiResult.toolArguments;
+    console.log(`[manual-generate] AI ok via ${aiResult.provider}`);
 
     // Log usage and cache
     const promptContentLog = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
