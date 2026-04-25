@@ -223,8 +223,8 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          max_tokens: 3700,
+          model: "google/gemini-2.5-flash",
+          max_tokens: 8000,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
