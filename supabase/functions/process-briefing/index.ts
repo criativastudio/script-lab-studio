@@ -54,10 +54,13 @@ serve(async (req) => {
   try {
     const { token } = await req.json();
     if (!token) {
+      console.error("[process-briefing] Missing token in request");
       return new Response(JSON.stringify({ error: "Token is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`[process-briefing] Iniciando processamento para token=${token.slice(0, 8)}...`);
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -73,10 +76,13 @@ serve(async (req) => {
       .single();
 
     if (brError || !br) {
+      console.error("[process-briefing] Briefing not found:", brError);
       return new Response(JSON.stringify({ error: "Briefing request not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`[process-briefing] Processando: ${br.business_name} / ${br.project_name} (status atual=${br.status})`);
 
     if (br.status === "completed") {
       return new Response(JSON.stringify({ error: "Already processed", data: br }), {
