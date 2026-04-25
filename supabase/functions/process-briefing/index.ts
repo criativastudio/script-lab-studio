@@ -386,11 +386,16 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
       .eq("business_name", br.business_name)
       .maybeSingle();
 
+    let ctxErr: any = null;
     if (existingCtx) {
-      await supabase.from("client_strategic_contexts").update(fullContextData).eq("id", existingCtx.id);
+      const { error } = await supabase.from("client_strategic_contexts").update(fullContextData).eq("id", existingCtx.id);
+      ctxErr = error;
     } else {
-      await supabase.from("client_strategic_contexts").insert(fullContextData);
+      const { error } = await supabase.from("client_strategic_contexts").insert(fullContextData);
+      ctxErr = error;
     }
+    if (ctxErr) console.error("[process-briefing] Erro ao salvar contexto estratégico:", ctxErr);
+    else console.log(`[process-briefing] ✅ Concluído com sucesso: ${br.business_name}`);
 
     return new Response(JSON.stringify({
       success: true,
