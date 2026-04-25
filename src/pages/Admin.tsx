@@ -174,6 +174,8 @@ const Admin = () => {
           <CreateUserDialog clients={clients} onUserCreated={fetchData} />
         </div>
 
+        <AIStatusCard />
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {statCards.map((c) => (
             <Card key={c.title}>
