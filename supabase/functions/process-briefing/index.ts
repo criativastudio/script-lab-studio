@@ -195,6 +195,8 @@ OBJETIVO FINAL: roteiros que conectam, entretêm e vendem sem parecer venda.
 
 2. GERAR roteiros completos e prontos para produção baseados nessa análise.
 
+REGRA DE CONCISÃO (OBRIGATÓRIA): Seja direto e objetivo. Evite repetições, explicações redundantes ou texto de preenchimento. Cada campo deve conter APENAS o essencial — qualidade > volume.
+
 Responda usando a função fornecida.${stylePersonalizationBlock}`;
 
       const objectiveAnswer = flat(answers.marketing_objective) || flat(answers.desired_outcome) || "Não informado";
@@ -222,7 +224,7 @@ Gere exatamente ${videoCount} roteiros estratégicos diferentes, completos e pro
         aiResult = await callAIWithFallback({
           functionName: "process-briefing",
           supabase,
-          maxTokens: 12000,
+          maxTokens: 6000,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },

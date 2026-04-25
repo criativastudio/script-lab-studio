@@ -29,20 +29,33 @@ export interface AICallResult {
 export async function callAIWithFallback(opts: AICallOptions): Promise<AICallResult> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-  const maxTokens = opts.maxTokens ?? 8000;
+  const maxTokens = opts.maxTokens ?? 4000;
 
-  // Try Lovable Gateway first
+  // Try Lovable Gateway with FAST model first (Gemini 3 Flash Preview — 3-5x faster than Pro)
   if (LOVABLE_API_KEY) {
     try {
-      const r = await tryLovable(LOVABLE_API_KEY, opts, maxTokens);
+      const r = await tryLovable(LOVABLE_API_KEY, opts, maxTokens, "google/gemini-3-flash-preview");
       if (r) return r;
-    } catch (e) {
-      console.error(`[ai-fallback] Lovable threw:`, e);
-      await recordGatewayError(opts.supabase, opts.functionName, 0, `lovable_exception: ${e instanceof Error ? e.message : String(e)}`);
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg === "RATE_LIMIT" || msg === "PAYMENT_REQUIRED") throw e;
+      console.error(`[ai-fallback] Flash threw:`, e);
+    }
+
+    // Fallback 1: same gateway with Pro model (handles MALFORMED on complex schemas)
+    try {
+      console.log(`[ai-fallback] Flash failed, trying Gemini 2.5 Pro for ${opts.functionName}`);
+      const r = await tryLovable(LOVABLE_API_KEY, opts, maxTokens, "google/gemini-2.5-pro");
+      if (r) return r;
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg === "RATE_LIMIT" || msg === "PAYMENT_REQUIRED") throw e;
+      console.error(`[ai-fallback] Pro threw:`, e);
+      await recordGatewayError(opts.supabase, opts.functionName, 0, `lovable_exception: ${msg}`);
     }
   }
 
-  // Fallback to OpenAI
+  // Fallback 2: OpenAI
   if (OPENAI_API_KEY) {
     console.log(`[ai-fallback] Falling back to OpenAI for ${opts.functionName}`);
     const r = await tryOpenAI(OPENAI_API_KEY, opts, maxTokens);
@@ -52,12 +65,12 @@ export async function callAIWithFallback(opts: AICallOptions): Promise<AICallRes
   throw new Error("AI generation failed on all providers (Lovable Gateway and OpenAI). Verify API keys and quotas.");
 }
 
-async function tryLovable(apiKey: string, opts: AICallOptions, maxTokens: number): Promise<AICallResult | null> {
+async function tryLovable(apiKey: string, opts: AICallOptions, maxTokens: number, model: string): Promise<AICallResult | null> {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
+      model,
       max_tokens: maxTokens,
       messages: opts.messages,
       tools: [{
