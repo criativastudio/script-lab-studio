@@ -458,6 +458,7 @@ const CRM = () => {
       }
 
       // Immediately invoke process-briefing to generate content from the existing briefing
+      toast({ title: "Gerando conteúdo estratégico...", description: "Isso leva cerca de 30 segundos." });
       const { error: fnError } = await supabase.functions.invoke("process-briefing", {
         body: { token: data.token },
       });
