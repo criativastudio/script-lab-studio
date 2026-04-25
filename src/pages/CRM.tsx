@@ -491,6 +491,7 @@ const CRM = () => {
     }
     setGeneratingProject(project.id);
     try {
+      toast({ title: "Gerando conteúdo...", description: "Isso leva cerca de 30 segundos." });
       const { error } = await supabase.functions.invoke("process-briefing", { body: { token: project.token } });
       if (error) throw error;
       await fetchClients();
