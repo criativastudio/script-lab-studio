@@ -150,7 +150,7 @@ Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}
       aiResult = await callAIWithFallback({
         functionName: "manual-generate",
         supabase,
-        maxTokens: 8000,
+        maxTokens: 5000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
