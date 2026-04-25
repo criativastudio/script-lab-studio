@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { ChangePlanDialog } from "@/components/admin/ChangePlanDialog";
 import { Users, FolderOpen, FileText, Search } from "lucide-react";
+import { AIStatusCard } from "@/components/admin/AIStatusCard";
 
 interface Sub { id: string; user_id: string | null; plan: string | null; status: string | null; created_at: string | null; }
 
