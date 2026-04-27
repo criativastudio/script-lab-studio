@@ -308,6 +308,8 @@ CATEGORIZAÇÃO: Classifique este roteiro em UMA categoria: educational, authori
 
 ${toneInstructions}
 
+${buildCategoryPrompt(resolvedCategory, categoryParams)}
+
 ${shouldUseAdvertisingStructure(content_type, platform) ? ADVERTISING_STRUCTURE_GUIDE : ""}
 
 ${(() => {
