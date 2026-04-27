@@ -120,7 +120,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 100 clientes",
       "Briefings ilimitados",
-      "Roteiros ilimitados",
       "Geração em lote",
       "Biblioteca de persona e marca",
       "Calendário de conteúdo",
