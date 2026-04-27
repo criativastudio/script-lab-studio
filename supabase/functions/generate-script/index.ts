@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth, checkScriptsPerBriefing, getUserPlan } from "../_shared/usage-guard.ts";
+import { buildCategoryPrompt, SCRIPT_CATEGORIES, SCRIPT_OBJECTIVES, FUNNEL_STAGES, AUDIENCE_TEMPERATURES } from "../_shared/script-categories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
