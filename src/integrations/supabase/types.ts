@@ -916,28 +916,37 @@ export type Database = {
       }
       scripts: {
         Row: {
+          category: string | null
           created_at: string | null
           id: string
           project_id: string | null
+          score: Json | null
           script: string | null
           title: string | null
           user_id: string | null
+          validation: Json | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           id?: string
           project_id?: string | null
+          score?: Json | null
           script?: string | null
           title?: string | null
           user_id?: string | null
+          validation?: Json | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           id?: string
           project_id?: string | null
+          score?: Json | null
           script?: string | null
           title?: string | null
           user_id?: string | null
+          validation?: Json | null
         }
         Relationships: [
           {
