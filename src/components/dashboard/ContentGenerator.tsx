@@ -94,6 +94,20 @@ export function ContentGenerator() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [viewItem, setViewItem] = useState<HistoryItem | null>(null);
 
+  // Category-driven script fields
+  const [scriptCategory, setScriptCategory] = useState<ScriptCategory>("engajamento_viral");
+  const [scriptObjective, setScriptObjective] = useState<ScriptObjective | "">("");
+  const [funnelStage, setFunnelStage] = useState<FunnelStage | "">("");
+  const [voiceTone, setVoiceTone] = useState<VoiceTone | "">("");
+  const [audienceTemperature, setAudienceTemperature] = useState<AudienceTemperature | "">("");
+
+  const isScriptType = contentType === "roteiro" || contentType === "briefing_roteiro";
+
+  // Auto-set objective when category changes
+  useEffect(() => {
+    if (!scriptObjective) setScriptObjective(SCRIPT_CATEGORY_META[scriptCategory].defaultObjective);
+  }, [scriptCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load clients
   useEffect(() => {
     if (!user) return;
