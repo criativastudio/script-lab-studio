@@ -62,7 +62,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 3 clientes cadastrados",
       "Até 3 briefings estratégicos completos",
-      "3 roteiros por briefing (total de 9)",
       "Até 3 captações via link de diagnóstico",
       "Persona, tom de voz, posicionamento e funil",
       "Ganchos virais e templates de roteiro",
