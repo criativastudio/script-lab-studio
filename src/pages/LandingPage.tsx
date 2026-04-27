@@ -545,7 +545,12 @@ export default function LandingPage() {
               >
                 {p.highlight && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">
-                    Mais popular
+                    {p.badge ?? "Mais recomendado"}
+                  </Badge>
+                )}
+                {!p.highlight && p.badge && (
+                  <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    {p.badge}
                   </Badge>
                 )}
                 <h3 className="text-xl font-bold mb-1">{p.name}</h3>
@@ -567,10 +572,8 @@ export default function LandingPage() {
                   onClick={() => {
                     if (p.price === "Grátis") {
                       navigate("/auth");
-                    } else if (p.name === "Creator Pro") {
-                      navigate("/checkout/creator-pro");
                     } else {
-                      navigate("/checkout/scale-studio");
+                      navigate(`/checkout/${p.checkoutSlug}`);
                     }
                   }}
                 >
