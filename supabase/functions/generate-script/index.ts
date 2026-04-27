@@ -182,8 +182,17 @@ serve(async (req) => {
         }
       }
 
-      // Cache check
-      const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration }));
+      // Resolve category params (defaults from project/context)
+      const resolvedCategory = (script_category && (SCRIPT_CATEGORIES as readonly string[]).includes(script_category)) ? script_category : "engajamento_viral";
+      const categoryParams = {
+        objective: (SCRIPT_OBJECTIVES as readonly string[]).includes(script_objective) ? script_objective : null,
+        funnel_stage: (FUNNEL_STAGES as readonly string[]).includes(funnel_stage) ? funnel_stage : null,
+        voice_tone: voice_tone || null,
+        audience_temperature: (AUDIENCE_TEMPERATURES as readonly string[]).includes(audience_temperature) ? audience_temperature : null,
+      };
+
+      // Cache check (includes category params so different configs don't share cache)
+      const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration, ...categoryParams, category: resolvedCategory }));
       const cached = await checkCache(supabase, pHash);
       if (cached) {
         await logUsage(supabase, user_id, "generate-script", "script", 0, pHash);
