@@ -11,7 +11,7 @@ const TRIGGER_TYPES = [
   "statistic", "myth_breaking", "question", "story", "bold_statement"
 ];
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
