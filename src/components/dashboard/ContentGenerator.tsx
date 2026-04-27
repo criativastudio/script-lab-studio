@@ -17,8 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ChevronDown, ChevronUp, Sparkles, Loader2,
   User, Target, MessageSquare, Filter, Download,
-  Eye, FileText, BookOpen, LayoutList, Clock,
+  Eye, FileText, BookOpen, LayoutList, Clock, Zap, TrendingUp, Award, CheckCircle2, XCircle,
 } from "lucide-react";
+import {
+  SCRIPT_CATEGORY_META, SCRIPT_CATEGORIES, SCRIPT_OBJECTIVE_LABEL, SCRIPT_OBJECTIVES,
+  FUNNEL_STAGE_LABEL, FUNNEL_STAGES, VOICE_TONE_LABEL, VOICE_TONES,
+  AUDIENCE_TEMPERATURE_LABEL, AUDIENCE_TEMPERATURES,
+  type ScriptCategory, type ScriptObjective, type FunnelStage, type VoiceTone, type AudienceTemperature,
+} from "@/lib/script-categories";
 
 interface StrategicContext {
   id: string;
@@ -47,6 +53,11 @@ interface GeneratedResult {
   // Carousel fields
   slides?: { slide_number: number; slide_label: string; headline: string; connector: string; visual_suggestion: string; alt_text: string }[];
   caption?: string;
+  // Strategic generator fields
+  category?: string;
+  score?: { clareza: number; impacto_gancho: number; retencao: number; conversao: number; total: number } | null;
+  validation?: { gancho_forte_3s: boolean; clareza_curiosidade_ok: boolean; texto_curto_30s: boolean; foco_resultado: boolean } | null;
+  optimization_attempted?: boolean;
 }
 
 interface HistoryItem {
