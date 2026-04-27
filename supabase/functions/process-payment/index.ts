@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     }
 
     const asaasSubscriptionId = subscriptionData.id;
-    const planKey = plan === "creator-pro" ? "creator_pro" : "scale_studio";
+    const planKey = planConfigCentral.id;
 
     // Save to DB
     try {
