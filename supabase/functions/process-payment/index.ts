@@ -178,6 +178,10 @@ Deno.serve(async (req) => {
         status: "active",
       }, { onConflict: "user_id" });
 
+      // Reactivate previously blocked briefing links after upgrade
+      try { await reactivateBlockedLinks(adminClient, userId); } catch (e) { console.error("reactivate links:", e); }
+
+
     } catch (dbError) {
       // Rollback: delete Asaas subscription
       console.error("DB error, rolling back:", dbError);
