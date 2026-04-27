@@ -71,6 +71,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       leadsBeforeBlock: 3,
       scriptsPerBriefing: 3,
       monthlyTokens: 120_000,
+      briefings: 3,
     },
   },
   creator_pro: {
@@ -98,6 +99,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       leadsBeforeBlock: 20,
       scriptsPerBriefing: 10,
       monthlyTokens: 900_000,
+      briefings: 25,
     },
   },
   scale_studio: {
@@ -126,6 +128,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       leadsBeforeBlock: Number.POSITIVE_INFINITY,
       scriptsPerBriefing: 9999,
       monthlyTokens: 4_000_000,
+      briefings: 9999,
     },
   },
 };
