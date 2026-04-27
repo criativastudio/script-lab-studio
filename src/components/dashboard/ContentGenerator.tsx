@@ -444,6 +444,86 @@ export function ContentGenerator() {
                 </div>
               </div>
 
+              {/* Category selector — only for script types */}
+              {isScriptType && (
+                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+                  <Label className="text-sm font-semibold">Categoria do Roteiro</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {SCRIPT_CATEGORIES.map((cat) => {
+                      const meta = SCRIPT_CATEGORY_META[cat];
+                      const Icon = cat === "trafego_pago" ? Zap : cat === "engajamento_viral" ? TrendingUp : Award;
+                      const active = scriptCategory === cat;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setScriptCategory(cat)}
+                          className={`text-left rounded-md border p-2.5 transition-colors ${
+                            active ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-muted"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className="text-sm font-semibold text-foreground">{meta.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-snug">{meta.tagline}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Objetivo</Label>
+                      <Select value={scriptObjective} onValueChange={(v) => setScriptObjective(v as ScriptObjective)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {SCRIPT_OBJECTIVES.map((o) => (
+                            <SelectItem key={o} value={o}>{SCRIPT_OBJECTIVE_LABEL[o]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Etapa do funil</Label>
+                      <Select value={funnelStage} onValueChange={(v) => setFunnelStage(v as FunnelStage)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {FUNNEL_STAGES.map((f) => (
+                            <SelectItem key={f} value={f}>{FUNNEL_STAGE_LABEL[f]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tom de voz</Label>
+                      <Select value={voiceTone} onValueChange={(v) => setVoiceTone(v as VoiceTone)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {VOICE_TONES.map((t) => (
+                            <SelectItem key={t} value={t}>{VOICE_TONE_LABEL[t]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {scriptCategory === "trafego_pago" && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Temperatura do público</Label>
+                      <Select value={audienceTemperature} onValueChange={(v) => setAudienceTemperature(v as AudienceTemperature)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto (adapta no prompt)" /></SelectTrigger>
+                        <SelectContent>
+                          {AUDIENCE_TEMPERATURES.map((a) => (
+                            <SelectItem key={a} value={a}>{AUDIENCE_TEMPERATURE_LABEL[a]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
+
 
               <div className="space-y-1.5">
                 <Label htmlFor="cg-keywords">Palavras-chave / Tema (opcional)</Label>
