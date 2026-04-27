@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens, getUserPlan, checkLeadLimitAndInvalidate } from "../_shared/usage-guard.ts";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
 
 const corsHeaders = {
@@ -114,6 +114,16 @@ serve(async (req) => {
     // Usage guards
     const guardResponse = await runGuards(supabase, br.user_id, "briefing", corsHeaders);
     if (guardResponse) return guardResponse;
+
+    // Lead limit: if reached, invalidate remaining pending links and abort
+    const userPlan = await getUserPlan(supabase, br.user_id);
+    const leadErr = await checkLeadLimitAndInvalidate(supabase, br.user_id, userPlan);
+    if (leadErr) {
+      await supabase.from("briefing_requests").update({ status: "blocked" }).eq("id", br.id);
+      return new Response(JSON.stringify({ error: leadErr }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Cache check
     const answers = br.form_answers || {};

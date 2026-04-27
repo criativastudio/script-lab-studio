@@ -1,5 +1,8 @@
 // Shared usage guard module for all AI edge functions
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getPlan, getPlanLimits, isUnlimited, normalizePlanId } from "./plans-config.ts";
+
+export { getPlan, getPlanLimits, normalizePlanId, isUnlimited };
 
 /**
  * Validates the JWT in the Authorization header and returns the authenticated user_id.
@@ -47,21 +50,7 @@ export async function requireAuth(
 }
 
 
-export const PLAN_LIMITS: Record<string, {
-  briefings: number;
-  scriptsPerBriefing: number;
-  ratePerMin: number;
-  dailyLimit: number;
-  monthlyTokens: number;
-}> = {
-  starter:      { briefings: 3,    scriptsPerBriefing: 3,    ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  basic:        { briefings: 3,    scriptsPerBriefing: 3,    ratePerMin: 2,  dailyLimit: 10,  monthlyTokens: 120000 },
-  creator_pro:  { briefings: 25,   scriptsPerBriefing: 10,   ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  premium:      { briefings: 25,   scriptsPerBriefing: 10,   ratePerMin: 5,  dailyLimit: 80,  monthlyTokens: 900000 },
-  scale_studio: { briefings: 9999, scriptsPerBriefing: 9999, ratePerMin: 10, dailyLimit: 400, monthlyTokens: 4000000 },
-};
-
-export type PlanName = keyof typeof PLAN_LIMITS;
+export type PlanName = "starter" | "creator_pro" | "scale_studio";
 
 export async function getUserPlan(supabase: any, userId: string): Promise<string> {
   const { data } = await supabase
@@ -72,11 +61,80 @@ export async function getUserPlan(supabase: any, userId: string): Promise<string
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
-  return data?.plan || "starter";
+  return normalizePlanId(data?.plan);
 }
 
-export function getPlanLimits(plan: string) {
-  return PLAN_LIMITS[plan] || PLAN_LIMITS.starter;
+/** Counts distinct active clients (by business_name) for the user. */
+export async function checkClientLimit(supabase: any, userId: string, plan: string): Promise<string | null> {
+  const limits = getPlanLimits(plan);
+  if (isUnlimited(limits.clients)) return null;
+  const { data } = await supabase
+    .from("briefing_requests")
+    .select("business_name")
+    .eq("user_id", userId)
+    .eq("is_active", true);
+  const unique = new Set((data || []).map((d: any) => (d.business_name || "").trim().toLowerCase()));
+  if (unique.size >= limits.clients) {
+    return `Limite de ${limits.clients} clientes do plano atingido. Faça upgrade para adicionar mais.`;
+  }
+  return null;
+}
+
+/** Counts active briefing share-links for the user. */
+export async function checkBriefingLinkLimit(supabase: any, userId: string, plan: string): Promise<string | null> {
+  const limits = getPlanLimits(plan);
+  if (isUnlimited(limits.briefingLinks)) return null;
+  const { count } = await supabase
+    .from("briefing_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("is_active", true);
+  if ((count || 0) >= limits.briefingLinks) {
+    return `Limite de ${limits.briefingLinks} links de diagnóstico atingido. Faça upgrade para criar mais.`;
+  }
+  return null;
+}
+
+/**
+ * Counts filled briefings (leads). When the lead count reaches the plan's
+ * `leadsBeforeBlock`, automatically invalidates remaining pending links by
+ * setting is_active=false and blocked_by_limit=true so they can be reactivated
+ * after an upgrade. Returns an error message if the limit is hit.
+ */
+export async function checkLeadLimitAndInvalidate(
+  supabase: any,
+  userId: string,
+  plan: string,
+): Promise<string | null> {
+  const limits = getPlanLimits(plan);
+  if (isUnlimited(limits.leadsBeforeBlock)) return null;
+  const { count } = await supabase
+    .from("briefing_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .neq("status", "pending");
+  if ((count || 0) >= limits.leadsBeforeBlock) {
+    // Invalidate remaining pending links
+    await supabase
+      .from("briefing_requests")
+      .update({ is_active: false, blocked_by_limit: true })
+      .eq("user_id", userId)
+      .eq("status", "pending")
+      .eq("is_active", true);
+    return `Limite de ${limits.leadsBeforeBlock} leads do plano atingido. Links pendentes foram invalidados — faça upgrade para continuar recebendo respostas.`;
+  }
+  return null;
+}
+
+/**
+ * Reactivates briefing links previously blocked by limit (called after upgrade).
+ */
+export async function reactivateBlockedLinks(supabase: any, userId: string): Promise<void> {
+  await supabase
+    .from("briefing_requests")
+    .update({ is_active: true, blocked_by_limit: false })
+    .eq("user_id", userId)
+    .eq("blocked_by_limit", true);
 }
 
 export async function checkRateLimit(supabase: any, userId: string, plan: string): Promise<string | null> {

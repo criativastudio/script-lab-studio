@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PLANS, planFromCheckoutSlug } from "../_shared/plans-config.ts";
+import { reactivateBlockedLinks } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,17 +52,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate plan
-    const planConfig: Record<string, { value: number; name: string }> = {
-      "creator-pro": { value: 49, name: "Creator Pro" },
-      "scale-studio": { value: 197, name: "Scale Studio" },
-    };
-    const selectedPlan = planConfig[plan];
-    if (!selectedPlan) {
+    // Validate plan via single source of truth
+    const planId = planFromCheckoutSlug(plan);
+    const planConfigCentral = planId ? PLANS[planId] : null;
+    if (!planConfigCentral || planConfigCentral.price <= 0) {
       return new Response(JSON.stringify({ error: "Plano inválido" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const selectedPlan = { value: planConfigCentral.price, name: planConfigCentral.name };
 
     // Sanitize
     const cleanCpf = (cpf || "").replace(/\D/g, "");
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     }
 
     const asaasSubscriptionId = subscriptionData.id;
-    const planKey = plan === "creator-pro" ? "creator_pro" : "scale_studio";
+    const planKey = planConfigCentral.id;
 
     // Save to DB
     try {
@@ -177,6 +177,10 @@ Deno.serve(async (req) => {
         plan: planKey,
         status: "active",
       }, { onConflict: "user_id" });
+
+      // Reactivate previously blocked briefing links after upgrade
+      try { await reactivateBlockedLinks(adminClient, userId); } catch (e) { console.error("reactivate links:", e); }
+
 
     } catch (dbError) {
       // Rollback: delete Asaas subscription

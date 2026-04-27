@@ -62,7 +62,7 @@ const CRM = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { limits, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount } = usePlanLimits();
+  const { limits, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount, getBriefingLinkCount, getLeadCount } = usePlanLimits();
   const { settings: pdfSettings } = usePdfSettings();
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -356,6 +356,20 @@ const CRM = () => {
       return;
     }
 
+    // Check active briefing-link limit
+    const linkCount = await getBriefingLinkCount();
+    if (Number.isFinite(limits.briefingLinks) && linkCount >= limits.briefingLinks) {
+      showUpgradeToast(`Você atingiu o limite de ${limits.briefingLinks} links de diagnóstico do seu plano.`);
+      return;
+    }
+
+    // Check lead block — if reached, block & invalidate happens server-side via process-briefing
+    const leadCount = await getLeadCount();
+    if (Number.isFinite(limits.leadsBeforeBlock) && leadCount >= limits.leadsBeforeBlock) {
+      showUpgradeToast(`Limite de ${limits.leadsBeforeBlock} leads atingido. Faça upgrade para enviar novos links.`);
+      return;
+    }
+
     const { deriveFunnelStage } = await import("@/lib/editorial-lines");
     const editorialLines: string[] = briefingForm.editorial_lines || [];
     const editorialMode = editorialLines.length === 0 ? "auto" : (briefingForm.editorial_mode || "manual");
@@ -388,6 +402,13 @@ const CRM = () => {
     const briefingCount = await getMonthlyBriefingCount();
     if (briefingCount >= limits.briefings) {
       showUpgradeToast("Você atingiu o limite mensal de briefings do seu plano.");
+      return;
+    }
+
+    // Lead block check
+    const leadCount = await getLeadCount();
+    if (Number.isFinite(limits.leadsBeforeBlock) && leadCount >= limits.leadsBeforeBlock) {
+      showUpgradeToast(`Limite de ${limits.leadsBeforeBlock} leads atingido. Faça upgrade para criar mais projetos.`);
       return;
     }
 

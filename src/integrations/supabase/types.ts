@@ -70,6 +70,7 @@ export type Database = {
       }
       briefing_requests: {
         Row: {
+          blocked_by_limit: boolean
           business_name: string
           city: string | null
           contact_email: string | null
@@ -92,6 +93,7 @@ export type Database = {
           video_quantity: number
         }
         Insert: {
+          blocked_by_limit?: boolean
           business_name: string
           city?: string | null
           contact_email?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           video_quantity?: number
         }
         Update: {
+          blocked_by_limit?: boolean
           business_name?: string
           city?: string | null
           contact_email?: string | null

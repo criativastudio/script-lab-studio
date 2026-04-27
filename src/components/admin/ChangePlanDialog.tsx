@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Pencil } from "lucide-react";
+import { PLAN_ORDER, PLANS } from "@/config/plans";
 
 interface ChangePlanDialogProps {
   userId: string;
@@ -13,11 +14,7 @@ interface ChangePlanDialogProps {
   onPlanChanged: () => void;
 }
 
-const PLAN_OPTIONS = [
-  { value: "starter", label: "Starter" },
-  { value: "creator_pro", label: "Creator Pro" },
-  { value: "scale_studio", label: "Scale Studio" },
-];
+const PLAN_OPTIONS = PLAN_ORDER.map((id) => ({ value: id, label: PLANS[id].name }));
 
 export const ChangePlanDialog = ({ userId, email, currentPlan, onPlanChanged }: ChangePlanDialogProps) => {
   const [open, setOpen] = useState(false);

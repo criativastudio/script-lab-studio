@@ -86,50 +86,22 @@ const benefits = [
   { icon: Layers, title: "Escale produção", desc: "Crie conteúdo em lote sem perder qualidade estratégica." },
 ];
 
-const plans = [
-  {
-    name: "Starter",
-    price: "Grátis",
-    period: "",
-    desc: "Para iniciantes que querem experimentar.",
-    features: ["3 briefings/mês", "Até 3 roteiros por briefing", "Briefing básico", "Geração de roteiro simples"],
-    highlight: false,
-  },
-  {
-    name: "Creator Pro",
-    price: "R$49",
-    period: "/mês",
-    desc: "Para criadores e pequenas empresas.",
-    features: [
-      "25 briefings/mês",
-      "Até 10 roteiros por briefing",
-      "Definição de persona",
-      "Tom de voz",
-      "Estratégia de funil",
-      "Ganchos virais",
-      "Templates de roteiro",
-      "Suporte para Reels, TikTok, YouTube e Ads",
-    ],
-    highlight: true,
-  },
-  {
-    name: "Scale Studio",
-    price: "R$197",
-    period: "/mês",
-    desc: "Para agências e produtoras.",
-    features: [
-      "Briefings ilimitados",
-      "Roteiros ilimitados",
-      "Geração em lote",
-      "Biblioteca de persona",
-      "Biblioteca de marca",
-      "Calendário de conteúdo",
-      "Workspace para equipes",
-      "Organização por campanhas",
-    ],
-    highlight: false,
-  },
-];
+import { PLAN_ORDER, PLANS } from "@/config/plans";
+
+const plans = PLAN_ORDER.map((id) => {
+  const p = PLANS[id];
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.price === 0 ? "Grátis" : `R$ ${p.price}`,
+    period: p.price === 0 ? "" : "/mês",
+    desc: p.description,
+    features: p.features,
+    highlight: p.highlight,
+    badge: p.badge,
+    checkoutSlug: p.checkoutSlug,
+  };
+});
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -573,7 +545,12 @@ export default function LandingPage() {
               >
                 {p.highlight && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-[0_0_15px_hsl(var(--primary)/0.3)]">
-                    Mais popular
+                    {p.badge ?? "Mais recomendado"}
+                  </Badge>
+                )}
+                {!p.highlight && p.badge && (
+                  <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    {p.badge}
                   </Badge>
                 )}
                 <h3 className="text-xl font-bold mb-1">{p.name}</h3>
@@ -595,10 +572,8 @@ export default function LandingPage() {
                   onClick={() => {
                     if (p.price === "Grátis") {
                       navigate("/auth");
-                    } else if (p.name === "Creator Pro") {
-                      navigate("/checkout/creator-pro");
                     } else {
-                      navigate("/checkout/scale-studio");
+                      navigate(`/checkout/${p.checkoutSlug}`);
                     }
                   }}
                 >

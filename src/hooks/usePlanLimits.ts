@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  getPlan,
+  getPlanLimits,
+  getUpgradePlan,
+  isUnlimited,
+  normalizePlanId,
+  type PlanLimits as ConfigPlanLimits,
+} from "@/config/plans";
 
 export interface PlanLimits {
   clients: number;
@@ -8,15 +16,21 @@ export interface PlanLimits {
   ideasPerBriefing: number;
   scriptsPerBriefing: number;
   scriptsPerMonth: number;
+  briefingLinks: number;
+  leadsBeforeBlock: number;
 }
 
-const PLAN_CONFIGS: Record<string, PlanLimits> = {
-  starter: { clients: 3, briefings: 3, ideasPerBriefing: 3, scriptsPerBriefing: 3, scriptsPerMonth: 9 },
-  basic: { clients: 3, briefings: 3, ideasPerBriefing: 3, scriptsPerBriefing: 3, scriptsPerMonth: 9 },
-  creator_pro: { clients: 25, briefings: 25, ideasPerBriefing: 10, scriptsPerBriefing: 10, scriptsPerMonth: 250 },
-  premium: { clients: 25, briefings: 25, ideasPerBriefing: 10, scriptsPerBriefing: 10, scriptsPerMonth: 250 },
-  scale_studio: { clients: 9999, briefings: 9999, ideasPerBriefing: 9999, scriptsPerBriefing: 9999, scriptsPerMonth: 9999 },
-};
+function toLegacyLimits(l: ConfigPlanLimits): PlanLimits {
+  return {
+    clients: l.clients,
+    briefings: l.briefings,
+    ideasPerBriefing: l.scriptsPerBriefing,
+    scriptsPerBriefing: l.scriptsPerBriefing,
+    scriptsPerMonth: isUnlimited(l.briefings) ? 9999 : l.briefings * 10,
+    briefingLinks: l.briefingLinks,
+    leadsBeforeBlock: l.leadsBeforeBlock,
+  };
+}
 
 export function usePlanLimits() {
   const { user } = useAuth();
@@ -25,7 +39,7 @@ export function usePlanLimits() {
 
   useEffect(() => {
     if (!user) { setPlan("starter"); setLoading(false); return; }
-    
+
     const fetchPlan = async () => {
       setLoading(true);
       const { data } = await supabase
@@ -36,13 +50,15 @@ export function usePlanLimits() {
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
-      setPlan(data?.plan || "starter");
+      setPlan(normalizePlanId(data?.plan));
       setLoading(false);
     };
     fetchPlan();
   }, [user?.id]);
 
-  const limits = PLAN_CONFIGS[plan] || PLAN_CONFIGS.starter;
+  const planConfig = getPlan(plan);
+  const limits = toLegacyLimits(getPlanLimits(plan));
+  const upgradePlan = getUpgradePlan(plan);
 
   const getMonthlyBriefingCount = async (): Promise<number> => {
     if (!user) return 0;
@@ -75,10 +91,44 @@ export function usePlanLimits() {
     const { data } = await supabase
       .from("briefing_requests")
       .select("business_name")
-      .eq("user_id", user.id);
-    const unique = new Set((data || []).map(d => d.business_name.trim().toLowerCase()));
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    const unique = new Set((data || []).map(d => (d.business_name || "").trim().toLowerCase()));
     return unique.size;
   };
 
-  return { plan, limits, loading, getMonthlyBriefingCount, getMonthlyScriptCount, getClientCount };
+  /** Active briefing share-links count */
+  const getBriefingLinkCount = async (): Promise<number> => {
+    if (!user) return 0;
+    const { count } = await supabase
+      .from("briefing_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    return count || 0;
+  };
+
+  /** Filled briefings (status != pending) */
+  const getLeadCount = async (): Promise<number> => {
+    if (!user) return 0;
+    const { count } = await supabase
+      .from("briefing_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .neq("status", "pending");
+    return count || 0;
+  };
+
+  return {
+    plan,
+    planConfig,
+    limits,
+    upgradePlan,
+    loading,
+    getMonthlyBriefingCount,
+    getMonthlyScriptCount,
+    getClientCount,
+    getBriefingLinkCount,
+    getLeadCount,
+  };
 }
