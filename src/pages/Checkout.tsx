@@ -9,22 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Check, CreditCard, Loader2, Lock, MapPin, User } from "lucide-react";
 import FloatingOrb from "@/components/landing/FloatingOrb";
+import { getPlan, planFromCheckoutSlug, PLANS as PLAN_CONFIGS } from "@/config/plans";
 
-// Plan configs
-const PLANS: Record<string, { name: string; price: number; priceLabel: string; features: string[] }> = {
-  "creator-pro": {
-    name: "Creator Pro",
-    price: 49,
-    priceLabel: "R$49/mês",
-    features: ["25 briefings/mês", "Até 10 roteiros por briefing", "Persona + Tom de voz", "Estratégia de funil", "Ganchos virais", "Templates de roteiro", "Reels, TikTok, YouTube e Ads"],
-  },
-  "scale-studio": {
-    name: "Scale Studio",
-    price: 197,
-    priceLabel: "R$197/mês",
-    features: ["Briefings ilimitados", "Roteiros ilimitados", "Geração em lote", "Biblioteca de persona e marca", "Calendário de conteúdo", "Workspace para equipes", "Organização por campanhas"],
-  },
-};
+// Plan configs (derived from central source of truth)
+const PLANS: Record<string, { name: string; price: number; priceLabel: string; features: string[] }> = Object.fromEntries(
+  Object.values(PLAN_CONFIGS)
+    .filter((p) => p.price > 0)
+    .map((p) => [
+      p.checkoutSlug,
+      { name: p.name, price: p.price, priceLabel: p.priceLabel, features: p.features },
+    ]),
+);
 
 // Masks
 const maskCPF = (v: string) => v.replace(/\D/g, "").slice(0, 11).replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
