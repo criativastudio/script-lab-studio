@@ -10,8 +10,9 @@ export interface PlanLimits {
   briefingLinks: number;
   leadsBeforeBlock: number;
   scriptsPerBriefing: number;
+  scriptsPerMonth: number;
   monthlyTokens: number;
-  // Backend-only operational caps (kept here so usage-guard can read them).
+  // Backend-only operational caps.
   ratePerMin: number;
   dailyLimit: number;
   briefings: number; // monthly briefing creations
@@ -38,6 +39,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       briefingLinks: 3,
       leadsBeforeBlock: 3,
       scriptsPerBriefing: 3,
+      scriptsPerMonth: 9,
       monthlyTokens: 120_000,
       ratePerMin: 2,
       dailyLimit: 10,
@@ -54,7 +56,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       clients: 20,
       briefingLinks: 20,
       leadsBeforeBlock: 20,
-      scriptsPerBriefing: 10,
+      scriptsPerBriefing: 12,
+      scriptsPerMonth: 300,
       monthlyTokens: 900_000,
       ratePerMin: 5,
       dailyLimit: 80,
@@ -72,10 +75,11 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       briefingLinks: Number.POSITIVE_INFINITY,
       leadsBeforeBlock: Number.POSITIVE_INFINITY,
       scriptsPerBriefing: 9999,
+      scriptsPerMonth: 3000,
       monthlyTokens: 4_000_000,
       ratePerMin: 10,
       dailyLimit: 400,
-      briefings: 9999,
+      briefings: 200,
     },
   },
 };

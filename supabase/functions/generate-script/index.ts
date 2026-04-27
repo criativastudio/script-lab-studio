@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
+import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth, checkScriptsPerBriefing, getUserPlan } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -149,6 +149,17 @@ serve(async (req) => {
       // Usage guards
       const guardResponse = await runGuards(supabase, user_id, "script", corsHeaders);
       if (guardResponse) return guardResponse;
+
+      // Per-briefing script limit
+      if (project_id) {
+        const plan = await getUserPlan(supabase, user_id);
+        const perBriefingErr = await checkScriptsPerBriefing(supabase, user_id, project_id, plan);
+        if (perBriefingErr) {
+          return new Response(JSON.stringify({ error: perBriefingErr }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
 
       // Layer 1: Strategic Context
       const { data: ctx } = await supabase

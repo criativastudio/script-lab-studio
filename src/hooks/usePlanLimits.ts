@@ -26,7 +26,7 @@ function toLegacyLimits(l: ConfigPlanLimits): PlanLimits {
     briefings: l.briefings,
     ideasPerBriefing: l.scriptsPerBriefing,
     scriptsPerBriefing: l.scriptsPerBriefing,
-    scriptsPerMonth: isUnlimited(l.briefings) ? 9999 : l.briefings * 10,
+    scriptsPerMonth: l.scriptsPerMonth,
     briefingLinks: l.briefingLinks,
     leadsBeforeBlock: l.leadsBeforeBlock,
   };
@@ -119,6 +119,17 @@ export function usePlanLimits() {
     return count || 0;
   };
 
+  /** Scripts already generated for a given briefing/project */
+  const getScriptsInBriefingCount = async (briefingId: string): Promise<number> => {
+    if (!user || !briefingId) return 0;
+    const { count } = await supabase
+      .from("scripts")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("project_id", briefingId);
+    return count || 0;
+  };
+
   return {
     plan,
     planConfig,
@@ -130,5 +141,6 @@ export function usePlanLimits() {
     getClientCount,
     getBriefingLinkCount,
     getLeadCount,
+    getScriptsInBriefingCount,
   };
 }

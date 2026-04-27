@@ -183,6 +183,42 @@ export async function checkMonthlyBriefings(supabase: any, userId: string, plan:
   return null;
 }
 
+export async function checkMonthlyScripts(supabase: any, userId: string, plan: string): Promise<string | null> {
+  const limits = getPlanLimits(plan);
+  if (isUnlimited(limits.scriptsPerMonth)) return null;
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("scripts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", monthStart.toISOString());
+  if ((count || 0) >= limits.scriptsPerMonth) {
+    return `Você atingiu o limite mensal de ${limits.scriptsPerMonth} roteiros do seu plano. Faça upgrade para continuar.`;
+  }
+  return null;
+}
+
+export async function checkScriptsPerBriefing(
+  supabase: any,
+  userId: string,
+  briefingId: string,
+  plan: string,
+): Promise<string | null> {
+  const limits = getPlanLimits(plan);
+  if (isUnlimited(limits.scriptsPerBriefing)) return null;
+  const { count } = await supabase
+    .from("scripts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("project_id", briefingId);
+  if ((count || 0) >= limits.scriptsPerBriefing) {
+    return `Limite de ${limits.scriptsPerBriefing} roteiros por briefing atingido. Faça upgrade para gerar mais.`;
+  }
+  return null;
+}
+
 export async function checkMonthlyTokenBudget(supabase: any, userId: string, plan: string): Promise<string | null> {
   const limits = getPlanLimits(plan);
   const monthStart = new Date();
@@ -309,6 +345,15 @@ export async function runGuards(
     const monthlyErr = await checkMonthlyBriefings(supabase, userId, plan);
     if (monthlyErr) {
       return new Response(JSON.stringify({ error: monthlyErr }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  if (generationType === "script") {
+    const monthlyScriptsErr = await checkMonthlyScripts(supabase, userId, plan);
+    if (monthlyScriptsErr) {
+      return new Response(JSON.stringify({ error: monthlyScriptsErr }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
