@@ -200,6 +200,12 @@ export function ContentGenerator() {
             pain_points: selectedContext?.pain_points,
             differentiators: selectedContext?.differentiators,
             marketing_objectives: selectedContext?.marketing_objectives,
+            // Category-driven script structure
+            script_category: isScriptType ? scriptCategory : undefined,
+            script_objective: isScriptType ? (scriptObjective || undefined) : undefined,
+            funnel_stage: isScriptType ? (funnelStage || undefined) : undefined,
+            voice_tone: isScriptType ? (voiceTone || undefined) : undefined,
+            audience_temperature: isScriptType && scriptCategory === "trafego_pago" ? (audienceTemperature || undefined) : undefined,
           },
         });
         if (resp.error) throw resp.error;
