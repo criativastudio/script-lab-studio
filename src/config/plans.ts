@@ -21,6 +21,8 @@ export interface PlanLimits {
   scriptsPerBriefing: number;
   /** Monthly token budget for AI generations */
   monthlyTokens: number;
+  /** Monthly briefings cap */
+  briefings: number;
 }
 
 export interface PlanConfig {
