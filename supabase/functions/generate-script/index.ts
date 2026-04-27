@@ -215,6 +215,10 @@ Contexto do Projeto (Layer 2 — Campanha):
 - Frequência de publicação: ${project.publishing_frequency || "N/A"}
 - Plataforma: ${project.platform || platform || "Instagram Reels"}
 - Quantidade de vídeos: ${project.video_count || "N/A"}`;
+          // Inherit funnel_stage from project when not explicitly provided
+          if (!categoryParams.funnel_stage && project.funnel_stage && (FUNNEL_STAGES as readonly string[]).includes(project.funnel_stage)) {
+            categoryParams.funnel_stage = project.funnel_stage;
+          }
         }
       }
 
