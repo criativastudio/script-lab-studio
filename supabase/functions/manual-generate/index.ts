@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth } from "../_shared/usage-guard.ts";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
+import { buildCategoryPrompt } from "../_shared/script-categories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,7 @@ serve(async (req) => {
       customer_persona, tone_of_voice, market_positioning, communication_style,
       products_services, pain_points, differentiators, marketing_objectives,
       content_type, content_style, editorial_lines, editorial_mode,
+      script_category, script_objective, funnel_stage, voice_tone, audience_temperature,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -48,7 +50,7 @@ serve(async (req) => {
     if (guardResponse) return guardResponse;
 
     // Cache check
-    const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche });
+    const promptContent = JSON.stringify({ objective, target_audience, platform, hook, duration, notes, video_quantity, business_name, niche, script_category, script_objective, funnel_stage, voice_tone, audience_temperature });
     const pHash = await hashPrompt(promptContent);
     const cached = await checkCache(supabase, pHash);
     if (cached) {
@@ -132,7 +134,9 @@ O resultado DEVE incluir obrigatoriamente:
 5. **Funil de Conteúdo**: Estratégia de conteúdo dividida em Topo (awareness), Meio (consideração) e Fundo (conversão) do funil.
 6. **Roteiro(s)**: Cada roteiro deve ter título atrativo e o roteiro completo com GANCHO, DESENVOLVIMENTO e CTA, incluindo indicações de cena e falas.
 
-Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}`;
+Escreva tudo em português do Brasil.${contextBlock}${stylePersonalizationBlock}
+
+${script_category ? buildCategoryPrompt(script_category, { objective: script_objective, funnel_stage, voice_tone, audience_temperature }) : ""}`;
 
     const userPrompt = `Informações do cliente:
 - Empresa: ${bName}
