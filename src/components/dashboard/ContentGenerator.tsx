@@ -598,6 +598,44 @@ export function ContentGenerator() {
             <DialogDescription>Conteúdo gerado automaticamente com base no contexto estratégico do cliente.</DialogDescription>
           </DialogHeader>
 
+          {/* Score & validation card */}
+          {result?.score && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 mb-3 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Score interno: {result.score.total.toFixed(1)}/10</span>
+                  {result.category && (
+                    <Badge variant="secondary" className="text-xs">
+                      {SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label || result.category}
+                    </Badge>
+                  )}
+                </div>
+                {result.optimization_attempted && (
+                  <Badge variant="outline" className="text-xs">Otimizado automaticamente</Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                {(["clareza","impacto_gancho","retencao","conversao"] as const).map((k) => (
+                  <div key={k} className="flex flex-col">
+                    <span className="text-muted-foreground capitalize">{k.replace("_"," ")}</span>
+                    <span className="font-semibold text-foreground">{Number(result.score![k]).toFixed(1)}</span>
+                  </div>
+                ))}
+              </div>
+              {result.validation && (
+                <div className="flex flex-wrap gap-2 text-xs pt-1 border-t border-border/60">
+                  {Object.entries(result.validation).map(([k, v]) => (
+                    <span key={k} className="flex items-center gap-1 text-muted-foreground">
+                      {v ? <CheckCircle2 className="h-3 w-3 text-green-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+                      {k.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div ref={printRef}>
             {result && contentType === "carrossel"
               ? renderCarouselResult(result)
