@@ -26,7 +26,7 @@ function toLegacyLimits(l: ConfigPlanLimits): PlanLimits {
     briefings: l.briefings,
     ideasPerBriefing: l.scriptsPerBriefing,
     scriptsPerBriefing: l.scriptsPerBriefing,
-    scriptsPerMonth: isUnlimited(l.briefings) ? 9999 : l.briefings * 10,
+    scriptsPerMonth: l.scriptsPerMonth,
     briefingLinks: l.briefingLinks,
     leadsBeforeBlock: l.leadsBeforeBlock,
   };
