@@ -432,80 +432,103 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.${shouldUse
         },
       ];
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          max_tokens: 2200,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          tools,
-          tool_choice: { type: "function", function: { name: "generate_strategic_script" } },
-        }),
-      });
-
-      if (!response.ok) {
-        const status = response.status;
-        if (status === 429) {
-          return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (status === 402) {
-          return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        const errorText = await response.text();
-        console.error("AI gateway error:", status, errorText);
-        return new Response(JSON.stringify({ error: "Erro ao gerar roteiro" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const callGateway = async (extraUserMsg?: string) => {
+        const messages: any[] = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ];
+        if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
+        return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            max_tokens: 2200,
+            messages,
+            tools,
+            tool_choice: { type: "function", function: { name: "generate_strategic_script" } },
+          }),
         });
-      }
+      };
 
-      const data = await response.json();
-      
-      let scriptContent = "";
-      let structured: Record<string, string> | null = null;
-      
-      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-      if (toolCall?.function?.arguments) {
+      const parseToolCall = (data: any): any | null => {
+        const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall?.function?.arguments) return null;
         try {
-          const args = typeof toolCall.function.arguments === "string" 
-            ? JSON.parse(toolCall.function.arguments) 
+          return typeof toolCall.function.arguments === "string"
+            ? JSON.parse(toolCall.function.arguments)
             : toolCall.function.arguments;
-          structured = args;
-          scriptContent = `## GANCHO (HOOK)
-${args.hook}
-
-## BRIEFING ESTRATÉGICO
-${args.strategic_briefing}
-
-## ESTRUTURA DO VÍDEO
-${args.video_structure}
-
-## ROTEIRO DE FALA
-${args.speaking_script}
-
-## CTA (CHAMADA PARA AÇÃO)
-${args.cta}
-
-## ESTILO DE GRAVAÇÃO SUGERIDO
-${args.recording_style}`;
         } catch (e) {
           console.error("Failed to parse tool call args:", e);
+          return null;
+        }
+      };
+
+      const handleGatewayError = (response: Response) => {
+        const status = response.status;
+        if (status === 429) return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Erro ao gerar roteiro" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      };
+
+      let response = await callGateway();
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("AI gateway error:", response.status, errText);
+        return handleGatewayError(response);
+      }
+
+      let data = await response.json();
+      let structured: any = parseToolCall(data);
+      let optimization_attempted = false;
+
+      // Auto-optimization retry: if score < 8 OR any validation flag is false, regenerate once
+      const needsRetry = (s: any): boolean => {
+        if (!s) return false;
+        const total = Number(s.internal_score?.total ?? 0);
+        const v = s.validation || {};
+        const anyFlagFalse = [v.gancho_forte_3s, v.clareza_curiosidade_ok, v.texto_curto_30s, v.foco_resultado].some(f => f === false);
+        return total < 8 || anyFlagFalse;
+      };
+
+      if (structured && needsRetry(structured)) {
+        optimization_attempted = true;
+        const retryMsg = `O roteiro anterior teve score interno ${JSON.stringify(structured.internal_score)} e validação ${JSON.stringify(structured.validation)}. Reescreva-o agora corrigindo TODOS os pontos fracos: aumente impacto do gancho, encurte o texto se passar de ~30s, reforce clareza/curiosidade conforme o objetivo, garanta foco em resultado. Retorne usando a mesma função generate_strategic_script com TODOS os campos preenchidos. Roteiro anterior:\n\n${JSON.stringify(structured)}`;
+        const retryResp = await callGateway(retryMsg);
+        if (retryResp.ok) {
+          const retryData = await retryResp.json();
+          const retryStructured = parseToolCall(retryData);
+          if (retryStructured) {
+            structured = retryStructured;
+            data = retryData;
+          }
         }
       }
-      
-      if (!scriptContent) {
-        scriptContent = data.choices?.[0]?.message?.content || "";
+
+      let scriptContent = "";
+      if (structured) {
+        scriptContent = `## GANCHO (HOOK)
+${structured.hook}
+
+## BRIEFING ESTRATÉGICO
+${structured.strategic_briefing}
+
+## ESTRUTURA DO VÍDEO
+${structured.video_structure}
+
+## ROTEIRO DE FALA
+${structured.speaking_script}
+
+## CTA (CHAMADA PARA AÇÃO)
+${structured.cta}
+
+## ESTILO DE GRAVAÇÃO SUGERIDO
+${structured.recording_style}`;
       }
+      if (!scriptContent) scriptContent = data?.choices?.[0]?.message?.content || "";
 
       // Update idea status
       if (idea_id) {
@@ -521,7 +544,7 @@ ${args.recording_style}`;
             idea_id: idea_id || null,
             topic: ideaText,
             hook: structured.hook,
-            content_category: structured.content_category || null,
+            content_category: structured.content_category || resolvedCategory || null,
             angle: structured.strategic_briefing?.substring(0, 500) || null,
             was_selected: false,
           });
@@ -530,7 +553,15 @@ ${args.recording_style}`;
         }
       }
 
-      const responseData = { script: scriptContent, title: ideaText, structured };
+      const responseData = {
+        script: scriptContent,
+        title: ideaText,
+        structured,
+        category: resolvedCategory,
+        score: structured?.internal_score || null,
+        validation: structured?.validation || null,
+        optimization_attempted,
+      };
 
       // Log usage and cache
       const tokens = estimateTokens(scriptContent);
