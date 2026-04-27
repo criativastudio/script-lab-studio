@@ -139,7 +139,7 @@ serve(async (req) => {
     const user_id = auth.userId;
 
     const body = await req.json();
-    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, project_id, content_type, content_style, editorial_lines, editorial_mode } = body;
+    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, project_id, content_type, content_style, editorial_lines, editorial_mode, script_category, script_objective, funnel_stage, voice_tone, audience_temperature } = body;
 
     // Enhanced mode: use strategic context + idea
     if (context_id && (idea_id || idea_title)) {
