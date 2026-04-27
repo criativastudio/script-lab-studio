@@ -91,7 +91,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 20 clientes",
       "25 briefings/mês",
-      "Até 12 roteiros por briefing",
       "Definição de persona e tom de voz",
       "Estratégia de funil e ganchos virais",
       "Templates de roteiro avançados",
