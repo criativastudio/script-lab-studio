@@ -896,6 +896,9 @@ const CRM = () => {
             project_id: projectId,
             title: data.title || idea.title,
             script: data.script,
+            category: data.category ?? null,
+            score: data.score ?? null,
+            validation: data.validation ?? null,
           }).select("id").single();
 
           if (scriptData?.id && strategicContext?.id) {

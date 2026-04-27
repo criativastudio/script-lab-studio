@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runGuards, hashPrompt, checkCache, saveCache, logUsage, validateInputLength, estimateTokens, requireAuth, checkScriptsPerBriefing, getUserPlan } from "../_shared/usage-guard.ts";
+import { buildCategoryPrompt, SCRIPT_CATEGORIES, SCRIPT_OBJECTIVES, FUNNEL_STAGES, AUDIENCE_TEMPERATURES } from "../_shared/script-categories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,7 +139,7 @@ serve(async (req) => {
     const user_id = auth.userId;
 
     const body = await req.json();
-    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, project_id, content_type, content_style, editorial_lines, editorial_mode } = body;
+    const { briefing, target_audience, platform, video_duration, context_id, idea_id, idea_title, project_id, content_type, content_style, editorial_lines, editorial_mode, script_category, script_objective, funnel_stage, voice_tone, audience_temperature } = body;
 
     // Enhanced mode: use strategic context + idea
     if (context_id && (idea_id || idea_title)) {
@@ -181,8 +182,17 @@ serve(async (req) => {
         }
       }
 
-      // Cache check
-      const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration }));
+      // Resolve category params (defaults from project/context)
+      const resolvedCategory = (script_category && (SCRIPT_CATEGORIES as readonly string[]).includes(script_category)) ? script_category : "engajamento_viral";
+      const categoryParams = {
+        objective: (SCRIPT_OBJECTIVES as readonly string[]).includes(script_objective) ? script_objective : null,
+        funnel_stage: (FUNNEL_STAGES as readonly string[]).includes(funnel_stage) ? funnel_stage : null,
+        voice_tone: voice_tone || null,
+        audience_temperature: (AUDIENCE_TEMPERATURES as readonly string[]).includes(audience_temperature) ? audience_temperature : null,
+      };
+
+      // Cache check (includes category params so different configs don't share cache)
+      const pHash = await hashPrompt(JSON.stringify({ context_id, idea_id, idea_title, platform, video_duration, ...categoryParams, category: resolvedCategory }));
       const cached = await checkCache(supabase, pHash);
       if (cached) {
         await logUsage(supabase, user_id, "generate-script", "script", 0, pHash);
@@ -205,6 +215,10 @@ Contexto do Projeto (Layer 2 — Campanha):
 - Frequência de publicação: ${project.publishing_frequency || "N/A"}
 - Plataforma: ${project.platform || platform || "Instagram Reels"}
 - Quantidade de vídeos: ${project.video_count || "N/A"}`;
+          // Inherit funnel_stage from project when not explicitly provided
+          if (!categoryParams.funnel_stage && project.funnel_stage && (FUNNEL_STAGES as readonly string[]).includes(project.funnel_stage)) {
+            categoryParams.funnel_stage = project.funnel_stage;
+          }
         }
       }
 
@@ -294,6 +308,8 @@ CATEGORIZAÇÃO: Classifique este roteiro em UMA categoria: educational, authori
 
 ${toneInstructions}
 
+${buildCategoryPrompt(resolvedCategory, categoryParams)}
+
 ${shouldUseAdvertisingStructure(content_type, platform) ? ADVERTISING_STRUCTURE_GUIDE : ""}
 
 ${(() => {
@@ -342,103 +358,177 @@ Gere o roteiro estratégico completo seguindo o pipeline de 5 etapas.${shouldUse
           type: "function",
           function: {
             name: "generate_strategic_script",
-            description: "Gera um roteiro estratégico estruturado para vídeo de marketing",
+            description: "Gera um roteiro estratégico estruturado para vídeo de marketing com auto-validação e score interno.",
             parameters: {
               type: "object",
               properties: {
-                hook: { type: "string", description: "O gancho de abertura escolhido (melhor dos 3 gerados). Deve parar o scroll em 3 segundos." },
-                strategic_briefing: { type: "string", description: "Briefing estratégico: objetivo do vídeo, mensagem central, posição no funil." },
+                hook: { type: "string", description: "O gancho de abertura escolhido. Deve parar o scroll em 3 segundos." },
+                strategic_briefing: { type: "string", description: "Briefing estratégico: objetivo, mensagem central, posição no funil." },
                 video_structure: { type: "string", description: "Estrutura do vídeo com indicações de cena [CENA: descrição] e tempos." },
                 speaking_script: { type: "string", description: "Roteiro de fala completo, palavra por palavra, pronto para gravação." },
-                cta: { type: "string", description: "Chamada para ação alinhada com a etapa do funil." },
-                recording_style: { type: "string", description: "Sugestão de estilo de gravação: enquadramento, cenário, edição, ritmo." },
+                cta: { type: "string", description: "Chamada para ação alinhada com a categoria e funil." },
+                recording_style: { type: "string", description: "Estilo de gravação: enquadramento, cenário, edição, ritmo." },
                 content_category: {
                   type: "string",
                   enum: ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"],
-                  description: "Categoria do conteúdo gerado.",
+                  description: "Subcategoria editorial.",
+                },
+                script_category: {
+                  type: "string",
+                  enum: ["trafego_pago", "engajamento_viral", "comercial_profissional"],
+                  description: "Categoria principal do roteiro (eco do parâmetro recebido).",
+                },
+                objective: {
+                  type: "string",
+                  enum: ["conversao", "engajamento", "posicionamento"],
+                  description: "Objetivo estratégico identificado.",
+                },
+                funnel_stage: {
+                  type: "string",
+                  enum: ["topo", "meio", "fundo"],
+                  description: "Etapa do funil deste roteiro.",
+                },
+                audience_target: {
+                  type: "object",
+                  description: "Análise do público-alvo.",
+                  properties: {
+                    dor: { type: "string" },
+                    desejo: { type: "string" },
+                    nivel_consciencia: { type: "string", description: "Ex: inconsciente, consciente do problema, consciente da solução, consciente do produto." },
+                  },
+                  required: ["dor", "desejo", "nivel_consciencia"],
+                  additionalProperties: false,
+                },
+                internal_score: {
+                  type: "object",
+                  description: "Score interno 0–10 em 4 dimensões + total (média).",
+                  properties: {
+                    clareza: { type: "number", minimum: 0, maximum: 10 },
+                    impacto_gancho: { type: "number", minimum: 0, maximum: 10 },
+                    retencao: { type: "number", minimum: 0, maximum: 10 },
+                    conversao: { type: "number", minimum: 0, maximum: 10 },
+                    total: { type: "number", minimum: 0, maximum: 10 },
+                  },
+                  required: ["clareza", "impacto_gancho", "retencao", "conversao", "total"],
+                  additionalProperties: false,
+                },
+                validation: {
+                  type: "object",
+                  description: "Checklist booleano de validação final.",
+                  properties: {
+                    gancho_forte_3s: { type: "boolean" },
+                    clareza_curiosidade_ok: { type: "boolean" },
+                    texto_curto_30s: { type: "boolean" },
+                    foco_resultado: { type: "boolean" },
+                  },
+                  required: ["gancho_forte_3s", "clareza_curiosidade_ok", "texto_curto_30s", "foco_resultado"],
+                  additionalProperties: false,
                 },
               },
-              required: ["hook", "strategic_briefing", "video_structure", "speaking_script", "cta", "recording_style", "content_category"],
+              required: ["hook", "strategic_briefing", "video_structure", "speaking_script", "cta", "recording_style", "content_category", "script_category", "objective", "funnel_stage", "audience_target", "internal_score", "validation"],
               additionalProperties: false,
             },
           },
         },
       ];
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          max_tokens: 2200,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          tools,
-          tool_choice: { type: "function", function: { name: "generate_strategic_script" } },
-        }),
-      });
-
-      if (!response.ok) {
-        const status = response.status;
-        if (status === 429) {
-          return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (status === 402) {
-          return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        const errorText = await response.text();
-        console.error("AI gateway error:", status, errorText);
-        return new Response(JSON.stringify({ error: "Erro ao gerar roteiro" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const callGateway = async (extraUserMsg?: string) => {
+        const messages: any[] = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ];
+        if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
+        return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            max_tokens: 2200,
+            messages,
+            tools,
+            tool_choice: { type: "function", function: { name: "generate_strategic_script" } },
+          }),
         });
-      }
+      };
 
-      const data = await response.json();
-      
-      let scriptContent = "";
-      let structured: Record<string, string> | null = null;
-      
-      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-      if (toolCall?.function?.arguments) {
+      const parseToolCall = (data: any): any | null => {
+        const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall?.function?.arguments) return null;
         try {
-          const args = typeof toolCall.function.arguments === "string" 
-            ? JSON.parse(toolCall.function.arguments) 
+          return typeof toolCall.function.arguments === "string"
+            ? JSON.parse(toolCall.function.arguments)
             : toolCall.function.arguments;
-          structured = args;
-          scriptContent = `## GANCHO (HOOK)
-${args.hook}
-
-## BRIEFING ESTRATÉGICO
-${args.strategic_briefing}
-
-## ESTRUTURA DO VÍDEO
-${args.video_structure}
-
-## ROTEIRO DE FALA
-${args.speaking_script}
-
-## CTA (CHAMADA PARA AÇÃO)
-${args.cta}
-
-## ESTILO DE GRAVAÇÃO SUGERIDO
-${args.recording_style}`;
         } catch (e) {
           console.error("Failed to parse tool call args:", e);
+          return null;
+        }
+      };
+
+      const handleGatewayError = (response: Response) => {
+        const status = response.status;
+        if (status === 429) return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Erro ao gerar roteiro" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      };
+
+      let response = await callGateway();
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("AI gateway error:", response.status, errText);
+        return handleGatewayError(response);
+      }
+
+      let data = await response.json();
+      let structured: any = parseToolCall(data);
+      let optimization_attempted = false;
+
+      // Auto-optimization retry: if score < 8 OR any validation flag is false, regenerate once
+      const needsRetry = (s: any): boolean => {
+        if (!s) return false;
+        const total = Number(s.internal_score?.total ?? 0);
+        const v = s.validation || {};
+        const anyFlagFalse = [v.gancho_forte_3s, v.clareza_curiosidade_ok, v.texto_curto_30s, v.foco_resultado].some(f => f === false);
+        return total < 8 || anyFlagFalse;
+      };
+
+      if (structured && needsRetry(structured)) {
+        optimization_attempted = true;
+        const retryMsg = `O roteiro anterior teve score interno ${JSON.stringify(structured.internal_score)} e validação ${JSON.stringify(structured.validation)}. Reescreva-o agora corrigindo TODOS os pontos fracos: aumente impacto do gancho, encurte o texto se passar de ~30s, reforce clareza/curiosidade conforme o objetivo, garanta foco em resultado. Retorne usando a mesma função generate_strategic_script com TODOS os campos preenchidos. Roteiro anterior:\n\n${JSON.stringify(structured)}`;
+        const retryResp = await callGateway(retryMsg);
+        if (retryResp.ok) {
+          const retryData = await retryResp.json();
+          const retryStructured = parseToolCall(retryData);
+          if (retryStructured) {
+            structured = retryStructured;
+            data = retryData;
+          }
         }
       }
-      
-      if (!scriptContent) {
-        scriptContent = data.choices?.[0]?.message?.content || "";
+
+      let scriptContent = "";
+      if (structured) {
+        scriptContent = `## GANCHO (HOOK)
+${structured.hook}
+
+## BRIEFING ESTRATÉGICO
+${structured.strategic_briefing}
+
+## ESTRUTURA DO VÍDEO
+${structured.video_structure}
+
+## ROTEIRO DE FALA
+${structured.speaking_script}
+
+## CTA (CHAMADA PARA AÇÃO)
+${structured.cta}
+
+## ESTILO DE GRAVAÇÃO SUGERIDO
+${structured.recording_style}`;
       }
+      if (!scriptContent) scriptContent = data?.choices?.[0]?.message?.content || "";
 
       // Update idea status
       if (idea_id) {
@@ -454,7 +544,7 @@ ${args.recording_style}`;
             idea_id: idea_id || null,
             topic: ideaText,
             hook: structured.hook,
-            content_category: structured.content_category || null,
+            content_category: structured.content_category || resolvedCategory || null,
             angle: structured.strategic_briefing?.substring(0, 500) || null,
             was_selected: false,
           });
@@ -463,7 +553,15 @@ ${args.recording_style}`;
         }
       }
 
-      const responseData = { script: scriptContent, title: ideaText, structured };
+      const responseData = {
+        script: scriptContent,
+        title: ideaText,
+        structured,
+        category: resolvedCategory,
+        score: structured?.internal_score || null,
+        validation: structured?.validation || null,
+        optimization_attempted,
+      };
 
       // Log usage and cache
       const tokens = estimateTokens(scriptContent);

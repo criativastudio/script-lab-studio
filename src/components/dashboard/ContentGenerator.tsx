@@ -17,8 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ChevronDown, ChevronUp, Sparkles, Loader2,
   User, Target, MessageSquare, Filter, Download,
-  Eye, FileText, BookOpen, LayoutList, Clock,
+  Eye, FileText, BookOpen, LayoutList, Clock, Zap, TrendingUp, Award, CheckCircle2, XCircle,
 } from "lucide-react";
+import {
+  SCRIPT_CATEGORY_META, SCRIPT_CATEGORIES, SCRIPT_OBJECTIVE_LABEL, SCRIPT_OBJECTIVES,
+  FUNNEL_STAGE_LABEL, FUNNEL_STAGES, VOICE_TONE_LABEL, VOICE_TONES,
+  AUDIENCE_TEMPERATURE_LABEL, AUDIENCE_TEMPERATURES,
+  type ScriptCategory, type ScriptObjective, type FunnelStage, type VoiceTone, type AudienceTemperature,
+} from "@/lib/script-categories";
 
 interface StrategicContext {
   id: string;
@@ -47,6 +53,11 @@ interface GeneratedResult {
   // Carousel fields
   slides?: { slide_number: number; slide_label: string; headline: string; connector: string; visual_suggestion: string; alt_text: string }[];
   caption?: string;
+  // Strategic generator fields
+  category?: string;
+  score?: { clareza: number; impacto_gancho: number; retencao: number; conversao: number; total: number } | null;
+  validation?: { gancho_forte_3s: boolean; clareza_curiosidade_ok: boolean; texto_curto_30s: boolean; foco_resultado: boolean } | null;
+  optimization_attempted?: boolean;
 }
 
 interface HistoryItem {
@@ -82,6 +93,20 @@ export function ContentGenerator() {
   const [limitReached, setLimitReached] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [viewItem, setViewItem] = useState<HistoryItem | null>(null);
+
+  // Category-driven script fields
+  const [scriptCategory, setScriptCategory] = useState<ScriptCategory>("engajamento_viral");
+  const [scriptObjective, setScriptObjective] = useState<ScriptObjective | "">("");
+  const [funnelStage, setFunnelStage] = useState<FunnelStage | "">("");
+  const [voiceTone, setVoiceTone] = useState<VoiceTone | "">("");
+  const [audienceTemperature, setAudienceTemperature] = useState<AudienceTemperature | "">("");
+
+  const isScriptType = contentType === "roteiro" || contentType === "briefing_roteiro";
+
+  // Auto-set objective when category changes
+  useEffect(() => {
+    if (!scriptObjective) setScriptObjective(SCRIPT_CATEGORY_META[scriptCategory].defaultObjective);
+  }, [scriptCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load clients
   useEffect(() => {
@@ -175,6 +200,12 @@ export function ContentGenerator() {
             pain_points: selectedContext?.pain_points,
             differentiators: selectedContext?.differentiators,
             marketing_objectives: selectedContext?.marketing_objectives,
+            // Category-driven script structure
+            script_category: isScriptType ? scriptCategory : undefined,
+            script_objective: isScriptType ? (scriptObjective || undefined) : undefined,
+            funnel_stage: isScriptType ? (funnelStage || undefined) : undefined,
+            voice_tone: isScriptType ? (voiceTone || undefined) : undefined,
+            audience_temperature: isScriptType && scriptCategory === "trafego_pago" ? (audienceTemperature || undefined) : undefined,
           },
         });
         if (resp.error) throw resp.error;
@@ -413,6 +444,86 @@ export function ContentGenerator() {
                 </div>
               </div>
 
+              {/* Category selector — only for script types */}
+              {isScriptType && (
+                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+                  <Label className="text-sm font-semibold">Categoria do Roteiro</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {SCRIPT_CATEGORIES.map((cat) => {
+                      const meta = SCRIPT_CATEGORY_META[cat];
+                      const Icon = cat === "trafego_pago" ? Zap : cat === "engajamento_viral" ? TrendingUp : Award;
+                      const active = scriptCategory === cat;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setScriptCategory(cat)}
+                          className={`text-left rounded-md border p-2.5 transition-colors ${
+                            active ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-muted"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className="text-sm font-semibold text-foreground">{meta.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-snug">{meta.tagline}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Objetivo</Label>
+                      <Select value={scriptObjective} onValueChange={(v) => setScriptObjective(v as ScriptObjective)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {SCRIPT_OBJECTIVES.map((o) => (
+                            <SelectItem key={o} value={o}>{SCRIPT_OBJECTIVE_LABEL[o]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Etapa do funil</Label>
+                      <Select value={funnelStage} onValueChange={(v) => setFunnelStage(v as FunnelStage)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {FUNNEL_STAGES.map((f) => (
+                            <SelectItem key={f} value={f}>{FUNNEL_STAGE_LABEL[f]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tom de voz</Label>
+                      <Select value={voiceTone} onValueChange={(v) => setVoiceTone(v as VoiceTone)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto" /></SelectTrigger>
+                        <SelectContent>
+                          {VOICE_TONES.map((t) => (
+                            <SelectItem key={t} value={t}>{VOICE_TONE_LABEL[t]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {scriptCategory === "trafego_pago" && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Temperatura do público</Label>
+                      <Select value={audienceTemperature} onValueChange={(v) => setAudienceTemperature(v as AudienceTemperature)}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Auto (adapta no prompt)" /></SelectTrigger>
+                        <SelectContent>
+                          {AUDIENCE_TEMPERATURES.map((a) => (
+                            <SelectItem key={a} value={a}>{AUDIENCE_TEMPERATURE_LABEL[a]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
+
 
               <div className="space-y-1.5">
                 <Label htmlFor="cg-keywords">Palavras-chave / Tema (opcional)</Label>
@@ -486,6 +597,44 @@ export function ContentGenerator() {
             <DialogTitle>{selectedBusiness} — {contentTypeLabel(contentType)}</DialogTitle>
             <DialogDescription>Conteúdo gerado automaticamente com base no contexto estratégico do cliente.</DialogDescription>
           </DialogHeader>
+
+          {/* Score & validation card */}
+          {result?.score && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 mb-3 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Score interno: {result.score.total.toFixed(1)}/10</span>
+                  {result.category && (
+                    <Badge variant="secondary" className="text-xs">
+                      {SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label || result.category}
+                    </Badge>
+                  )}
+                </div>
+                {result.optimization_attempted && (
+                  <Badge variant="outline" className="text-xs">Otimizado automaticamente</Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                {(["clareza","impacto_gancho","retencao","conversao"] as const).map((k) => (
+                  <div key={k} className="flex flex-col">
+                    <span className="text-muted-foreground capitalize">{k.replace("_"," ")}</span>
+                    <span className="font-semibold text-foreground">{Number(result.score![k]).toFixed(1)}</span>
+                  </div>
+                ))}
+              </div>
+              {result.validation && (
+                <div className="flex flex-wrap gap-2 text-xs pt-1 border-t border-border/60">
+                  {Object.entries(result.validation).map(([k, v]) => (
+                    <span key={k} className="flex items-center gap-1 text-muted-foreground">
+                      {v ? <CheckCircle2 className="h-3 w-3 text-green-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+                      {k.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div ref={printRef}>
             {result && contentType === "carrossel"
