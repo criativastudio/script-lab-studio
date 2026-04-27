@@ -405,6 +405,13 @@ const CRM = () => {
       return;
     }
 
+    // Lead block check
+    const leadCount = await getLeadCount();
+    if (Number.isFinite(limits.leadsBeforeBlock) && leadCount >= limits.leadsBeforeBlock) {
+      showUpgradeToast(`Limite de ${limits.leadsBeforeBlock} leads atingido. Faça upgrade para criar mais projetos.`);
+      return;
+    }
+
     // Find the original briefing (one with form_answers or persona filled)
     const original = selectedGroup.projects.find(
       (p) => (p.form_answers && Object.keys(p.form_answers).length > 0) || p.persona
