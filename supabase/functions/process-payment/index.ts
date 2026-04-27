@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PLANS, planFromCheckoutSlug } from "../_shared/plans-config.ts";
+import { reactivateBlockedLinks } from "../_shared/usage-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,17 +52,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate plan
-    const planConfig: Record<string, { value: number; name: string }> = {
-      "creator-pro": { value: 49, name: "Creator Pro" },
-      "scale-studio": { value: 197, name: "Scale Studio" },
-    };
-    const selectedPlan = planConfig[plan];
-    if (!selectedPlan) {
+    // Validate plan via single source of truth
+    const planId = planFromCheckoutSlug(plan);
+    const planConfigCentral = planId ? PLANS[planId] : null;
+    if (!planConfigCentral || planConfigCentral.price <= 0) {
       return new Response(JSON.stringify({ error: "Plano inválido" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const selectedPlan = { value: planConfigCentral.price, name: planConfigCentral.name };
 
     // Sanitize
     const cleanCpf = (cpf || "").replace(/\D/g, "");
