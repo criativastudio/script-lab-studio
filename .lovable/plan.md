@@ -1,137 +1,112 @@
 ## Objetivo
 
-Centralizar preços e limites em uma única fonte de verdade, atualizar valores (Free / R$ 67 / R$ 97), destacar Creator Pro, e implementar bloqueio + invalidação de links de briefing ao atingir limite de leads.
+Refinar a estrutura já centralizada de planos com os novos limites exatos, copy persuasiva e validações solicitadas. Preços (Free / R$ 67 / R$ 97) já estão corretos — o foco agora é **ajustar limites, features, copy e bloqueios**.
 
-## Esclarecimentos de escopo
+## Estado atual (já implementado)
 
-- **"Links de diagnóstico" = links de briefing público** gerados pelo CRM (tabela `briefing_requests`, campo `token`, página `/briefing/:token`). O quiz público `/diagnostico` é uma página única de captação geral, não conta como link por usuário.
-- **"Leads" = registros em `briefing_requests`** preenchidos pelo cliente final (status diferente de `pending`).
+- Fonte única: `src/config/plans.ts` + `supabase/functions/_shared/plans-config.ts`.
+- Coluna `briefing_requests.blocked_by_limit` criada.
+- `usage-guard.ts` com `checkClientLimit`, `checkBriefingLinkLimit`, `checkLeadLimitAndInvalidate`, `reactivateBlockedLinks`.
+- Checkout, LandingPage, CRM e UpgradePrompt já consomem a config central.
 
-## 1. Fonte única de verdade (centralização)
+## 1. Ajustar limites na config central
 
-Criar `src/config/plans.ts` (frontend) e `supabase/functions/_shared/plans-config.ts` (backend) — mesmo conteúdo, exportado em ambos os runtimes:
+`src/config/plans.ts` e `supabase/functions/_shared/plans-config.ts` (espelho):
 
-```ts
-export const PLANS = {
-  starter: {
-    id: "starter",
-    name: "Starter",
-    price: 0,
-    priceLabel: "Grátis",
-    highlight: false,
-    limits: {
-      clients: 3,
-      briefingLinks: 3,        // total de briefing_requests ativos
-      leadsBeforeBlock: 3,     // leads que travam novos links
-      scriptsPerBriefing: 3,
-      monthlyTokens: 120000,
-    },
-    upgradeTo: "creator_pro",
-  },
-  creator_pro: {
-    id: "creator_pro",
-    name: "Creator Pro",
-    price: 67,
-    priceLabel: "R$ 67/mês",
-    highlight: true,            // destaque "Mais recomendado"
-    limits: {
-      clients: 20,
-      briefingLinks: 20,
-      leadsBeforeBlock: 20,
-      scriptsPerBriefing: 10,
-      monthlyTokens: 900000,
-    },
-    upgradeTo: "scale_studio",
-  },
-  scale_studio: {
-    id: "scale_studio",
-    name: "Scale Studio",
-    price: 97,
-    priceLabel: "R$ 97/mês",
-    highlight: false,
-    badge: "Profissional para escala",
-    limits: {
-      clients: 100,
-      briefingLinks: Infinity,
-      leadsBeforeBlock: Infinity,
-      scriptsPerBriefing: 9999,
-      monthlyTokens: 4000000,
-    },
-    upgradeTo: null,
-  },
-} as const;
-```
 
-Todos os arquivos abaixo passam a importar dessa fonte — remoção de literais espalhados.
+| Limite                         | Starter | Creator Pro   | Scale Studio           |
+| ------------------------------ | ------- | ------------- | ---------------------- |
+| `clients`                      | 3       | 20            | 100                    |
+| `briefings` (mensal)           | 3       | 25            | **200** (cap interno)  |
+| `scriptsPerBriefing`           | 3       | **12**        | 9999                   |
+| `scriptsPerMonth` (novo campo) | **9**   | 25 × 12 = 300 | **3000** (cap interno) |
+| `briefingLinks` ativos         | 3       | 20            | Infinity               |
+| `leadsBeforeBlock`             | 3       | 20            | Infinity               |
+| `monthlyTokens`                | 120k    | 900k          | 4M                     |
 
-## 2. Arquivos atualizados
 
-### Frontend
-- `src/config/plans.ts` — **NOVO** (config central + helpers `getPlan`, `getPlanLimits`, `formatPrice`).
-- `src/lib/plan-features.ts` — manter, mas alinhar `PLAN_RANK`.
-- `src/hooks/usePlanLimits.ts` — passar a ler de `PLANS`. Adicionar `getBriefingLinkCount()` (count de `briefing_requests` ativos) e `getLeadCount()` (briefings preenchidos).
-- `src/pages/LandingPage.tsx` — remover array `plans` literal, mapear `PLANS`. Aplicar destaque visual (borda/glow) em Creator Pro com badge "Mais recomendado", e badge secundário "Profissional para escala" em Scale Studio.
-- `src/pages/Checkout.tsx` — remover `PLANS` local; usar central. Atualizar `priceLabel`, totais e textos.
-- `src/components/UpgradePrompt.tsx` — aceitar prop `targetPlan` opcional; CTA dinâmico via `upgradeTo` do plano atual.
-- `src/components/admin/ChangePlanDialog.tsx` — `PLAN_OPTIONS` lido de `PLANS`.
-- `src/pages/CRM.tsx` — antes de criar cliente: validar `clients`. Antes de criar briefing/link: validar `briefingLinks` e `leadsBeforeBlock`. Em ambos os casos, bloquear com toast + `<UpgradePrompt>`.
+Observação: Scale Studio comunica "ilimitado" no marketing, mas backend faz cap em 200 briefings + 3000 roteiros/mês.
+
+## 2. Atualizar copy e features (frontend)
+
+`src/config/plans.ts` — atualizar `description` e `features` de cada plano.
+
+### Starter (FREE)
+
+- **Description**: "Teste o poder da criação estratégica antes de escalar."
+- **Features** (todas as funcionalidades do Scale com limites baixos):
+  - Até 3 clientes cadastrados
+  - Até 3 briefings estratégicos completos
+  - 3 roteiros por briefing (total 9)
+  - Até 3 captações via link de diagnóstico
+  - Persona, tom de voz, posicionamento e funil
+  - Ganchos virais e templates
+  - Suporte Reels, TikTok, YouTube e Ads
+  - Acesso completo (com limites) a todas as features do Scale Studio
+
+### Creator Pro — `R$ 67/mês` · destaque "⭐ Mais recomendado"
+
+- **Description**: "Crie conteúdo estratégico de forma consistente e profissional."
+- **Features**:
+  - Até 20 clientes
+  - 25 briefings/mês
+  - Até 12 roteiros por projeto
+  - Definição de persona e tom de voz
+  - Estratégia de funil e ganchos virais
+  - Templates de roteiro avançados
+  - Suporte Reels, TikTok, YouTube e Ads
+  - Até 20 captações via link de diagnóstico
+
+### Scale Studio — `R$ 97/mês` · badge "Profissional · Para escalar"
+
+- **Description**: "Escale sua produção com inteligência e organização profissional."
+- **Features**:
+  - Até 100 clientes
+  - Briefings ilimitados
+  - Roteiros ilimitados
+  - Geração em lote
+  - Biblioteca de persona e marca
+  - Calendário de conteúdo
+  - Workspace em equipe
+  - Organização por campanhas
+  - Links de diagnóstico ilimitados
+
+## 3. Validações de bloqueio
+
+### Frontend (`src/pages/CRM.tsx`)
+
+Já valida `clients`, `briefingLinks` e `leadsBeforeBlock` antes de criar registro. Adicionar:
+
+- Validação de `scriptsPerBriefing` no fluxo de geração (CRM e Dashboard ContentGenerator) — bloquear botão "Gerar roteiro" quando o briefing já alcançou o limite, com `<UpgradePrompt>`.
 
 ### Backend
-- `supabase/functions/_shared/plans-config.ts` — **NOVO** (espelho da config).
-- `supabase/functions/_shared/usage-guard.ts` — `PLAN_LIMITS` deletado; importar de `plans-config.ts`. Adicionar:
-  - `checkClientLimit(supabase, userId, plan)` — conta clientes únicos.
-  - `checkBriefingLinkLimit(supabase, userId, plan)` — conta `briefing_requests` com `is_active=true`.
-  - `checkLeadLimitAndInvalidate(supabase, userId, plan)` — se `leads >= leadsBeforeBlock`, faz `UPDATE briefing_requests SET is_active=false WHERE user_id=? AND status='pending'` e retorna erro.
-- `supabase/functions/process-payment/index.ts` — `planConfig` lido de `plans-config.ts` (valores 67 / 97).
-- `supabase/functions/process-briefing/index.ts` — chamar `checkLeadLimitAndInvalidate` antes de processar.
-- `supabase/functions/create-user/index.ts` — usar config central para plano default.
 
-## 3. Posicionamento visual
+- `checkLeadLimitAndInvalidate` já invalida links automaticamente — manter.
+- Adicionar `checkScriptsPerBriefingLimit(supabase, userId, briefingId, plan)` em `usage-guard.ts` e chamar em `generate-script` e `manual-generate`.
+- Adicionar `checkMonthlyScriptsLimit(supabase, userId, plan)` (Scale: 3000, Pro: 300, Starter: 9) em `runGuards` quando `generationType === "script"`.
+- `checkMonthlyBriefings` já existe; ajustar `briefings` no plans-config (Scale = 200).
 
-- **Creator Pro**: card central elevado, borda lavanda (`#cbacef`), badge "⭐ Mais recomendado" no topo, botão CTA com `rainbow-button`.
-- **Scale Studio**: badge "Profissional · Para escalar" em peach (`#f5cea5`), estilo sóbrio.
-- **Starter**: card neutro, CTA "Começar grátis".
+## 4. Reativação no upgrade
 
-## 4. Lógica de bloqueio + invalidação
+Já implementado: `process-payment` chama `reactivateBlockedLinks` ao confirmar plano superior. Sem mudanças.
 
-Quando `leads >= leadsBeforeBlock`:
-1. Frontend (`CRM.tsx`): desabilitar botão "Novo Link/Briefing" com tooltip + render `<UpgradePrompt>` apontando para `upgradeTo`.
-2. Backend (`process-briefing`, criação de briefing): retornar 403 com mensagem padronizada.
-3. **Invalidação**: trigger no banco OU executado no edge function ao detectar limite — `UPDATE briefing_requests SET is_active=false WHERE user_id=? AND status='pending'`. Página `/briefing/:token` já checa `is_active` (verificar e adicionar guard se faltar).
+## 5. Arquivos a editar
 
-Ao fazer upgrade (webhook Asaas confirma plano), reativar links: `UPDATE briefing_requests SET is_active=true WHERE user_id=?` (apenas se anteriormente bloqueados por limite — adicionar coluna `blocked_by_limit boolean default false` para rastrear).
+- `src/config/plans.ts` — limites + copy + features.
+- `supabase/functions/_shared/plans-config.ts` — espelhar limites (incluir `scriptsPerMonth`).
+- `src/hooks/usePlanLimits.ts` — adicionar `getScriptsInBriefingCount(briefingId)` e `getMonthlyScriptCount` já existe; expor `scriptsPerMonth` no `limits`.
+- `supabase/functions/_shared/usage-guard.ts` — novos guards `checkScriptsPerBriefingLimit` e `checkMonthlyScriptsLimit`; integrar em `runGuards`.
+- `supabase/functions/generate-script/index.ts` e `manual-generate/index.ts` — chamar novo guard com `briefingId`.
+- `src/components/dashboard/ContentGenerator.tsx` e `src/pages/CRM.tsx` — bloquear UI quando `scriptsPerBriefing` atingido.
+- `src/pages/LandingPage.tsx` — não muda código (consome `PLANS.features`); apenas validar visual.
 
-## 5. Migração de banco
+## 6. Sem migração de banco
 
-```sql
-ALTER TABLE briefing_requests
-ADD COLUMN blocked_by_limit boolean NOT NULL DEFAULT false;
-```
-
-Sem alteração nos planos existentes em `subscriptions` (chaves `starter`/`creator_pro`/`scale_studio` já em uso).
-
-## 6. Validações
-
-| Ação | Frontend | Backend |
-|---|---|---|
-| Criar cliente | `usePlanLimits.getClientCount()` vs `limits.clients` | `checkClientLimit` em edge function de criação (se houver) ou validar no insert via RLS+trigger |
-| Criar link de briefing | `getBriefingLinkCount()` vs `limits.briefingLinks` | `checkBriefingLinkLimit` no `process-briefing` |
-| Receber novo lead | n/a | Após insert de lead, `checkLeadLimitAndInvalidate` dispara invalidação |
-
-## 7. Ordem de implementação
-
-1. Criar `src/config/plans.ts` + `supabase/functions/_shared/plans-config.ts`.
-2. Migration: coluna `blocked_by_limit`.
-3. Refatorar `usage-guard.ts`, `usePlanLimits.ts`, `plan-features.ts` para ler da config.
-4. Atualizar `LandingPage.tsx`, `Checkout.tsx`, `process-payment` com novos preços.
-5. Implementar checagens de cliente/links em `CRM.tsx` + edge functions.
-6. Implementar invalidação automática + reativação no upgrade.
-7. Atualizar `UpgradePrompt`, `ChangePlanDialog`, banners.
-8. Deploy edge functions afetadas.
+Todas as mudanças são em config + lógica. A coluna `blocked_by_limit` já existe.
 
 ## Resultado
 
-- Um único arquivo controla preços e limites — alterações futuras em 1 lugar.
-- Preços corretos (Free / R$ 67 / R$ 97) em landing, checkout e Asaas.
-- Creator Pro visualmente destacado.
-- Limites de clientes e links aplicados; ao atingir leads, links são invalidados automaticamente e usuário vê CTA de upgrade.
+- Limites exatos solicitados aplicados em frontend + backend a partir de 1 arquivo.
+- Copy persuasiva alinhada à proposta de cada plano.
+- Geração de roteiro bloqueada quando briefing atinge limite, com CTA de upgrade.
+- Scale Studio comunica "ilimitado" mas com cap interno de 200 briefings / 3000 roteiros/mês.
