@@ -62,7 +62,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 3 clientes cadastrados",
       "Até 3 briefings estratégicos completos",
-      "3 roteiros por briefing (total de 9)",
       "Até 3 captações via link de diagnóstico",
       "Persona, tom de voz, posicionamento e funil",
       "Ganchos virais e templates de roteiro",
@@ -92,7 +91,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 20 clientes",
       "25 briefings/mês",
-      "Até 12 roteiros por briefing",
       "Definição de persona e tom de voz",
       "Estratégia de funil e ganchos virais",
       "Templates de roteiro avançados",
@@ -122,7 +120,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "Até 100 clientes",
       "Briefings ilimitados",
-      "Roteiros ilimitados",
       "Geração em lote",
       "Biblioteca de persona e marca",
       "Calendário de conteúdo",
