@@ -140,6 +140,13 @@ export function ContentGenerator() {
   const contentTypeLabel = (type: string) =>
     CONTENT_TYPES.find((t) => t.value === type)?.label || type;
 
+  // Wraps a promise with a timeout so the UI never hangs forever
+  const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`${label} demorou demais. Tente novamente em instantes.`)), ms);
+      p.then((v) => { clearTimeout(t); resolve(v); }).catch((e) => { clearTimeout(t); reject(e); });
+    });
+
   const handleGenerate = async () => {
     if (!user) return;
     if (!selectedBusiness || !contentType) {
@@ -147,89 +154,114 @@ export function ContentGenerator() {
       return;
     }
 
-    const currentCount = await getMonthlyScriptCount();
-    if (currentCount >= limits.scriptsPerMonth) {
-      setLimitReached(true);
-      return;
-    }
-
     setLoading(true);
     setResult(null);
 
     try {
+      // Limit check (defensive — never let it crash the click flow)
+      try {
+        const currentCount = await getMonthlyScriptCount();
+        if (currentCount >= limits.scriptsPerMonth) {
+          setLimitReached(true);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        // If the count query fails, allow generation but log the issue.
+        console.warn("[ContentGenerator] Falha ao checar limite mensal:", e);
+      }
+
       let data: any;
 
       if (contentType === "carrossel") {
-        const resp = await supabase.functions.invoke("generate-carousel", {
-          body: {
-            user_id: user.id,
-            business_name: selectedBusiness,
-            mode: "script",
-            topic: keywords.trim() || undefined,
-          },
-        });
+        const resp = await withTimeout(
+          supabase.functions.invoke("generate-carousel", {
+            body: {
+              user_id: user.id,
+              business_name: selectedBusiness,
+              mode: "script",
+              topic: keywords.trim() || undefined,
+            },
+          }),
+          90_000,
+          "A geração do carrossel"
+        );
         if (resp.error) throw resp.error;
         if (resp.data?.error) throw new Error(resp.data.error);
         data = resp.data;
       } else {
-        // Map content type to what the edge function expects
         const objective = contentType === "briefing"
           ? `Criar briefing estratégico completo para ${selectedBusiness}`
           : contentType === "roteiro"
             ? `Criar roteiro de vídeo para ${selectedBusiness}`
             : `Criar briefing estratégico e roteiro de vídeo para ${selectedBusiness}`;
 
-        const resp = await supabase.functions.invoke("manual-generate", {
-          body: {
-            business_name: selectedBusiness,
-            objective,
-            target_audience: selectedContext?.target_audience || `Público do nicho ${selectedContext?.business_niche || "geral"}`,
-            platform: "Instagram",
-            niche: selectedContext?.business_niche || "geral",
-            notes: keywords.trim() || undefined,
-            hook: keywords.trim() || undefined,
-            duration: "30s",
-            video_quantity: 1,
-            user_id: user.id,
-            // Strategic context fields
-            customer_persona: selectedContext?.customer_persona,
-            tone_of_voice: selectedContext?.tone_of_voice,
-            market_positioning: selectedContext?.market_positioning,
-            communication_style: selectedContext?.communication_style,
-            products_services: selectedContext?.products_services,
-            pain_points: selectedContext?.pain_points,
-            differentiators: selectedContext?.differentiators,
-            marketing_objectives: selectedContext?.marketing_objectives,
-            // Category-driven script structure
-            script_category: isScriptType ? scriptCategory : undefined,
-            script_objective: isScriptType ? (scriptObjective || undefined) : undefined,
-            funnel_stage: isScriptType ? (funnelStage || undefined) : undefined,
-            voice_tone: isScriptType ? (voiceTone || undefined) : undefined,
-            audience_temperature: isScriptType && scriptCategory === "trafego_pago" ? (audienceTemperature || undefined) : undefined,
-          },
-        });
+        const resp = await withTimeout(
+          supabase.functions.invoke("manual-generate", {
+            body: {
+              business_name: selectedBusiness,
+              objective,
+              target_audience: selectedContext?.target_audience || `Público do nicho ${selectedContext?.business_niche || "geral"}`,
+              platform: "Instagram",
+              niche: selectedContext?.business_niche || "geral",
+              notes: keywords.trim() || undefined,
+              hook: keywords.trim() || undefined,
+              duration: "30s",
+              video_quantity: 1,
+              user_id: user.id,
+              customer_persona: selectedContext?.customer_persona,
+              tone_of_voice: selectedContext?.tone_of_voice,
+              market_positioning: selectedContext?.market_positioning,
+              communication_style: selectedContext?.communication_style,
+              products_services: selectedContext?.products_services,
+              pain_points: selectedContext?.pain_points,
+              differentiators: selectedContext?.differentiators,
+              marketing_objectives: selectedContext?.marketing_objectives,
+              script_category: isScriptType ? scriptCategory : undefined,
+              script_objective: isScriptType ? (scriptObjective || undefined) : undefined,
+              funnel_stage: isScriptType ? (funnelStage || undefined) : undefined,
+              voice_tone: isScriptType ? (voiceTone || undefined) : undefined,
+              audience_temperature: isScriptType && scriptCategory === "trafego_pago" ? (audienceTemperature || undefined) : undefined,
+            },
+          }),
+          90_000,
+          "A geração do conteúdo"
+        );
         if (resp.error) throw resp.error;
         if (resp.data?.error) throw new Error(resp.data.error);
         data = resp.data;
       }
 
+      if (!data || typeof data !== "object") {
+        throw new Error("Resposta vazia do gerador. Tente novamente.");
+      }
+
       setResult(data as GeneratedResult);
       setModalOpen(true);
 
-      // Auto-save to scripts
-      const dateStr = new Date().toLocaleDateString("pt-BR");
-      const title = `${selectedBusiness} — ${contentTypeLabel(contentType)} — ${dateStr}`;
-      const scriptText = buildScriptText(data, contentType);
-
-      await supabase.from("scripts").insert({
-        title,
-        script: scriptText,
-        user_id: user.id,
-      });
-
-      toast({ title: "Conteúdo gerado e salvo com sucesso!" });
+      // Auto-save (best-effort — does not block the UI)
+      try {
+        const dateStr = new Date().toLocaleDateString("pt-BR");
+        const title = `${selectedBusiness} — ${contentTypeLabel(contentType)} — ${dateStr}`;
+        const scriptText = buildScriptText(data, contentType);
+        await supabase.from("scripts").insert({ title, script: scriptText, user_id: user.id });
+        toast({ title: "Conteúdo gerado e salvo com sucesso!" });
+      } catch (saveErr: any) {
+        console.warn("[ContentGenerator] Falha ao salvar histórico:", saveErr);
+        toast({
+          title: "Conteúdo gerado",
+          description: "Não foi possível salvar no histórico, mas o resultado está disponível abaixo.",
+        });
+      }
     } catch (err: any) {
-      toast({ title: "Erro ao gerar conteúdo", description: err.message, variant: "destructive" });
+      const msg =
+        (typeof err === "string" && err) ||
+        err?.message ||
+        err?.error?.message ||
+        err?.error ||
+        "Falha ao gerar o conteúdo. Tente novamente em instantes.";
+      console.error("[ContentGenerator] Erro na geração:", err);
+      toast({ title: "Erro ao gerar conteúdo", description: String(msg), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -599,15 +631,17 @@ export function ContentGenerator() {
           </DialogHeader>
 
           {/* Score & validation card */}
-          {result?.score && (
+          {result?.score && typeof result.score === "object" && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 mb-3 space-y-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Award className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold">Score interno: {result.score.total.toFixed(1)}/10</span>
+                  <span className="text-sm font-semibold">
+                    Score interno: {Number(result.score?.total ?? 0).toFixed(1)}/10
+                  </span>
                   {result.category && (
                     <Badge variant="secondary" className="text-xs">
-                      {SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label || result.category}
+                      {SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label ?? String(result.category)}
                     </Badge>
                   )}
                 </div>
@@ -616,16 +650,22 @@ export function ContentGenerator() {
                 )}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                {(["clareza","impacto_gancho","retencao","conversao"] as const).map((k) => (
-                  <div key={k} className="flex flex-col">
-                    <span className="text-muted-foreground capitalize">{k.replace("_"," ")}</span>
-                    <span className="font-semibold text-foreground">{Number(result.score![k]).toFixed(1)}</span>
-                  </div>
-                ))}
+                {(["clareza","impacto_gancho","retencao","conversao"] as const).map((k) => {
+                  const raw = (result.score as any)?.[k];
+                  const num = typeof raw === "number" && Number.isFinite(raw) ? raw : Number(raw);
+                  return (
+                    <div key={k} className="flex flex-col">
+                      <span className="text-muted-foreground capitalize">{k.replace("_"," ")}</span>
+                      <span className="font-semibold text-foreground">
+                        {Number.isFinite(num) ? num.toFixed(1) : "—"}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              {result.validation && (
+              {result.validation && typeof result.validation === "object" && (
                 <div className="flex flex-wrap gap-2 text-xs pt-1 border-t border-border/60">
-                  {Object.entries(result.validation).map(([k, v]) => (
+                  {Object.entries(result.validation ?? {}).map(([k, v]) => (
                     <span key={k} className="flex items-center gap-1 text-muted-foreground">
                       {v ? <CheckCircle2 className="h-3 w-3 text-green-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
                       {k.replace(/_/g, " ")}

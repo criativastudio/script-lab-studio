@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens, requireAuth, recordGatewayError } from "../_shared/usage-guard.ts";
 
@@ -9,7 +8,7 @@ const corsHeaders = {
 
 const CONTENT_CATEGORIES = ["educational", "authority", "story", "case_study", "tips", "myth_breaking", "behind_scenes"];
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

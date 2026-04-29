@@ -25,6 +25,7 @@ import AdminDiagnostic from "./pages/AdminDiagnostic";
 import Configuracoes from "./pages/Configuracoes";
 import InterfaceSettings from "./pages/InterfaceSettings";
 import FormSettingsPage from "./pages/FormSettings";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ErrorBoundary>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
@@ -60,6 +62,7 @@ const App = () => (
             <Route path="/diagnostico/:type" element={<DiagnosticQuiz />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
