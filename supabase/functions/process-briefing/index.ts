@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runGuards, hashPrompt, checkCache, saveCache, logUsage, estimateTokens, getUserPlan, checkLeadLimitAndInvalidate } from "../_shared/usage-guard.ts";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
@@ -49,7 +48,7 @@ async function upsertRawContext(supabase: any, br: any) {
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

@@ -1,109 +1,96 @@
-# Geração estruturada de roteiros por categoria
+## Causa raiz do bug
 
-Adicionar 3 categorias selecionáveis na geração de roteiros, cada uma com estrutura, regras de gancho/CTA/inserção de produto próprias, validação automática e score interno (0–10) com auto-otimização.
+Investiguei o fluxo "Gerar Roteiro / Carrossel" (`ContentGenerator.tsx` → `manual-generate` / `generate-carousel`) e identifiquei **três causas convergentes**:
 
-## 1. Nova taxonomia (front + back compartilhada)
+### 1. Edge Functions falhando no deploy (mesmo bug do `generate-hooks`)
+9 funções ainda importam `https://deno.land/std@0.168.0/http/server.ts`, que está causando `SUPABASE_CODEGEN_ERROR` por timeout de bundling (10s). Entre elas estão **as duas funções chamadas pelo botão "Gerar"**:
+- `manual-generate` (roteiro/briefing)
+- `generate-script`
+- E mais 7: `generate-ideas`, `generate-diagnostic`, `strategic-analysis`, `score-script`, `process-briefing`, `suggest-briefing`, `retry-pending-briefings`.
 
-Criar `src/lib/script-categories.ts` (e cópia em `supabase/functions/_shared/script-categories.ts`) com:
+Quando a função falha em deploy, `supabase.functions.invoke` retorna erro não-JSON. O `catch` lê `err.message` (pode ser `undefined`), o toast não aparece direito e o usuário fica olhando o spinner "Gerando..." → percepção de **travamento**.
 
-- `SCRIPT_CATEGORIES = ["trafego_pago", "engajamento_viral", "comercial_profissional"]`
-- Labels PT-BR + descrição curta + ícone sugerido para a UI.
-- `AUDIENCE_TEMPERATURE = ["frio", "morno", "quente"]` (usado só em Tráfego Pago).
-- `FUNNEL_STAGES = ["topo", "meio", "fundo"]`.
-- `VOICE_TONES = ["popular", "profissional", "premium"]`.
+### 2. Sem `ErrorBoundary` global → tela preta
+Não existe nenhum `ErrorBoundary` no projeto (`rg ErrorBoundary src/` retorna vazio). Qualquer erro de renderização derruba a árvore React inteira mostrando tela preta até o refresh.
 
-## 2. UI — Seleção da categoria antes de gerar
+### 3. Renderização do score sem proteção
+Em `ContentGenerator.tsx` linha 607:
+```tsx
+{result.score.total.toFixed(1)}/10
+```
+Se a edge function retorna `score` parcial (por ex. retry de otimização sem `total`), `total` fica `undefined` e `.toFixed` lança `TypeError` → tela preta. Mesma fragilidade em `SCRIPT_CATEGORY_META[result.category]?.label` quando categoria vem com valor desconhecido.
 
-**`src/components/dashboard/ContentGenerator.tsx`** (modal "Gerador de Conteúdo")
+---
 
-Quando `contentType` for `roteiro` ou `briefing_roteiro`, exibir um novo bloco "Categoria do Roteiro" com 3 cards selecionáveis:
+## Plano de correção
+
+### A) Migrar todas as edge functions para `Deno.serve` nativo
+Remover o import `serve from deno.land/std@0.168.0/http/server.ts` em **9 funções** e trocar `serve(handler)` → `Deno.serve(handler)`. Resolve o `SUPABASE_CODEGEN_ERROR` em massa e garante que `manual-generate` / `generate-script` voltem a deployar.
+
+Arquivos:
+- `supabase/functions/manual-generate/index.ts`
+- `supabase/functions/generate-script/index.ts`
+- `supabase/functions/generate-ideas/index.ts`
+- `supabase/functions/generate-diagnostic/index.ts`
+- `supabase/functions/strategic-analysis/index.ts`
+- `supabase/functions/score-script/index.ts`
+- `supabase/functions/process-briefing/index.ts`
+- `supabase/functions/suggest-briefing/index.ts`
+- `supabase/functions/retry-pending-briefings/index.ts`
+
+### B) Criar `ErrorBoundary` global
+Novo arquivo `src/components/ErrorBoundary.tsx`:
+- Captura erros de render filhos.
+- Mostra fallback com botão "Tentar novamente" (reset do state) e "Recarregar página".
+- Loga `error` + `componentStack` no console.
+
+Envolver o `<Routes>` em `App.tsx` com o `ErrorBoundary`. Isso elimina definitivamente a "tela preta" — qualquer crash futuro mostra tela amigável com retry.
+
+### C) Renderização defensiva no `ContentGenerator.tsx`
+- Score: usar `Number(result.score?.total ?? 0).toFixed(1)` e só renderizar o bloco se `typeof result.score?.total === "number"`.
+- Categoria: fallback de label `SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label ?? result.category ?? "—"`.
+- Validation: `Object.entries(result.validation ?? {})`.
+
+### D) Tratamento de erro robusto no `handleGenerate`
+- Timeout client-side de 90s no `supabase.functions.invoke` via `Promise.race` — se exceder, mostra toast "A geração demorou demais, tente novamente" e libera o spinner.
+- Normalizar mensagem de erro: `const msg = err?.message || err?.error || "Falha desconhecida ao gerar conteúdo. Tente novamente."`.
+- Garantir `setLoading(false)` em `finally` (já existe — manter).
+- Adicionar `try/catch` ao redor do `supabase.from("scripts").insert` que ocorre depois — se o insert falhar, não derrubar o resultado nem travar a UI; apenas avisar via toast secundário.
+
+### E) Pequenas blindagens em `ScriptGenerator.tsx`
+- `data?.error || error?.message || "Erro desconhecido"` no toast (já é parecido — apenas garantir ordem segura).
+- Loading state liberado em `finally`.
+
+---
+
+## Resultado esperado
+
+- Botões "Gerar Roteiro" e "Gerar Carrossel" voltam a funcionar em todos os planos (free e pagos), porque as edge functions deixam de falhar no deploy.
+- Mesmo que a IA retorne payload inesperado, o componente não trava nem mostra tela preta — exibe o que veio e ignora campos faltantes.
+- Qualquer erro de render futuro é capturado pelo `ErrorBoundary` com opção de retry sem refresh.
+- Click → loading visível → resposta ou erro tratado dentro de no máximo 90s.
+
+## Diagrama do fluxo corrigido
 
 ```text
-[ Tráfego Pago ]   [ Engajamento / Viral ]   [ Comercial Profissional ]
-   conversão            retenção                autoridade
+[Usuário clica Gerar]
+        │
+        ▼
+[handleGenerate] ──▶ valida limites
+        │
+        ▼
+[invoke edge fn] ──── Promise.race(timeout 90s)
+        │
+   ┌────┴────┐
+   ▼         ▼
+[sucesso]  [erro/timeout]
+   │           │
+   ▼           ▼
+[setResult] [toast amigável + setLoading(false)]
+   │
+   ▼
+[Render no Dialog]
+   │ (qualquer crash aqui)
+   ▼
+[ErrorBoundary fallback] ──▶ [Retry] ou [Recarregar]
 ```
-
-Campos adicionais condicionais (todos opcionais — defaults inferidos do contexto estratégico do cliente quando vazios):
-
-- Objetivo: `conversão | engajamento | posicionamento` (auto-preenchido pela categoria, editável).
-- Etapa do funil: `topo | meio | fundo`.
-- Tom de voz: `popular | profissional | premium`.
-- Apenas para Tráfego Pago: Temperatura do público `frio | morno | quente`.
-
-Esses valores entram no `body` da chamada para `manual-generate` / `generate-script` como:
-`script_category`, `script_objective`, `funnel_stage`, `voice_tone`, `audience_temperature`.
-
-**`src/pages/ScriptGenerator.tsx`** (gerador legado): adicionar o mesmo seletor de categoria + objetivo + funil + tom (sem temperatura como obrigatório).
-
-**`src/pages/CRM.tsx`** (geração a partir de ideia/projeto): adicionar `script_category` ao payload — se já existir `funnel_stage` no projeto, usar como default.
-
-## 3. Backend — `supabase/functions/generate-script/index.ts`
-
-### 3.1 Aceitar novos campos no body
-`script_category`, `script_objective`, `funnel_stage`, `voice_tone`, `audience_temperature`.
-
-Default: se ausente, derivar de `project.funnel_stage` / contexto. Categoria default = `engajamento_viral`.
-
-### 3.2 Builder de prompt por categoria
-
-Criar `buildCategoryPrompt(category, { objective, funnel_stage, voice_tone, audience_temperature })` que retorna um bloco a ser injetado no `systemPrompt` (substitui/complementa o `ADVERTISING_STRUCTURE_GUIDE` quando aplicável):
-
-- **TRÁFEGO PAGO** — estrutura: Gancho direto (dor/promessa) → Problema específico → Promessa → Prova → Oferta → CTA forte. Regras por temperatura: frio = dor + curiosidade; morno = benefício + prova; quente = urgência + CTA direto. Inserção de produto: direta. CTA: explícito.
-- **ENGAJAMENTO / VIRALIZAÇÃO** — estrutura: Gancho curioso/polêmico → Quebra de expectativa → Loop aberto → Micro-recompensas → Final interativo/inesperado. Regras: priorizar retenção, criar lacunas de curiosidade, evitar venda direta, produto sutil. CTA: interação (comentar/salvar/compartilhar). Storytelling obrigatório.
-- **COMERCIAL PROFISSIONAL** — estrutura: Abertura institucional → Apresentação da marca → Problema de mercado → Solução → Diferenciais → Fechamento autoridade + CTA leve. Inserção: estratégica. CTA: institucional. Linguagem refinada.
-
-### 3.3 Regras globais injetadas
-Bloco fixo `GLOBAL_RULES` com mapeamentos de gancho, tom de voz, storytelling, inserção de produto, CTA — conforme spec.
-
-### 3.4 Tool calling expandido
-Estender o tool `generate_strategic_script` com novos campos:
-
-- `script_category` (enum)
-- `audience_target` (objeto: `dor`, `desejo`, `nivel_consciencia`)
-- `objective` (enum)
-- `funnel_stage` (enum)
-- `internal_score` (objeto): `clareza`, `impacto_gancho`, `retencao`, `conversao`, `total` (0–10 cada)
-- `validation`: `gancho_forte_3s` (bool), `clareza_curiosidade_ok` (bool), `texto_curto_30s` (bool), `foco_resultado` (bool)
-- Mantém `hook`, `strategic_briefing`, `video_structure`, `speaking_script`, `cta`, `recording_style`, `content_category`.
-
-### 3.5 Auto-revisão (loop server-side)
-Após 1ª geração:
-- Se `internal_score.total < 8` (média) **ou** alguma flag de `validation` for `false`, fazer **1 segunda chamada** ao gateway pedindo "REWRITE_OPTIMIZE" — mesmo tool, recebendo o output anterior + score como contexto e instrução para corrigir os pontos fracos. Limite: 1 retry para conter custo.
-- Anexar score final + flags na resposta JSON (`responseData.score`, `responseData.validation`).
-
-### 3.6 Mesmo tratamento em `manual-generate`
-`supabase/functions/manual-generate/index.ts` deve repassar os novos campos ao prompt interno (adaptar igual). Se não usar tool calling, adicionar instrução de auto-validação no system prompt.
-
-## 4. Exibição do score na UI
-
-Em `ContentGenerator.tsx` e no `ScriptViewer`, mostrar um pequeno card após geração:
-- Badge da categoria.
-- 4 barras (clareza/impacto/retenção/conversão) + score total.
-- Lista das flags de validação (✓/✗).
-
-## 5. Persistência
-
-Adicionar coluna opcional na tabela `scripts`: `category text`, `score jsonb`, `validation jsonb` (migration). Usar em `client_content_memory` o campo `content_category` já existente para refletir a categoria escolhida.
-
-## 6. Arquivos a criar / editar
-
-Criar:
-- `src/lib/script-categories.ts`
-- `supabase/functions/_shared/script-categories.ts`
-- migration: adicionar `category`, `score`, `validation` em `public.scripts`
-
-Editar:
-- `src/components/dashboard/ContentGenerator.tsx` (seletor + payload + exibição score)
-- `src/pages/ScriptGenerator.tsx` (seletor + payload)
-- `src/pages/CRM.tsx` (passar `script_category` quando gerar do projeto)
-- `src/components/ScriptViewer.tsx` (renderizar score/categoria)
-- `supabase/functions/generate-script/index.ts` (builder por categoria, tool expandido, retry de otimização, persistência)
-- `supabase/functions/manual-generate/index.ts` (mesmos campos)
-
-## 7. Detalhes técnicos
-
-- Modelo permanece `google/gemini-3-flash-preview`; retry de otimização também.
-- `internal_score.total` = média aritmética arredondada.
-- Limite de 1 retry; se ainda < 8, retornar mesmo assim com flag `optimization_attempted: true`.
-- Default de categoria mantém compatibilidade com chamadas existentes (sem categoria = `engajamento_viral`, sem retry forçado).
-- Cache key (`hashPrompt`) deve incluir os novos campos para não devolver cache "cego".
