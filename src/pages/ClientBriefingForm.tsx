@@ -115,10 +115,8 @@ const ClientBriefingForm = () => {
     if (!token) return;
     const load = async () => {
       const { data, error } = await supabase
-        .from("briefing_requests")
-        .select("id, business_name, project_name, video_quantity, status, form_answers, niche")
-        .eq("token", token)
-        .single();
+        .rpc("get_briefing_by_token", { p_token: token })
+        .maybeSingle();
       if (error || !data) {
         setError("Link inválido ou expirado.");
         setLoading(false);
@@ -149,10 +147,10 @@ const ClientBriefingForm = () => {
     async (next: Record<string, string>) => {
       if (!token) return;
       setSaveStatus("saving");
-      const { error } = await supabase
-        .from("briefing_requests")
-        .update({ form_answers: next })
-        .eq("token", token);
+      const { error } = await supabase.rpc("update_briefing_form_by_token", {
+        p_token: token,
+        p_form_answers: next,
+      });
       setSaveStatus(error ? "error" : "saved");
     },
     [token]
@@ -221,10 +219,10 @@ const ClientBriefingForm = () => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
     // 1. Persistir respostas finais + marcar como submitted (garantia de não perder dados)
-    const { error: updateErr } = await supabase
-      .from("briefing_requests")
-      .update({ form_answers: answers, status: "submitted" })
-      .eq("token", token);
+    const { error: updateErr } = await supabase.rpc("submit_briefing_by_token", {
+      p_token: token,
+      p_form_answers: answers,
+    });
 
     if (updateErr) {
       console.error("[Briefing] Erro ao salvar respostas finais:", updateErr);
