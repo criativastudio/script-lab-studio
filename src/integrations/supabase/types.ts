@@ -1193,12 +1193,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_briefing_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          business_name: string
+          form_answers: Json
+          id: string
+          niche: string
+          project_name: string
+          status: string
+          video_quantity: number
+        }[]
+      }
       get_user_client_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      submit_briefing_by_token: {
+        Args: { p_form_answers: Json; p_token: string }
+        Returns: boolean
+      }
+      update_briefing_form_by_token: {
+        Args: { p_form_answers: Json; p_token: string }
         Returns: boolean
       }
     }
