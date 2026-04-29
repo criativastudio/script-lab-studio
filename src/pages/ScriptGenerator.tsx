@@ -49,19 +49,29 @@ const ScriptGenerator = () => {
     setIsGenerating(true);
     setGeneratedScript("");
 
-    const { data, error } = await supabase.functions.invoke("generate-script", {
-      body: { briefing, target_audience: targetAudience, platform, video_duration: videoDuration },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-script", {
+        body: { briefing, target_audience: targetAudience, platform, video_duration: videoDuration },
+      });
 
-    setIsGenerating(false);
+      if (error || data?.error) {
+        const msg = data?.error || error?.message || "Erro desconhecido ao gerar o roteiro.";
+        toast({ title: "Erro ao gerar roteiro", description: String(msg), variant: "destructive" });
+        return;
+      }
 
-    if (error || data?.error) {
-      toast({ title: "Erro ao gerar roteiro", description: data?.error || error?.message, variant: "destructive" });
-      return;
+      setGeneratedScript(data?.script || "");
+      toast({ title: "Roteiro gerado com sucesso!" });
+    } catch (err: any) {
+      console.error("[ScriptGenerator] Erro na geração:", err);
+      toast({
+        title: "Erro ao gerar roteiro",
+        description: err?.message || "Falha inesperada. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
-
-    setGeneratedScript(data.script || "");
-    toast({ title: "Roteiro gerado com sucesso!" });
   };
 
   const handleSave = async () => {
