@@ -11,7 +11,7 @@ export const ContainerScroll = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start 25%", "center center"],
+    offset: ["start end", "center center"],
   });
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -26,16 +26,28 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const scaleDimensions = () => {};
-
-  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], [75, 0, -5]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], isMobile ? [0.75, 0.92, 0.85] : [0.9, 1, 0.95]);
-  const translate = useTransform(scrollYProgress, [0, 0.5, 1], [80, 0, -80]);
+  // Mobile: card finishes opening (rotateX = 0) well before centered, around ~85% scroll progress.
+  // Desktop: keep original behavior unchanged.
+  const rotate = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [70, 0, 0] : [75, 0, -5]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [0.85, 1, 1] : [0.9, 1, 0.95]
+  );
+  const translate = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [40, 0, 0] : [80, 0, -80]
+  );
 
   return (
-    <div className="h-[40rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20 overflow-hidden max-w-[100vw]" ref={containerRef}>
+    <div className="h-[44rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20 overflow-hidden max-w-[100vw]" ref={containerRef}>
       <div
-        className="py-10 md:py-40 w-full relative"
+        className="py-6 md:py-40 w-full relative"
         style={{
           perspective: "3000px",
         }}
