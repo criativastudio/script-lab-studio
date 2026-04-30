@@ -188,7 +188,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── 1. CINEMATIC HERO ── */}
-      <section className="relative min-h-screen flex items-center justify-center bg-background overflow-hidden pt-16">
+      <section className="relative min-h-[88vh] md:min-h-screen flex items-center justify-center bg-background overflow-hidden pt-16">
         <CursorGlow />
         <FloatingOrb />
 
