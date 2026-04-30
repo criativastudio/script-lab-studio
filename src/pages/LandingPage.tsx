@@ -511,7 +511,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" className="relative py-16 md:py-24 px-4">
+      <section id="planos" className="relative py-12 md:py-24 px-4">
         <div className="glow-orb w-[350px] h-[350px] bg-primary/8 top-20 left-1/2 -translate-x-1/2" />
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
@@ -523,10 +523,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Planos
             </Badge>
-            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 tracking-tight leading-[1.1]">
+            <h2 className="font-display text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-6 md:mb-8 tracking-tight leading-[1.05] md:leading-[1.1]">
               Escolha o <span className="text-gradient-primary">plano ideal</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
+            <p className="mx-auto mb-10 md:mb-14 max-w-xl text-muted-foreground text-base md:text-xl font-normal leading-relaxed">
               Do criador solo à agência, temos o plano certo.
             </p>
           </motion.div>
