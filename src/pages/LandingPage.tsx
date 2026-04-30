@@ -415,7 +415,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── EXEMPLO DE ROTEIRO ── */}
-      <section className="relative py-16 md:py-24 px-4">
+      <section className="relative py-12 md:py-24 px-4">
         <div className="mx-auto max-w-3xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -426,10 +426,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Exemplo
             </Badge>
-            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 tracking-tight leading-[1.1]">
+            <h2 className="font-display text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-6 md:mb-8 tracking-tight leading-[1.05] md:leading-[1.1]">
               Roteiro gerado <span className="text-gradient-primary">pela plataforma</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
+            <p className="mx-auto mb-10 md:mb-14 max-w-xl text-muted-foreground text-base md:text-xl font-normal leading-relaxed">
               Veja como um roteiro é estruturado cena a cena.
             </p>
           </motion.div>
