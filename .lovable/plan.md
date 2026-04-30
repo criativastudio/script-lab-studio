@@ -1,96 +1,88 @@
-## Causa raiz do bug
+## Objetivo
 
-Investiguei o fluxo "Gerar Roteiro / Carrossel" (`ContentGenerator.tsx` → `manual-generate` / `generate-carousel`) e identifiquei **três causas convergentes**:
-
-### 1. Edge Functions falhando no deploy (mesmo bug do `generate-hooks`)
-9 funções ainda importam `https://deno.land/std@0.168.0/http/server.ts`, que está causando `SUPABASE_CODEGEN_ERROR` por timeout de bundling (10s). Entre elas estão **as duas funções chamadas pelo botão "Gerar"**:
-- `manual-generate` (roteiro/briefing)
-- `generate-script`
-- E mais 7: `generate-ideas`, `generate-diagnostic`, `strategic-analysis`, `score-script`, `process-briefing`, `suggest-briefing`, `retry-pending-briefings`.
-
-Quando a função falha em deploy, `supabase.functions.invoke` retorna erro não-JSON. O `catch` lê `err.message` (pode ser `undefined`), o toast não aparece direito e o usuário fica olhando o spinner "Gerando..." → percepção de **travamento**.
-
-### 2. Sem `ErrorBoundary` global → tela preta
-Não existe nenhum `ErrorBoundary` no projeto (`rg ErrorBoundary src/` retorna vazio). Qualquer erro de renderização derruba a árvore React inteira mostrando tela preta até o refresh.
-
-### 3. Renderização do score sem proteção
-Em `ContentGenerator.tsx` linha 607:
-```tsx
-{result.score.total.toFixed(1)}/10
-```
-Se a edge function retorna `score` parcial (por ex. retry de otimização sem `total`), `total` fica `undefined` e `.toFixed` lança `TypeError` → tela preta. Mesma fragilidade em `SCRIPT_CATEGORY_META[result.category]?.label` quando categoria vem com valor desconhecido.
+Refinar APENAS a versão mobile da `LandingPage` (`src/pages/LandingPage.tsx`) — densidade visual, headlines maiores e blocos mais robustos — sem tocar em nada acima de `md:`. Ajustar também o `ContainerScroll` (`src/components/ui/container-scroll-animation.tsx`) para que o "modal 3D" da Sessão 3 termine de abrir (rotação chega a 0°) quando o usuário rolar ~85% do viewport, antes do card ficar totalmente centralizado.
 
 ---
 
-## Plano de correção
+## Mudanças
 
-### A) Migrar todas as edge functions para `Deno.serve` nativo
-Remover o import `serve from deno.land/std@0.168.0/http/server.ts` em **9 funções** e trocar `serve(handler)` → `Deno.serve(handler)`. Resolve o `SUPABASE_CODEGEN_ERROR` em massa e garante que `manual-generate` / `generate-script` voltem a deployar.
+### 1. `src/components/ui/container-scroll-animation.tsx` — Sessão 3 (modal 3D)
 
-Arquivos:
-- `supabase/functions/manual-generate/index.ts`
-- `supabase/functions/generate-script/index.ts`
-- `supabase/functions/generate-ideas/index.ts`
-- `supabase/functions/generate-diagnostic/index.ts`
-- `supabase/functions/strategic-analysis/index.ts`
-- `supabase/functions/score-script/index.ts`
-- `supabase/functions/process-briefing/index.ts`
-- `supabase/functions/suggest-briefing/index.ts`
-- `supabase/functions/retry-pending-briefings/index.ts`
+Hoje o modal só fica 100% aberto (rotateX = 0) quando `scrollYProgress = 0.5`, ou seja, exatamente quando o card está centralizado. No mobile isso atrasa demais a abertura.
 
-### B) Criar `ErrorBoundary` global
-Novo arquivo `src/components/ErrorBoundary.tsx`:
-- Captura erros de render filhos.
-- Mostra fallback com botão "Tentar novamente" (reset do state) e "Recarregar página".
-- Loga `error` + `componentStack` no console.
+- Trocar o `offset` do `useScroll` por `["start end", "center center"]` para começar a animar assim que a seção entra na tela.
+- Reescalar os keyframes apenas no mobile para que a rotação chegue a 0 muito antes da centralização (≈ ponto 0.85 do progresso visível, equivalente a ~85% da rolagem da tela):
 
-Envolver o `<Routes>` em `App.tsx` com o `ErrorBoundary`. Isso elimina definitivamente a "tela preta" — qualquer crash futuro mostra tela amigável com retry.
+```ts
+// mobile  → abre rápido e estabiliza antes do centro
+const rotate = useTransform(scrollYProgress, [0, 0.55, 1], isMobile ? [70, 0, 0] : [75, 0, -5]);
+const scale  = useTransform(scrollYProgress, [0, 0.55, 1], isMobile ? [0.85, 1, 1] : [0.9, 1, 0.95]);
+const translate = useTransform(scrollYProgress, [0, 0.55, 1], isMobile ? [40, 0, 0] : [80, 0, -80]);
+```
 
-### C) Renderização defensiva no `ContentGenerator.tsx`
-- Score: usar `Number(result.score?.total ?? 0).toFixed(1)` e só renderizar o bloco se `typeof result.score?.total === "number"`.
-- Categoria: fallback de label `SCRIPT_CATEGORY_META[result.category as ScriptCategory]?.label ?? result.category ?? "—"`.
-- Validation: `Object.entries(result.validation ?? {})`.
+- Reduzir altura do wrapper no mobile (`h-[40rem]` → `h-[44rem]`) e o padding vertical interno (`py-10` → `py-6`) para o card ocupar mais área útil.
+- Aumentar a altura do `Card` no mobile (`h-[30rem]` → `h-[34rem]`) para um look mais "app".
 
-### D) Tratamento de erro robusto no `handleGenerate`
-- Timeout client-side de 90s no `supabase.functions.invoke` via `Promise.race` — se exceder, mostra toast "A geração demorou demais, tente novamente" e libera o spinner.
-- Normalizar mensagem de erro: `const msg = err?.message || err?.error || "Falha desconhecida ao gerar conteúdo. Tente novamente."`.
-- Garantir `setLoading(false)` em `finally` (já existe — manter).
-- Adicionar `try/catch` ao redor do `supabase.from("scripts").insert` que ocorre depois — se o insert falhar, não derrubar o resultado nem travar a UI; apenas avisar via toast secundário.
+Desktop permanece intocado (todos os valores `md:` e o branch `!isMobile` ficam idênticos).
 
-### E) Pequenas blindagens em `ScriptGenerator.tsx`
-- `data?.error || error?.message || "Erro desconhecido"` no toast (já é parecido — apenas garantir ordem segura).
-- Loading state liberado em `finally`.
+### 2. `src/pages/LandingPage.tsx` — densidade e tipografia mobile
+
+Todas as alterações usam classes base (mobile) e mantêm os breakpoints `sm:` / `md:` / `lg:` existentes intactos.
+
+**Hero (Sessão 1)**
+- Headline: `text-2xl` → `text-4xl` no mobile (mantém `sm:text-4xl md:text-4xl lg:text-7xl`).
+- Reduzir `min-h-screen` para `min-h-[88vh]` no mobile (`min-h-[88vh] md:min-h-screen`) e `mb-8` da headline para `mb-6`, eliminando vazio acima do CTA.
+- Descrição: `text-base` → `text-lg` mobile; `mb-12` → `mb-8`.
+- CTAs: empilhar em coluna full-width no mobile (`flex-col w-full max-w-xs mx-auto`), botões `h-12` para padrão app.
+- Reduzir `mt-8` dos ícones de plataformas para `mt-6`.
+
+**Seções com headline `text-4xl sm:text-5xl ...`** (Sessões "Como funciona", "Problema", "Exemplo de roteiro", "Benefícios", "Planos", "CTA final"):
+- Mobile sobe de `text-4xl` → `text-[2.75rem] leading-[1.05]` para preencher melhor a largura do iPhone, mantendo `sm:text-5xl md:text-6xl lg:text-7xl`.
+- Padding vertical da seção: `py-16` → `py-12` no mobile (`py-12 md:py-24`).
+- Parágrafo descritivo: `text-lg` → `text-base` para hierarquia mais clara abaixo das headlines maiores.
+
+**Cards "Problema" (4 cards)**
+- Grid: `grid-cols-1` → `grid-cols-2` no mobile (mantém `sm:grid-cols-2 lg:grid-cols-4`), eliminando a coluna única "vazia".
+- `min-h-[14rem]` → `min-h-[11rem]` no mobile.
+- Padding interno do card: `p-6` → `p-4` mobile; ícone `h-12 w-12` → `h-10 w-10`; título `text-lg` → `text-base`.
+
+**Steps "Como funciona" (3 itens)**
+- No mobile, virar layout horizontal compacto: usar `flex-row items-start gap-4 text-left` (em vez de `flex-col items-center text-center`) via `flex-row md:flex-col items-start md:items-center text-left md:text-center`.
+- Bola do número: `h-20 w-20` → `h-14 w-14` mobile, mantendo `md:h-20 md:w-20`.
+- Descrição: `text-xs` → `text-sm` mobile.
+
+**Cards "Benefícios"**
+- `min-h-[14rem]` → `min-h-[12rem]` mobile.
+- Padding interno `p-6` → `p-5` mobile.
+- Descrição `text-xs` → `text-sm` mobile.
+
+**Cards "Planos"**
+- Padding `p-8` → `p-6` mobile (`p-6 md:p-8`).
+- `space-y-3 mb-8` da feature list → `space-y-2 mb-6` mobile.
+- Garantir destaque do plano em mobile: remover `scale-[1.03]` no mobile (vira `md:scale-[1.03]`) para não ultrapassar a viewport.
+
+**CTA final**
+- Padding `p-10` → `p-8` mobile; headline `text-4xl` → `text-[2.5rem] leading-[1.05]`.
+- Botões empilhados full-width já funciona via `flex-col sm:flex-row`; apenas adicionar `w-full sm:w-auto` em ambos para preencher.
+
+**Exemplo de roteiro (timeline)**
+- Padding do card: `p-4` → `p-5` mobile e descrição `text-xs` → `text-sm` para look mais robusto.
+
+### 3. Sem mudanças em desktop
+
+Todas as classes acima de `md:` permanecem exatamente como estão hoje. O QA visual deve confirmar isso comparando antes/depois em ≥ 768px.
 
 ---
 
-## Resultado esperado
+## Detalhes técnicos
 
-- Botões "Gerar Roteiro" e "Gerar Carrossel" voltam a funcionar em todos os planos (free e pagos), porque as edge functions deixam de falhar no deploy.
-- Mesmo que a IA retorne payload inesperado, o componente não trava nem mostra tela preta — exibe o que veio e ignora campos faltantes.
-- Qualquer erro de render futuro é capturado pelo `ErrorBoundary` com opção de retry sem refresh.
-- Click → loading visível → resposta ou erro tratado dentro de no máximo 90s.
+- Detecção mobile no `ContainerScroll` já usa `window.innerWidth <= 768` — reutilizada.
+- Nenhum novo dependency. Sem alterações em rotas, edge functions, RLS ou banco.
+- Sem alterações em `Auth.tsx`, `ContentGenerator`, etc. — escopo restrito a `LandingPage.tsx` e `container-scroll-animation.tsx`.
+- Acessibilidade: contraste e tamanhos de toque mantidos (botões mobile passam para `h-12`, ≥ 48px).
 
-## Diagrama do fluxo corrigido
+## Critérios de aceite
 
-```text
-[Usuário clica Gerar]
-        │
-        ▼
-[handleGenerate] ──▶ valida limites
-        │
-        ▼
-[invoke edge fn] ──── Promise.race(timeout 90s)
-        │
-   ┌────┴────┐
-   ▼         ▼
-[sucesso]  [erro/timeout]
-   │           │
-   ▼           ▼
-[setResult] [toast amigável + setLoading(false)]
-   │
-   ▼
-[Render no Dialog]
-   │ (qualquer crash aqui)
-   ▼
-[ErrorBoundary fallback] ──▶ [Retry] ou [Recarregar]
-```
+1. Em viewport 390×844 (iPhone 12/13/14): hero ocupa quase toda a tela sem grandes vazios; headlines visivelmente maiores; cards de problema em 2 colunas; steps horizontais compactos.
+2. Sessão 3: ao rolar do topo da seção, o card 3D termina a rotação (chapado) antes de chegar ao centro vertical da tela — perceptível por volta de ~85% da rolagem do viewport.
+3. Em viewport ≥ 1024px: layout idêntico ao atual (visual diff zero).

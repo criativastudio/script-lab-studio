@@ -11,7 +11,7 @@ export const ContainerScroll = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start 25%", "center center"],
+    offset: ["start end", "center center"],
   });
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -26,16 +26,28 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const scaleDimensions = () => {};
-
-  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], [75, 0, -5]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], isMobile ? [0.75, 0.92, 0.85] : [0.9, 1, 0.95]);
-  const translate = useTransform(scrollYProgress, [0, 0.5, 1], [80, 0, -80]);
+  // Mobile: card finishes opening (rotateX = 0) well before centered, around ~85% scroll progress.
+  // Desktop: keep original behavior unchanged.
+  const rotate = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [70, 0, 0] : [75, 0, -5]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [0.85, 1, 1] : [0.9, 1, 0.95]
+  );
+  const translate = useTransform(
+    scrollYProgress,
+    [0, 0.55, 1],
+    isMobile ? [40, 0, 0] : [80, 0, -80]
+  );
 
   return (
-    <div className="h-[40rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20 overflow-hidden max-w-[100vw]" ref={containerRef}>
+    <div className="h-[44rem] md:h-[55rem] flex items-center justify-center relative p-2 md:p-20 overflow-hidden max-w-[100vw]" ref={containerRef}>
       <div
-        className="py-10 md:py-40 w-full relative"
+        className="py-6 md:py-40 w-full relative"
         style={{
           perspective: "3000px",
         }}
@@ -85,7 +97,7 @@ export const Card = ({
         scale,
         boxShadow: "0 40px 80px rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1)",
       }}
-      className="max-w-5xl mt-8 mx-auto h-[30rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
+      className="max-w-5xl mt-8 mx-auto h-[34rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
     >
       {/* Glass reflection overlay */}
       <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/[0.04] to-transparent rounded-t-[30px] pointer-events-none z-10" />
