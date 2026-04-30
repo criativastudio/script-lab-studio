@@ -539,9 +539,9 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 whileHover={{ y: -4 }}
-                className={`relative rounded-2xl p-8 text-left transition-all duration-300 ${
+                className={`relative rounded-2xl p-6 md:p-8 text-left transition-all duration-300 ${
                   p.highlight
-                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] scale-[1.03]"
+                    ? "border border-primary/40 bg-primary/5 shadow-[0_0_50px_hsl(var(--primary)/0.15),inset_0_1px_0_hsl(var(--primary)/0.1)] md:scale-[1.03]"
                     : "glass-card"
                 }`}
               >
@@ -561,7 +561,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-extrabold">{p.price}</span>
                   <span className="text-muted-foreground text-sm">{p.period}</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm">
                       <Check className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
