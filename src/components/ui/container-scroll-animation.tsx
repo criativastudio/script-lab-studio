@@ -97,7 +97,7 @@ export const Card = ({
         scale,
         boxShadow: "0 40px 80px rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1)",
       }}
-      className="max-w-5xl mt-8 mx-auto h-[30rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
+      className="max-w-5xl mt-8 mx-auto h-[34rem] md:h-[40rem] w-full border border-white/[0.08] p-2 md:p-6 bg-background/80 rounded-[30px] transition-shadow duration-700 relative overflow-hidden"
     >
       {/* Glass reflection overlay */}
       <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/[0.04] to-transparent rounded-t-[30px] pointer-events-none z-10" />
