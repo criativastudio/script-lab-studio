@@ -231,9 +231,9 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex justify-center gap-4"
+            className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full max-w-xs sm:max-w-none mx-auto"
           >
-            <RainbowButton onClick={() => navigate("/auth")}>
+            <RainbowButton className="w-full sm:w-auto h-12 sm:h-auto" onClick={() => navigate("/auth")}>
               Começar
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </RainbowButton>
@@ -244,7 +244,7 @@ export default function LandingPage() {
                   block: "start",
                 });
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-xs font-light text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
+              className="inline-flex w-full sm:w-auto h-12 sm:h-auto items-center justify-center gap-2 rounded-full border border-border px-7 py-3.5 text-sm sm:text-xs font-light text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:text-foreground"
             >
               Ver como funciona
             </button>
