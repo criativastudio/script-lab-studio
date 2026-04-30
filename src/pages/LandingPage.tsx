@@ -464,7 +464,7 @@ export default function LandingPage() {
       <SocialProof />
 
       {/* ── BENEFÍCIOS ── */}
-      <section className="relative py-16 md:py-24 px-4">
+      <section className="relative py-12 md:py-24 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -475,7 +475,7 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               Benefícios
             </Badge>
-            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-light mb-14 tracking-tight leading-[1.1] max-w-3xl mx-auto">
+            <h2 className="font-display text-[2.75rem] sm:text-5xl md:text-6xl font-light mb-10 md:mb-14 tracking-tight leading-[1.05] md:leading-[1.1] max-w-3xl mx-auto">
               Tudo que você precisa para criar <span className="text-gradient-primary">conteúdo estratégico</span>
             </h2>
           </motion.div>
@@ -487,18 +487,18 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="min-h-[14rem] list-none"
+                className="min-h-[12rem] md:min-h-[14rem] list-none"
               >
                 <div className="relative h-full rounded-2xl border p-2 md:rounded-3xl md:p-3">
                   <GlowingEffect spread={40} glow proximity={64} disabled={false} />
-                  <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D] md:p-6">
+                  <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-5 md:p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D]">
                     <div className="relative flex flex-1 flex-col justify-between gap-3">
                       <div className="w-fit rounded-lg border border-primary/20 p-2">
                         <b.icon className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold text-foreground">{b.title}</h3>
-                        <p className="text-xs font-light text-muted-foreground mt-2">{b.desc}</p>
+                        <p className="text-sm md:text-xs font-light text-muted-foreground mt-2">{b.desc}</p>
                       </div>
                     </div>
                   </div>
