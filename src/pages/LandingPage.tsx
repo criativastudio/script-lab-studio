@@ -591,29 +591,29 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. FINAL CTA ── */}
-      <section className="py-16 md:py-24 px-4">
+      <section className="py-12 md:py-24 px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-10 md:p-20 text-center relative overflow-hidden"
+          className="mx-auto max-w-3xl rounded-3xl bg-card border border-border p-8 md:p-20 text-center relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12)_0%,transparent_70%)]" />
-          <h2 className="relative z-10 font-display text-4xl sm:text-5xl md:text-6xl font-light mb-8 text-foreground tracking-tight leading-[1.1] max-w-2xl mx-auto">
+          <h2 className="relative z-10 font-display text-[2.5rem] sm:text-5xl md:text-6xl font-light mb-6 md:mb-8 text-foreground tracking-tight leading-[1.05] md:leading-[1.1] max-w-2xl mx-auto">
             Comece a Criar Roteiros Estratégicos <span className="text-gradient-primary">Hoje</span>
           </h2>
-          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-lg md:text-xl font-normal leading-relaxed">
+          <p className="relative z-10 text-muted-foreground mb-8 max-w-md mx-auto text-base md:text-xl font-normal leading-relaxed">
             Roteiros profissionais prontos para gravação em segundos.
           </p>
           <div className="relative z-10 flex flex-col sm:flex-row justify-center gap-3">
-            <RainbowButton className="gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
+            <RainbowButton className="w-full sm:w-auto gap-2 text-base rounded-full" onClick={() => navigate("/auth")}>
               Começar grátis 4 <ArrowRight className="h-4 w-4" />
             </RainbowButton>
             <Button
               size="lg"
               variant="outline"
-              className="gap-2 text-base rounded-full border-border text-foreground hover:bg-muted"
+              className="w-full sm:w-auto gap-2 text-base rounded-full border-border text-foreground hover:bg-muted"
               onClick={() => {
                 document.getElementById("solucao")?.scrollIntoView({ behavior: "smooth" });
               }}
