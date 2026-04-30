@@ -322,7 +322,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── 5. AI WORKFLOW STEPS ── */}
-      <section id="solucao" className="relative py-16 md:py-24 px-4">
+      <section id="solucao" className="relative py-12 md:py-24 px-4">
         <div className="mx-auto max-w-5xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -333,10 +333,10 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               A solução
             </Badge>
-            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 tracking-tight leading-[1.1]">
+            <h2 className="font-display text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-6 md:mb-8 tracking-tight leading-[1.05] md:leading-[1.1]">
               Como <span className="text-gradient-primary">funciona</span>
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
+            <p className="mx-auto mb-10 max-w-2xl text-muted-foreground text-base md:text-xl font-normal leading-relaxed">
               Transforme informações do cliente em conteúdo estratégico em segundos.
             </p>
           </motion.div>
