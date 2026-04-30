@@ -450,9 +450,9 @@ export default function LandingPage() {
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
                 {s.num}
               </div>
-              <div className="glass-card rounded-xl p-4 flex-1 transition-all duration-300 hover:-translate-y-0.5">
+              <div className="glass-card rounded-xl p-5 md:p-4 flex-1 transition-all duration-300 hover:-translate-y-0.5">
                 <h4 className="font-semibold mb-1">{s.title}</h4>
-                <p className="text-xs font-light text-muted-foreground">{s.desc}</p>
+                <p className="text-sm md:text-xs font-light text-muted-foreground">{s.desc}</p>
               </div>
             </motion.div>
           ))}
