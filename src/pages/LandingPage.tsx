@@ -366,7 +366,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 6. PROBLEMA ── */}
-      <section id="problema" className="relative py-16 md:py-24 px-4">
+      <section id="problema" className="relative py-12 md:py-24 px-4">
         <div className="mx-auto max-w-6xl text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -377,14 +377,14 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs tracking-widest uppercase">
               O problema
             </Badge>
-            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 tracking-tight leading-[1.1]">
+            <h2 className="font-display text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-6 md:mb-8 tracking-tight leading-[1.05] md:leading-[1.1]">
               Por que seus vídeos <span className="text-gradient-primary">não performam?</span>
             </h2>
-            <p className="mx-auto mb-14 max-w-2xl text-muted-foreground text-lg md:text-xl font-normal leading-relaxed">
+            <p className="mx-auto mb-10 md:mb-14 max-w-2xl text-muted-foreground text-base md:text-xl font-normal leading-relaxed">
               A maioria das pessoas grava vídeos sem estratégia, sem roteiro e sem persona definida.
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {problems.map((p, i) => (
               <motion.div
                 key={p.title}
@@ -393,16 +393,16 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 whileHover={{ scale: 1.03 }}
-                className="group/card relative min-h-[14rem] rounded-2xl border border-border/40 bg-card/50 p-2"
+                className="group/card relative min-h-[11rem] md:min-h-[14rem] rounded-2xl border border-border/40 bg-card/50 p-2"
               >
                 <GlowingEffect spread={40} glow proximity={64} inactiveZone={0.01} borderWidth={2} disabled={false} />
-                <div className="relative flex h-full flex-col justify-between gap-4 overflow-hidden rounded-xl border border-border/30 bg-card p-6">
+                <div className="relative flex h-full flex-col justify-between gap-3 md:gap-4 overflow-hidden rounded-xl border border-border/30 bg-card p-4 md:p-6">
                   <div className="flex flex-col gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                    <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
                       <p.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg text-foreground">{p.title}</h3>
+                      <h3 className="font-semibold text-base md:text-lg text-foreground">{p.title}</h3>
                       <p className="mt-1 text-xs font-light text-muted-foreground">{p.desc}</p>
                     </div>
                   </div>
