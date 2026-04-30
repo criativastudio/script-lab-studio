@@ -340,7 +340,7 @@ export default function LandingPage() {
               Transforme informações do cliente em conteúdo estratégico em segundos.
             </p>
           </motion.div>
-          <div className="grid gap-8 md:grid-cols-3 relative">
+          <div className="grid gap-5 md:gap-8 md:grid-cols-3 relative">
             <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-[2px] shimmer-border" />
             {steps.map((s, i) => (
               <motion.div
@@ -349,13 +349,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="relative flex flex-col items-center text-center"
+                className="relative flex flex-row md:flex-col items-start md:items-center text-left md:text-center gap-4 md:gap-0 rounded-2xl md:rounded-none border border-border/30 md:border-0 bg-card/40 md:bg-transparent p-4 md:p-0"
               >
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/8 border border-primary/20 text-primary font-bold text-xl shadow-[0_0_25px_hsl(var(--primary)/0.15)] transition-shadow hover:shadow-[0_0_40px_hsl(var(--primary)/0.25)]">
+                <div className="flex h-14 w-14 md:h-20 md:w-20 flex-shrink-0 md:mb-6 items-center justify-center rounded-2xl bg-primary/8 border border-primary/20 text-primary font-bold text-lg md:text-xl shadow-[0_0_25px_hsl(var(--primary)/0.15)] transition-shadow hover:shadow-[0_0_40px_hsl(var(--primary)/0.25)]">
                   {s.num}
                 </div>
-                <h3 className="mb-2 font-semibold text-lg">{s.title}</h3>
-                <p className="text-xs font-light text-muted-foreground max-w-xs">{s.desc}</p>
+                <div className="flex-1 md:flex-none">
+                  <h3 className="mb-1 md:mb-2 font-semibold text-base md:text-lg">{s.title}</h3>
+                  <p className="text-sm md:text-xs font-light text-muted-foreground md:max-w-xs">{s.desc}</p>
+                </div>
               </motion.div>
             ))}
           </div>
